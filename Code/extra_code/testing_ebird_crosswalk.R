@@ -22,12 +22,29 @@ library(ggpubr)
 ###############################################################################
                    #### Read in crosswalk ####
 
-# Read in some data.
+# Read in the ebird crosswalk.
 ebird_crosswalk <- read.csv("Data/crosswalk_BT_EB.csv") %>% clean_names()
 
-# Read in a tree.
+# Read in the ebird tree.
 ebird_tree <- read.tree("Data/Trees/ebird_24may.tre")
 ebird_tree_species <- ebird_tree$tip.label %>% str_replace("_", " ")
+
+
+###############################################################################
+                  #### Extinct ebird species ####
+
+# Pull out extinct species.
+extinct_ebird <- ebird_crosswalk %>% filter(match_notes == "Extinct")
+
+# Check to make sure none are in the tree. (all NA so obvs not in the tree.)
+intersect(extinct_ebird$ebird_species, ebird_tree_species)
+
+# Check possib extinct.
+
+
+
+
+ebird_crosswalk_2 <- ebird_crosswalk %>% filter(match_notes != "Extinct")
 
 ###############################################################################
                 #### Remove 1:1 matches and check ####
@@ -45,14 +62,6 @@ ebird_dupes <- ebird_crosswalk %>% get_dupes(ebird_species)
 
 ebird_dupes %>% count(match_notes)
 
-###############################################################################
-                           #### Extinct ebird species ####
-
-
-extinct_ebird <-  ebird_crosswalk %>% filter(match_notes == "Extinct")
-
-intersect(extinct_ebird$ebird_species, ebird_tree_species)
-intersect("Acrocephalus luscinius", ebird_tree_species)
 
 
 ###############################################################################
