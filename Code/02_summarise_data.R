@@ -117,18 +117,22 @@ high_full_data %>% count(sexual_score)
 
 # Calculate percentages.
 counts <- full_data %>% count(sexual_score) 
+counts[1,2]/9989     
+sum(counts[2:5,2])/9989   
+
+counts[2,2]/9989
+counts[3,2]/9989
+counts[4,2]/9989
+counts[5,2]/9989
 
 
 
-counts[1,2]/9989     # 8350      # 8269
-sum(counts[2:5,2])/9989   # 1642    # 1721
+###############################################################################
+             #### Plot sexual selection scores barchat ####
 
-counts[2,2]/9989   # 515   # 529
-counts[3,2]/9989   # 225    # 237
-counts[4,2]/9989   # 652    # 683
-counts[5,2]/9989   # 250    # 272
-
-
+full_data %>% ggplot(aes(x = sexual_score)) + geom_bar() + theme_classic()
+full_data %>% filter(trophic_niche == "Frugivore") %>%  ggplot(aes(x = sexual_score)) + geom_bar() + theme_classic()
+full_data %>% filter(trophic_niche == "Invertivore") %>%  ggplot(aes(x = sexual_score)) + geom_bar() + theme_classic()
 
 
 
