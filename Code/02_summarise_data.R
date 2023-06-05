@@ -26,14 +26,12 @@ source("Code/functions.R")
                              #### Data ####
 
 # Read in the life history traits.
-bird_traits <- read.csv("Data/birdtree_ecotraits_09_05_2023.csv") %>% 
+full_data <- read.csv("Data/ecotraits_09_05_without_invalids.csv") %>% 
   clean_names()
+high_full_data <- full_data %>% filter(sexual_certainty < 3)
 
-
-# Read in some data.
+# Read in model data.
 model_data <- read.csv("Data/sexual_traits.csv")
-
-# Filter for high cert.
 high_data <- model_data %>% filter(sexual_certainty < 3)
 
 # Read in a tree.
@@ -113,23 +111,26 @@ high_data %<>% mutate(
 ###############################################################################
                 #### Count sexual selection scores ####
 
-model_data %>% count(sexual_score)
+# Raw numbers of sexual selection scores.
+full_data %>% count(sexual_score) 
+high_full_data %>% count(sexual_score)
 
-invalid_taxa <- c("Lophura hatinhensis",
-                  "Amaurospiza carrizalensis",
-                  "Anthus longicaudatus",
-                  "Phyllastrephus leucolepis",
-                  "Myrmotherula fluminensis",
-                  "Hypositta perdita")
+# Calculate percentages.
+counts <- full_data %>% count(sexual_score) 
 
-# Remove these invalid taxa from the ecotraits database.
-invalid_taxa <- c("Lophura hatinhensis",
-                  "Amaurospiza carrizalensis",
-                  "Anthus longicaudatus",
-                  "Hypositta perdita")
 
-intersect(bird_traits$birdtree_name, invalid_taxa)
-intersect(model_data$birdtree_name, invalid_taxa)
+
+counts[1,2]/9989     # 8350      # 8269
+sum(counts[2:5,2])/9989   # 1642    # 1721
+
+counts[2,2]/9989   # 515   # 529
+counts[3,2]/9989   # 225    # 237
+counts[4,2]/9989   # 652    # 683
+counts[5,2]/9989   # 250    # 272
+
+
+
+
 
 ###############################################################################
                     #### Check raw correlations ####
