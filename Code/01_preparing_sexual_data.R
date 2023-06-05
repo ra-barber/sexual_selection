@@ -26,7 +26,7 @@ source("Code/functions.R")
                         #### Read in the data #####
 
 # Read in the life history traits.
-bird_traits <- read.csv("Data/birdtree_ecotraits_09_05_2023.csv") %>% 
+bird_traits <- read.csv("Data/ecotraits_09_05_without_invalids.csv") %>% 
   clean_names()
 
 # Select the traits we want to model.
@@ -46,7 +46,7 @@ phylo_data <- bird_traits %>% dplyr::select(
 skim(phylo_data)
 
 # Remove NA species.
-#phylo_data %<>% tidyr::drop_na(bio4)
+phylo_data %<>% tidyr::drop_na(bio4)
 
 # Read in developmental data.
 developmental_data <- read.csv("Data/developmental_data.csv") %>% 
@@ -181,11 +181,10 @@ phylo_data$dens_sqrt <- sqrt(phylo_data$predicted_density)
 phylo_data$temp_log <- log(phylo_data$bio4)
 
 # This transformation works but it's a bit sketchy. Should assess both.
-phylo_data$npp_sqrt <- sqrt(max(phylo_data$npp) - phylo_data$npp)*-1
+phylo_data$npp_sqrt <- sqrt(max(phylo_data$npp, na.rm = TRUE) - phylo_data$npp)*-1
 phylo_data$gen_log <- log(phylo_data$gen_length)
 
 phylo_data$fed_sqrt <- sqrt(phylo_data$time_fed)
-
 
 
 
@@ -193,12 +192,11 @@ phylo_data$fed_sqrt <- sqrt(phylo_data$time_fed)
 seasonal_linear <- lm(phylo_data$temp_log ~ phylo_data$npp_sqrt)
 plot(seasonal_linear)
 
-phylo_data$new_seasonal <- seasonal_linear$residuals
-
-cor(phylo_data$new_seasonal, phylo_data$temp_log)
-cor(phylo_data$new_seasonal, phylo_data$npp_sqrt)
-
-hist(phylo_data$new_seasonal)
+# Doesn't work when you don't remove NAs.
+#phylo_data$new_seasonal <- seasonal_linear$residuals
+# cor(phylo_data$new_seasonal, phylo_data$temp_log)
+# cor(phylo_data$new_seasonal, phylo_data$npp_sqrt)
+# hist(phylo_data$new_seasonal)
 
 #phylo_data$breed_log <- log(phylo_data$age_at_first_breeding)
 #phylo_data$long_log <- log(phylo_data$maximum_longevity)
@@ -450,19 +448,5 @@ ggplot(phylo_data, aes(y=temp_log, x=sexual_score, group = sexual_score)) +
 write.csv(phylo_data, "Data/sexual_traits.csv", row.names = FALSE)
 
 
-
-################################################################################
-               ####  Check data numbers       ####
-
-skim(bird_traits)
-
-counts <- bird_traits %>% count(sexual_score) 
-counts[1,2]/9989     # 8350      # 8271
-sum(counts[2:5,2])/9989   # 1642    # 1721
-
-counts[2,2]/9989   # 515   # 529
-counts[3,2]/9989   # 225    # 237
-counts[4,2]/9989   # 652    # 683
-counts[5,2]/9989   # 250    # 272
 
 
