@@ -20,7 +20,7 @@ library(ggpubr)
 
 
 ###############################################################################
-                   #### Read in crosswalk ####
+                       #### Read in crosswalk ####
 
 # Read in the ebird crosswalk.
 ebird_crosswalk <- read.csv("Data/crosswalk_BT_EB.csv") %>% clean_names()
@@ -29,9 +29,12 @@ ebird_crosswalk <- read.csv("Data/crosswalk_BT_EB.csv") %>% clean_names()
 ebird_tree <- read.tree("Data/Trees/ebird_24may.tre")
 ebird_tree_species <- ebird_tree$tip.label %>% str_replace("_", " ")
 
+# Print unique list of match types.
+unique(ebird_crosswalk$match_notes)
+
 
 ###############################################################################
-                  #### Extinct ebird species ####
+                     #### Extinct ebird species ####
 
 # Pull out extinct species.
 extinct_ebird <- ebird_crosswalk %>% filter(match_notes == "Extinct")
@@ -40,32 +43,70 @@ extinct_ebird <- ebird_crosswalk %>% filter(match_notes == "Extinct")
 intersect(extinct_ebird$ebird_species, ebird_tree_species)
 
 # Check possib extinct.
+poss_extinct_ebird <- ebird_crosswalk %>% filter(match_notes == "Poss. Extinct")
 
-
-
-
+# Remove extinct species.
 ebird_crosswalk_2 <- ebird_crosswalk %>% filter(match_notes != "Extinct")
+ebird_crosswalk_2 <- ebird_crosswalk_2 %>% filter(match_notes != "Poss. Extinct")
 
-###############################################################################
-                #### Remove 1:1 matches and check ####
-
-ebird_crosswalk %>% count(match_notes)
-
-
-bt1_eb1 <-  ebird_crosswalk %>% filter(match_notes == "1BT to 1eBird")
-nbt1_eb1 <-  ebird_crosswalk %>% filter(match_notes != "1BT to 1eBird")
-
-intersect(bt1_eb1$bird_tree_species, nbt1_eb1$bird_tree_species)
-
-ebird_dupes <- ebird_crosswalk %>% get_dupes(ebird_species)
-
-
-ebird_dupes %>% count(match_notes)
-
+# There are extra extinct ebird species included in the tree.
+setdiff(ebird_tree_species, ebird_crosswalk$ebird_species)
+intersect(poss_extinct_ebird$ebird_species, ebird_tree_species)
 
 
 ###############################################################################
-                           #### Section 3 ####
+                #### Look at newly described species ####
+
+# Print unique list of match types.
+unique(ebird_crosswalk_2$match_notes)
+
+# Pull out newly described species.
+new_ebird <- ebird_crosswalk_2 %>% filter(match_notes == "Newly described species")
+
+# Remove newly described birdlife species.
+new_ebird %<>% tidyr::drop_na(ebird_species)
+
+# Remove newly described species.
+ebird_crosswalk_3 <- ebird_crosswalk_2 %>% filter(!ebird_species %in% new_ebird$ebird_species)
+
+
+
+###############################################################################
+                  #### Remove 1:1 matches and check ####
+
+# Print unique list of match types.
+unique(ebird_crosswalk_3$match_notes)
+
+# Filter for 1 to 1 matches.
+one_bt_to_one_eb <-  ebird_crosswalk_3 %>% filter(match_notes == "1BT to 1eBird")
+
+# Pull out non-matches.
+non_one_to_one_matches <-  ebird_crosswalk_3 %>% filter(match_notes != "1BT to 1eBird")
+
+# Check overlap.
+intersect(one_bt_to_one_eb$bird_tree_species, non_one_to_one_matches$bird_tree_species)
+intersect(one_bt_to_one_eb$ebird_species, non_one_to_one_matches$ebird_species)
+
+# Create new ebird crosswalk list.
+ebird_crosswalk_4 <-  ebird_crosswalk_3 %>% filter(match_notes != "1BT to 1eBird")
+
+
+###############################################################################
+              #### Pull out 1 1BT to many eBird splits ####
+
+# Print unique list of match types.
+unique(ebird_crosswalk_4$match_notes)
+
+# Filter for 1 to 1 matches.
+one_bt_to_many_eb <-  ebird_crosswalk_4 %>% filter(match_notes == "1BT to many eBird")
+
+# Pull out non-matches.
+none_matches <-  ebird_crosswalk_4 %>% filter(match_notes != "1BT to many eBird")
+
+# Check overlap.
+intersect(one_bt_to_many_eb$bird_tree_species, none_matches$bird_tree_species)
+intersect(one_bt_to_many_eb$ebird_species, none_matches$ebird_species)
+
 
 
 ###############################################################################
