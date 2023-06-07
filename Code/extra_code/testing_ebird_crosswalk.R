@@ -21,7 +21,7 @@ library(ggpubr)
                        #### Read in crosswalk ####
 
 # Read in the ebird crosswalk.
-ebird_crosswalk <- read.csv("Data/crosswalk_BT_EB_06_06.csv") %>% clean_names()
+ebird_crosswalk <- read.csv("Data/crosswalk_BT_EB_07_06.csv") %>% clean_names()
 
 # Read in the ebird tree.
 ebird_tree <- read.tree("Data/Trees/ebird_24may.tre")
@@ -57,7 +57,6 @@ intersect(new_ebird$ebird_species, not_new_ebird$ebird_species)
 # Create a new crosswalk object for next round of filtering.
 ebird_crosswalk_2 <- ebird_crosswalk %>% filter(robs_matches != "New tree species")
 
-
 # Dataset to keep.
 new_ebird
 
@@ -92,25 +91,13 @@ unique(ebird_crosswalk_3$match_notes)
 unique(ebird_crosswalk_3$robs_matches)
 
 # filter for 1bT to many ebird
-one_bt_to_many_eb <-  ebird_crosswalk_3 %>% filter(match_notes == "1BT to many eBird")
-non_matches <-  ebird_crosswalk_3 %>% filter(match_notes != "1BT to many eBird")
+one_to_many_ebird <-  ebird_crosswalk_3 %>% filter(robs_matches == "1BT to many eBird")
+non_matches <-  ebird_crosswalk_3 %>% filter(robs_matches != "1BT to many eBird")
 
 # Make sure there's no species in both groups.
-intersect(one_bt_to_many_eb$ebird_species, non_matches$ebird_species)
-
-# filter for 1bT to many ebird
-imperfect_one_bt_to_many_eb <-  ebird_crosswalk_3 %>% filter(match_notes == "1BT to many eBird (imperfect match)")
-non_matches <-  ebird_crosswalk_3 %>% filter(match_notes != "1BT to many eBird (imperfect match)")
-
-# None left over.
-intersect(imperfect_one_bt_to_many_eb$ebird_species, non_matches$ebird_species)
-
-# Lets check the clashes between jingyi and robs matches.
-clashes_forwards <-  ebird_crosswalk_3 %>% filter(match_notes == "1BT to many eBird" & robs_matches != "1BT to many eBird")
-clashes_backwards <-  ebird_crosswalk_3 %>% filter(match_notes != "1BT to many eBird" & robs_matches == "1BT to many eBird")
+intersect(one_to_many_ebird$ebird_species, non_matches$ebird_species)
 
 # No issues. Filter out these species.
-one_to_many_ebird <-  ebird_crosswalk_3 %>% filter(robs_matches == "1BT to many eBird")
 ebird_crosswalk_4 <-  ebird_crosswalk_3 %>% filter(robs_matches != "1BT to many eBird")
 
 # Dataset to keep.
@@ -126,11 +113,115 @@ unique(ebird_crosswalk_4$match_notes)
 unique(ebird_crosswalk_4$robs_matches)
 
 # filter for 1bT to many ebird
-many_to_one_ebird <-  ebird_crosswalk_4 %>% filter(match_notes == "Many BT to 1eBird")
-non_matches <-  ebird_crosswalk_4 %>% filter(match_notes != "Many BT to 1eBird")
+many_to_one_ebird <-  ebird_crosswalk_4 %>% filter(robs_matches == "Many BT to 1eBird")
+non_matches <-  ebird_crosswalk_4 %>% filter(robs_matches != "Many BT to 1eBird")
 
 # Make sure there's no species in both groups.
 intersect(many_to_one_ebird$ebird_species, non_matches$ebird_species)
+
+# No issues. Filter out these species.
+ebird_crosswalk_5 <-  ebird_crosswalk_4 %>% filter(robs_matches != "Many BT to 1eBird")
+
+# Dataset to keep.
+many_to_one_ebird
+
+################################################################################
+                   #### Last crosswalk group ####
+
+# Check no other values.
+unique(ebird_crosswalk_5$robs_matches)
+
+# Assign name to match others.
+many_to_many_ebird <- ebird_crosswalk_5
+
+
+
+################################################################################
+                    #### Assign easy nominates ####
+
+# No missing nominates from other group.
+skim(many_to_one_ebird)
+
+# Check one to many group. (Most are blank)
+one_to_many_ebird %>% count(nominate)
+
+# Filter for species where they match exactly. 
+matching_binom_data <- one_to_many_ebird %>% filter(bird_tree_species == ebird_species)
+
+# Assign to main one to many dataset the ebird species that are in the matchin binom dataset.
+one_to_many_ebird$nominate[one_to_many_ebird$ebird_species %in% matching_binom_data$ebird_species] <- "Yes"
+
+# Now assign all the leftover birdtree species that were part of the same complex.
+one_to_many_ebird$nominate[one_to_many_ebird$bird_tree_species %in% matching_binom_data$bird_tree_species & one_to_many_ebird$nominate != "Yes"] <- "No"
+
+# Remove those birdlife species that are matched up.
+extra_ebird_data <- one_to_many_ebird %>% filter(!bird_tree_species %in% matching_binom_data$bird_tree_species)
+
+# Create a species bird tree and ebird column.
+extra_ebird_data$bt_species <- str_split(extra_ebird_data$bird_tree_species, pattern = " ", simplify = TRUE)[,2]
+extra_ebird_data$eb_species <- str_split(extra_ebird_data$ebird_species, pattern = " ", simplify = TRUE)[,2]
+
+# Filter for species where they match exactly. 
+matching_species_data <- extra_ebird_data %>% filter(bt_species == eb_species)
+
+# Check for dupes. (Checked each species column indvidually and no dupes)
+matching_species_data %>% get_dupes()
+
+# Assign nominates to matching species.
+one_to_many_ebird$nominate[one_to_many_ebird$ebird_species %in% matching_species_data$ebird_species]  <- "Yes"
+
+# Assign Nos to birdtree species.
+one_to_many_ebird$nominate[one_to_many_ebird$bird_tree_species %in% matching_species_data$bird_tree_species & one_to_many_ebird$nominate != "Yes"] <- "No"
+
+# Only 55 blanks left.
+one_to_many_ebird %>% count(nominate)
+
+
+################################################################################
+                #### Check remaining nominates ####
+
+extra_ebird_data_2 <- one_to_many_ebird %>% filter(!bird_tree_species %in% matching_binom_data$bird_tree_species &
+                                                   !bird_tree_species %in% matching_species_data$bird_tree_species)
+
+# Easier to do by hand.
+clean_ebird_crosswalk <- rbind(new_ebird, one_to_one_ebird, one_to_many_ebird, many_to_one_ebird, many_to_many_ebird)
+
+# Check dupes.
+clean_ebird_crosswalk %>% get_dupes()
+
+# Export.  Commented out after making edits.
+#write.csv(clean_ebird_crosswalk, "Data/clean_crosswalk_BT_EB_07_06.csv", row.names = FALSE)
+
+
+################################################################################
+            #### add in missing species #####
+
+# 157 species that should be in the crosswalk but aren't. Only 17 are extant.
+missing_species <- setdiff(ebird_tree_species, clean_ebird_crosswalk$ebird_species)
+
+write.csv(missing_species, "Data/missing_ebird_species.csv", row.names = FALSE)
+
+
+
+setdiff(clean_ebird_crosswalk$ebird_species, ebird_tree_species)
+
+
+# Check for missing jetz species.
+
+jetz_data <- read.csv("Data/ecotraits_09_05_without_invalids.csv") %>% clean_names()
+
+
+
+
+
+
+
+
+
+
+
+
+one_to_many_ebird %>% filter(bird_tree_species %in% matching_binom_data$bird_tree_species)
 
 
 
