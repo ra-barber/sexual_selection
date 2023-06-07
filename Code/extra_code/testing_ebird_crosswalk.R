@@ -2,8 +2,6 @@
                ##### Testing the ebird crosswalk #####
 ###############################################################################
 
-# This script does something new. Pretty sick eh.
-
 
 # Clean the environment.
 rm(list=ls())
@@ -23,18 +21,121 @@ library(ggpubr)
                        #### Read in crosswalk ####
 
 # Read in the ebird crosswalk.
-ebird_crosswalk <- read.csv("Data/crosswalk_BT_EB.csv") %>% clean_names()
+ebird_crosswalk <- read.csv("Data/crosswalk_BT_EB_06_06.csv") %>% clean_names()
 
 # Read in the ebird tree.
 ebird_tree <- read.tree("Data/Trees/ebird_24may.tre")
 ebird_tree_species <- ebird_tree$tip.label %>% str_replace("_", " ")
 
+# Remove redundant rows.
+ebird_crosswalk %<>% filter(!is.na(robs_matches))
+
+# Remove species not in the tree using the new rob match column.
+ebird_crosswalk %<>% filter(robs_matches != "Not tree species")
+
+# 157 species that should be in the crosswalk but aren't. Only 17 are extant.
+setdiff(ebird_tree_species, ebird_crosswalk$ebird_species)
+
 # Print unique list of match types.
 unique(ebird_crosswalk$match_notes)
+unique(ebird_crosswalk$robs_matches)
+
+
+################################################################################
+                    #### Seperate new tree species ####
+
+# Pull out new species.
+new_ebird <- ebird_crosswalk %>% filter(robs_matches == "New tree species")
+not_new_ebird <- ebird_crosswalk %>% filter(robs_matches != "New tree species")
+
+# Check to make sure none are in the tree. (all NA so obvs not in the tree.)
+intersect(new_ebird$ebird_species, ebird_tree_species)
+
+# Make sure there's no species in both groups.
+intersect(new_ebird$ebird_species, not_new_ebird$ebird_species)
+
+# Create a new crosswalk object for next round of filtering.
+ebird_crosswalk_2 <- ebird_crosswalk %>% filter(robs_matches != "New tree species")
+
+
+# Dataset to keep.
+new_ebird
+
+
+################################################################################
+                    #### Remove 1 to 1 matches ####
+
+# Print unique list of match types.
+unique(ebird_crosswalk_2$match_notes)
+unique(ebird_crosswalk_2$robs_matches)
+
+# Pull out one to one ebird species.
+one_to_one_ebird <- ebird_crosswalk_2 %>% filter(robs_matches == "1BT to 1eBird")
+non_matches <- ebird_crosswalk_2 %>% filter(robs_matches != "1BT to 1eBird")
+
+# Make sure there's no species in both groups.
+intersect(one_to_one_ebird$ebird_species, non_matches$ebird_species)
+
+# Create a new crosswalk object for next round of filtering.
+ebird_crosswalk_3 <- ebird_crosswalk_2 %>% filter(robs_matches != "1BT to 1eBird")
+
+# Dataset to keep.
+one_to_one_ebird
+
+
+################################################################################
+                   #### Remove 1 to many matches ####
+
+
+# Print unique list of match types.
+unique(ebird_crosswalk_3$match_notes)
+unique(ebird_crosswalk_3$robs_matches)
+
+# filter for 1bT to many ebird
+one_bt_to_many_eb <-  ebird_crosswalk_3 %>% filter(match_notes == "1BT to many eBird")
+non_matches <-  ebird_crosswalk_3 %>% filter(match_notes != "1BT to many eBird")
+
+# Make sure there's no species in both groups.
+intersect(one_bt_to_many_eb$ebird_species, non_matches$ebird_species)
+
+# filter for 1bT to many ebird
+imperfect_one_bt_to_many_eb <-  ebird_crosswalk_3 %>% filter(match_notes == "1BT to many eBird (imperfect match)")
+non_matches <-  ebird_crosswalk_3 %>% filter(match_notes != "1BT to many eBird (imperfect match)")
+
+# None left over.
+intersect(imperfect_one_bt_to_many_eb$ebird_species, non_matches$ebird_species)
+
+# Lets check the clashes between jingyi and robs matches.
+clashes_forwards <-  ebird_crosswalk_3 %>% filter(match_notes == "1BT to many eBird" & robs_matches != "1BT to many eBird")
+clashes_backwards <-  ebird_crosswalk_3 %>% filter(match_notes != "1BT to many eBird" & robs_matches == "1BT to many eBird")
+
+# No issues. Filter out these species.
+one_to_many_ebird <-  ebird_crosswalk_3 %>% filter(robs_matches == "1BT to many eBird")
+ebird_crosswalk_4 <-  ebird_crosswalk_3 %>% filter(robs_matches != "1BT to many eBird")
+
+# Dataset to keep.
+one_to_many_ebird
+
+
+
+################################################################################
+                #### Remove many to 1 matches ####
+
+# Print unique list of match types.
+unique(ebird_crosswalk_4$match_notes)
+unique(ebird_crosswalk_4$robs_matches)
+
+# filter for 1bT to many ebird
+many_to_one_ebird <-  ebird_crosswalk_4 %>% filter(match_notes == "Many BT to 1eBird")
+non_matches <-  ebird_crosswalk_4 %>% filter(match_notes != "Many BT to 1eBird")
+
+# Make sure there's no species in both groups.
+intersect(many_to_one_ebird$ebird_species, non_matches$ebird_species)
+
 
 
 ###############################################################################
-                     #### Extinct ebird species ####
+                #### Extinct ebird species ####
 
 # Pull out extinct species.
 extinct_ebird <- ebird_crosswalk %>% filter(match_notes == "Extinct")
@@ -44,13 +145,18 @@ intersect(extinct_ebird$ebird_species, ebird_tree_species)
 
 # Check possib extinct.
 poss_extinct_ebird <- ebird_crosswalk %>% filter(match_notes == "Poss. Extinct")
+intersect(poss_extinct_ebird$ebird_species, ebird_tree_species)
+
+# Remove species not in the tree using the new rob match column.
+ebird_crosswalk %>% filter(robs_matches == "Not tree species")
+
 
 # Remove extinct species.
 ebird_crosswalk_2 <- ebird_crosswalk %>% filter(match_notes != "Extinct")
 ebird_crosswalk_2 <- ebird_crosswalk_2 %>% filter(match_notes != "Poss. Extinct")
 
 # There are extra extinct ebird species included in the tree.
-setdiff(ebird_tree_species, ebird_crosswalk$ebird_species)
+
 intersect(poss_extinct_ebird$ebird_species, ebird_tree_species)
 
 
