@@ -27,8 +27,8 @@ source("Code/functions.R")
                   #### Read in the models #####
 
 
-all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/lifehistory_all_models.rds")
-high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/lifehistory_high_models.rds")
+all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/lifehistory_all_models.rds")
+high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/lifehistory_high_models.rds")
 
 
 
@@ -62,8 +62,8 @@ brms_forest <- function(model){
 brms_forest(all_models)
 brms_forest(high_models)
 
-brms_forest(log_high_models)
-brms_forest(test_model)
+#brms_forest(log_high_models)
+#brms_forest(test_model)
 ###############################################################################
                           #### P mapping #####
 
@@ -274,16 +274,12 @@ y_axis_labs <- rev(expression("Territoriality", "Migration", "1"^ry*" consumer",
                               "1"^ry*" consumer\nx seasonality",
                               "1"^ry*" consumer\nx territoriality"))
 
-y_axis_labs <- rev(expression("Territoriality", "Migration", "1"^ry*" consumer",
-                     "Seasonality",
+y_axis_labs <- rev(expression("Seasonality", "Migration", "1"^ry*" consumer",
+                     "Territoriality",
                      atop(NA,atop(textstyle("1"^ry*" consumer"),textstyle("× seasonality"))),
                      atop(NA,atop(textstyle("1"^ry*" consumer"), textstyle("× territoriality")))))
 
-mtext(side = 2, line = 2, 
-      expression(atop(NA, atop(textstyle('Mean height of'),
-                               textstyle(italic(Dicksonia ~ antarctica) ~ (m))))))
-?mtext
-?expression
+
 
 ###############################################################################
                     #### Quasi random plots #####
@@ -361,8 +357,8 @@ ggsave("Plots/Results/all_model.tiff", dpi = 1200, width = 8, height = 5, compre
 high_plot <- gg_stat_eye(high_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-4.5,3))
 ggsave("Plots/Results/high_model.tiff", dpi = 1200, width = 8, height = 5, compression = "lzw")
 
-gg_stat_eye(log_high_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours)
-ggsave("Plots/Results/loghigh_model.tiff", dpi = 1200, width = 8, height = 4, compression = "lzw")
+#gg_stat_eye(log_high_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours)
+#ggsave("Plots/Results/loghigh_model.tiff", dpi = 1200, width = 8, height = 4, compression = "lzw")
 
 ## Add arrows ##
 
