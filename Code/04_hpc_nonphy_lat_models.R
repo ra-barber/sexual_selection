@@ -18,6 +18,7 @@ library(graph4lg)
 # Set the seed.
 set.seed(1993)
 
+
 ###############################################################################
                        #### Read in the data #####
 
@@ -45,6 +46,11 @@ model_data$sexual_score <- model_data$sexual_score + 1
 lat_brms_model <- function(data_set = model_data, response = "sexual_score",  
                            predictor = "abs_lat", family = "cumulative"){
   
+  
+  # Scale continuous predictors to two SD.
+  data_set %<>% mutate(
+    centroid_z = standardize(centroid_sqrt, two_sd = TRUE))
+  
   # Create model formula.
   model_formula <- formula(paste0(response, " ~ ", predictor))
   
@@ -63,8 +69,8 @@ lat_brms_model <- function(data_set = model_data, response = "sexual_score",
     brms_formula,
     data = data_set,
     prior = linear_priors,
-    iter = 10000,
-    warmup = 5000,
+    iter = 50000,
+    warmup = 25000,
     chains = 2,
     thin = 20,
     cores = 32,
