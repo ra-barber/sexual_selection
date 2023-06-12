@@ -125,14 +125,73 @@ counts[3,2]/9989
 counts[4,2]/9989
 counts[5,2]/9989
 
-
+full_data %>% filter(trophic_niche == "Invertivore") %>% count(sexual_score)
 
 ###############################################################################
              #### Plot sexual selection scores barchat ####
 
-full_data %>% ggplot(aes(x = sexual_score)) + geom_bar() + theme_classic()
-full_data %>% filter(trophic_niche == "Frugivore") %>%  ggplot(aes(x = sexual_score)) + geom_bar() + theme_classic()
-full_data %>% filter(trophic_niche == "Invertivore") %>%  ggplot(aes(x = sexual_score)) + geom_bar() + theme_classic()
+# Create a palette to match bin length.
+pal <- c('#3B9AB2', '#78B7C5', '#EBCC2A', '#E1AF00', '#F21A00')
+
+full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("Sexual selection") + ylab("Species count") +
+  #ylim(0, 8500) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  theme_classic() + theme(legend.position = "none")
+full_data %>% filter(trophic_niche == "Frugivore") %>%  
+  ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("Sexual selection") + ylab("Species count") +
+  #ylim(0, 8500) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  theme_classic() + theme(legend.position = "none")
+full_data %>% filter(trophic_niche == "Invertivore") %>% 
+  ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("Sexual selection") + ylab("Species count") +
+  #ylim(0, 8500) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  theme_classic() + theme(legend.position = "none")
+
+
+library(ggbreak)
+
+full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("Sexual selection") + ylab("Species count") +
+  ylim(0, 8500) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  scale_y_break(c(4500, 7000), scales = "fixed", ticklabels = c(7000, 8000)) +
+  theme_classic() + theme(legend.position = "none",axis.text.y.right = element_blank(),
+                                                          axis.ticks.y.right  = element_blank(),
+                                                          axis.line.y.right  = element_blank())
+                                                          
+library(ggforce)
+ggplot(df) + 
+  aes(x = b, y = a) +
+  geom_col() +
+  facet_zoom(ylim = c(0, 10))
+
+
+full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("Sexual selection") + ylab("Species count") +
+  ylim(0, 8500) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  theme_classic() + theme(legend.position = "none") +
+  facet_zoom(ylim = c(0, 1000), zoom.size = 1, show.area = FALSE, shrink = FALSE)
+
+?scale_y_break
+
+################################################################################
+
+full_data %>% group_by(sexual_certainty) %>% summarise(mean_ss = mean(sexual_score))
+
+
+
+
+
+
+
+
+
+
 
 
 
