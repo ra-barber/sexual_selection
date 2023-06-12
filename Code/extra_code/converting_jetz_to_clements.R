@@ -24,6 +24,9 @@ library(readxl)
                    #### Traits and crosswalk ####
 
 # Read in crosswalk.
+
+## Need to use most up to date version of crosswalk.
+
 clements_crosswalk <- read_excel("Data/jetz_to_clements_crosswalk_07_06.xlsx") %>% clean_names()
 
 # Read in ecotraits.
