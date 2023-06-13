@@ -148,7 +148,7 @@ write.csv(all_estimates, "Results/Tables/all_nonphy_lat_regression.csv", row.nam
 options(scipen = 999)
 
 # Function that recreates side plots using both pseudo p-values and credible intervals from centered models.
-brms_lat_side_plot_2 <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreaks = c(0,0.5,1), 
+brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreaks = c(0,0.5,1), 
                                lab_x_pos = 60, lab_ypos = 1, plot_label = "b", 
                                plot_model = allbirds_model, stats_model = centered_allbirds_model,
                                sex_score = TRUE, r_include = FALSE, p_include = TRUE){
@@ -241,37 +241,37 @@ brms_lat_side_plot_2 <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybre
 
 # Main sexual selection plot.
 sex_lat_plot <- lat_data %>% 
-  brms_lat_side_plot_2(ylabel = "Sexual selection", ylimits = c(0,1.2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
                        ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b")
 
 # Data certainty.
 cert_lat_plot <- cert_lat_data %>% 
-  brms_lat_side_plot_2(ylabel = "Data certainty", ylimits = c(1,4), 
+  brms_lat_side_plot(ylabel = "Data certainty", ylimits = c(1,4), 
                      ybreaks =  c(1,2,3,4), lab_ypos = 1.5, plot_label = "d",
                      plot_model = cert_model, stats_model = centered_cert_model,
                      sex_score = FALSE)
 
 # Primary and secondary consumers.
 pri_lat_plot <- diet_lat_data %>% filter(trophic_binary == "Primary") %>% 
-  brms_lat_side_plot_2(ylabel = "Sexual selection", ylimits = c(0,2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
                      plot_label = "b", plot_model = primary_model,
                      stats_model = centered_primary_model) 
 
 sec_lat_plot <- diet_lat_data %>% filter(trophic_binary == "Secondary") %>% 
-  brms_lat_side_plot_2(ylabel = "Sexual selection", ylimits = c(0,2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
                      ybreaks =  c(0,1.0,2.0), lab_x_pos = 20, lab_ypos = 1.5,
                      plot_label = "f", plot_model = secondary_model, 
                      stats_model = centered_secondary_model) 
 
 # Trophic niche models.
 fruit_lat_plot <- fruit_lat_data %>% 
-  brms_lat_side_plot_2(ylabel = "Sexual selection", ylimits = c(0,2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
                      plot_label = "d", plot_model = fruit_model, 
                      stats_model = centered_fruit_model) 
 invert_lat_plot <- niche_lat_data %>% filter(trophic_niche == "Invertivore") %>% 
-  brms_lat_side_plot_2(ylabel = "Sexual selection", ylimits = c(0,2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
                      plot_label = "h", plot_model = invert_model, 
                      stats_model = centered_invert_model) 
@@ -300,13 +300,13 @@ centered_yearterr_secondary_model <- readRDS("Z:/home/sexual_selection/Results/M
 
 # Sexual lat gradient for high data certainty.
 med_sex_lat_plot <- med_lat_data %>% 
-  brms_lat_side_plot_2(ylabel = "Sexual selection", ylimits = c(0,1.2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
                        ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
                        plot_model = med_cert_model, stats_model = centered_med_cert_model,
                        sex_score = TRUE)
 
 hi_sex_lat_plot <- hi_lat_data %>% 
-  brms_lat_side_plot_2(ylabel = "Sexual selection", ylimits = c(0,1.8), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.8), 
                        ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 0.3, plot_label = "d",
                        plot_model = hi_cert_model, stats_model = centered_hi_cert_model,
                        sex_score = TRUE)
@@ -314,27 +314,27 @@ hi_sex_lat_plot <- hi_lat_data %>%
 
 # Primary terr.
 pri_terr_lat_plot <- terr_diet_lat_data %>% filter(trophic_binary == "Primary") %>% 
-  brms_lat_side_plot_2(ylabel = "Proportion of species", ylimits = c(0,1), 
+  brms_lat_side_plot(ylabel = "Proportion of species", ylimits = c(0,1), 
                        ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "b",
                        plot_model = terr_primary_model, stats_model = centered_terr_primary_model,
                        sex_score = FALSE)
 # Primary year terr.
 pri_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_binary == "Primary") %>% 
-  brms_lat_side_plot_2(ylabel = "Proportion of species", ylimits = c(0,1), 
+  brms_lat_side_plot(ylabel = "Proportion of species", ylimits = c(0,1), 
                        ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "d",
                        plot_model = yearterr_primary_model, stats_model = centered_yearterr_primary_model,
                        sex_score = FALSE)
 
 # Secondary terr.
 sec_terr_lat_plot <- terr_diet_lat_data %>% filter(trophic_binary == "Secondary") %>% 
-  brms_lat_side_plot_2(ylabel = "Proportion of species", ylimits = c(0,1), 
+  brms_lat_side_plot(ylabel = "Proportion of species", ylimits = c(0,1), 
                        ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "f",
                        plot_model = terr_secondary_model, stats_model = centered_terr_secondary_model,
                        sex_score = FALSE)
 
 # Secondary year terr.
 sec_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_binary == "Secondary") %>% 
-  brms_lat_side_plot_2(ylabel = "Proportion of species", ylimits = c(0,1), 
+  brms_lat_side_plot(ylabel = "Proportion of species", ylimits = c(0,1), 
                        ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "h",
                        plot_model = yearterr_secondary_model, stats_model = centered_yearterr_secondary_model,
                        sex_score = FALSE)
