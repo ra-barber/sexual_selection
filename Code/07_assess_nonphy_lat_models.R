@@ -76,6 +76,12 @@ diet_lat_data <- model_data %>% filter(binned_lat != 75) %>%
 niche_lat_data <- model_data %>% filter(binned_lat != 75) %>% 
   group_by(binned_lat, trophic_niche) %>% average_lat_bins()
 
+# Add in the three monogamous frugivore species that each occupy a single lat bin alone.
+fruit_lat_data <- niche_lat_data %>% filter(trophic_niche == "Frugivore")
+fruit_lat_data[9,] <- list(40, "Frugivore", 0, 0, 0, 0, 0, 1) 
+fruit_lat_data[10,] <- list(45, "Frugivore", 0, 0, 0, 0, 0, 1)
+fruit_lat_data[11,] <- list(50, "Frugivore", 0, 0, 0, 0, 0, 1)
+
 # Do same for high and medium certainty.
 hi_lat_data <- model_data %>% filter(binned_lat != 75 & sexual_certainty == 1) %>% 
   group_by(binned_lat) %>% average_lat_bins()
@@ -92,7 +98,7 @@ year_terr_diet_lat_data <- model_data %>% filter(binned_lat != 75) %>%
 
 
 ###############################################################################
-                    #### Read in  brms models ######
+                    #### Read in  brms models ####
 
 
 # # Filter for primary and secondary data.
@@ -178,6 +184,10 @@ brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreak
 
     # Extract predictions from brms model.
     predictions <- conditional_effects(plot_model)[[1]]
+    
+    
+    
+    
     
     # Change sexual score back to original values (have to + 1 for ordinal regression)
     if (sex_score){
@@ -288,59 +298,123 @@ brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreak
 brms_lat_side_plot_2 <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreaks = c(0,0.5,1), 
                                lab_x_pos = 60, lab_ypos = 1, plot_label = "b", 
                                plot_model = allbirds_model, stats_model = centered_allbirds_model,
-                               sex_score = TRUE, r_include = FALSE){
+                               sex_score = TRUE, r_include = FALSE, p_include = TRUE){
   
-  # Extract predictions from brms model.
-  predictions <- conditional_effects(plot_model)[[1]]
-  
-  # Change sexual score back to original values (have to + 1 for ordinal regression)
-  if (sex_score){
-    predictions$estimate__ <- predictions$estimate__ - 1
-  }
-  
-  # Sample size.
+  # Sample size.   # Not sure we need.
   sample_size <- nrow(plot_model$data)
   
+  # Extract predictions from brms model.
+  predictions <- conditional_effects(plot_model)[[1]] 
+  
+  # Change back to normal data values that were transformed for ordinal models..
+  if (sex_score){
+     predictions %<>% mutate(estimate__ = estimate__ - 1, lower__ = lower__ - 1, upper__ = upper__ - 1)
+  }
+  
   # Estimate
-  estimate <- summary(stats_model)$fixed["centroid_z",1]
+  estimate <- last(summary(stats_model)$fixed[,1])
   estimate <- as.character(format(round(estimate, 2), nsmall = 2))
   
   # Redo estimate if it's too small.
   if (estimate == "0.00"){
-    estimate <- summary(stats_model)$fixed["centroid_z",1]
+    estimate <- last(summary(stats_model)$fixed[,1])
     estimate <- as.character(format(round(estimate, 3), nsmall = 3))
   }
   
   # Lower. 
-  lower <- summary(stats_model)$fixed["centroid_z",3]
+  lower <- last(summary(stats_model)$fixed[,3])
   lower <- as.character(format(round(lower, 2), nsmall = 2))
   
   # Upper
-  upper <- summary(stats_model)$fixed["centroid_z",4]
+  upper <- last(summary(stats_model)$fixed[,4])
   upper <- as.character(format(round(upper, 2), nsmall = 2))
   
   # Change size of CI.
   if (lower == "0.00" | upper == "0.00"){
-    lower <- summary(stats_model)$fixed["centroid_z",3]
+    lower <- last(summary(stats_model)$fixed[,3])
     lower <- as.character(format(round(lower, 3), nsmall = 3))
-    upper <- summary(stats_model)$fixed["centroid_z",4]
+    upper <- last(summary(stats_model)$fixed[,4])
     upper <- as.character(format(round(upper, 3), nsmall = 3))
   }
-  if (lower == "0.000" | upper == "0.000"){
-    lower <- summary(stats_model)$fixed["centroid_z",3]
-    lower <- as.character(format(round(lower, 4), nsmall = 4))
-    upper <- summary(stats_model)$fixed["centroid_z",4]
-    upper <- as.character(format(round(upper, 4), nsmall = 4))
-  }
-  # if (lower == "0.0000" | upper == "0.0000"){
-  #   lower <- summary(plot_model)$fixed["centroid_z",3]
-  #   lower <- as.character(format(round(lower, 3), nsmall = 5))
-  #   upper <- summary(plot_model)$fixed["centroid_z",4]
-  #   upper <- as.character(format(round(upper, 3), nsmall = 5))
-  # }
   
-  # Plot labels.
-  cor_label <- paste0("\U03B2 = ", estimate, "\n[", lower, ", ", upper, "]")
+  # Paste together estimate and CIs as a string.
+  estimate <- paste0("\U03B2 = ", estimate)
+  intervals <- paste0("[", lower, ", ", upper, "]")
+  
+  # # Extract p-values using probability of direction two-tailed test.
+  p_value <- pd_to_p(last(p_direction(stats_model)[,2]))
+  
+  # Change p value to a string, using standard thresholds. 
+  if (p_value < 0.001 ){
+    p_value <- "p < 0.001"
+  } else if (p_value < 0.01) {
+    p_value <- "p < 0.01"
+  } else if (p_value < 0.05) {
+    p_value <- "p < 0.05"
+  } else {
+    p_value <- paste0("p = ", as.character(format(round(p_value, 2), nsmall = 2)))
+  }
+  
+  # Create a label 
+  if (p_include){
+    stats_label <- paste0(estimate, "\n", p_value)
+  } else {
+    stats_label <- paste0(estimate, "\n", intervals)
+  }
+  
+  # 
+  # 
+  # # Extract predictions from brms model.
+  # predictions <- conditional_effects(plot_model)[[1]]
+  # 
+  # # Change sexual score back to original values (have to + 1 for ordinal regression)
+  # if (sex_score){
+  #   predictions$estimate__ <- predictions$estimate__ - 1
+  # }
+  # 
+  # # Sample size.
+  # sample_size <- nrow(plot_model$data)
+  # 
+  # # Estimate
+  # estimate <- summary(stats_model)$fixed["centroid_z",1]
+  # estimate <- as.character(format(round(estimate, 2), nsmall = 2))
+  # 
+  # # Redo estimate if it's too small.
+  # if (estimate == "0.00"){
+  #   estimate <- summary(stats_model)$fixed["centroid_z",1]
+  #   estimate <- as.character(format(round(estimate, 3), nsmall = 3))
+  # }
+  # 
+  # # Lower. 
+  # lower <- summary(stats_model)$fixed["centroid_z",3]
+  # lower <- as.character(format(round(lower, 2), nsmall = 2))
+  # 
+  # # Upper
+  # upper <- summary(stats_model)$fixed["centroid_z",4]
+  # upper <- as.character(format(round(upper, 2), nsmall = 2))
+  # 
+  # # Change size of CI.
+  # if (lower == "0.00" | upper == "0.00"){
+  #   lower <- summary(stats_model)$fixed["centroid_z",3]
+  #   lower <- as.character(format(round(lower, 3), nsmall = 3))
+  #   upper <- summary(stats_model)$fixed["centroid_z",4]
+  #   upper <- as.character(format(round(upper, 3), nsmall = 3))
+  # }
+  # if (lower == "0.000" | upper == "0.000"){
+  #   lower <- summary(stats_model)$fixed["centroid_z",3]
+  #   lower <- as.character(format(round(lower, 4), nsmall = 4))
+  #   upper <- summary(stats_model)$fixed["centroid_z",4]
+  #   upper <- as.character(format(round(upper, 4), nsmall = 4))
+  # }
+  # # if (lower == "0.0000" | upper == "0.0000"){
+  # #   lower <- summary(plot_model)$fixed["centroid_z",3]
+  # #   lower <- as.character(format(round(lower, 3), nsmall = 5))
+  # #   upper <- summary(plot_model)$fixed["centroid_z",4]
+  # #   upper <- as.character(format(round(upper, 3), nsmall = 5))
+  # # }
+  # 
+  # # Plot labels.
+  # cor_label <- paste0("\U03B2 = ", estimate, "\n[", lower, ", ", upper, "]")
 
   # ggplot function for sideplots with annotations.
   ggplot(data_set, aes(x = binned_lat, y = trait_mean)) +
@@ -357,7 +431,7 @@ brms_lat_side_plot_2 <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybre
           axis.title.y = element_text(size = rel(0.85)),
           axis.title.x = element_text(size = rel(0.85)),
           plot.margin = margin(t = 1, l = 0.2, b = 0.2, r =0.3, unit = "cm")) + 
-    annotate("text", x = lab_x_pos, y =lab_ypos, label = cor_label, size = 7, fontface = 2) +
+    annotate("text", x = lab_x_pos, y =lab_ypos, label = stats_label, size = 7, fontface = 2) +
     annotate("text", x = 0, y = ylimits[2], label = plot_label, size = 12, fontface = 2) + 
     geom_line(data = predictions, aes(x = abs_lat, y = (estimate__)), linetype = "dashed", linewidth = 1)
 }
