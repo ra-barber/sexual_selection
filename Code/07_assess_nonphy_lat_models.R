@@ -20,7 +20,7 @@ library(brms)
 library(graph4lg)
 
 # Set the seed.
-#set.seed(1993)
+set.seed(1993)
 
 ###############################################################################
                        #### Read in the data #####
@@ -38,11 +38,7 @@ model_data$abs_lat <- abs(model_data$complete_latitude)
               #### Prepare predictor variables ######
 
 # Scale continuous predictors to two SD.
-model_data %<>% mutate(
-  centroid_z = standardize(centroid_sqrt, two_sd = TRUE))
-
-# Prepare response variables.
-# model_data$sexual_score <- model_data$sexual_score + 1
+model_data %<>% mutate(centroid_z = standardize(centroid_sqrt, two_sd = TRUE))
 
 # Create 5 degree bins for latitude.
 bin_range <- seq(0, 80, 5)
@@ -59,8 +55,6 @@ average_lat_bins <- function(grouped_data, predictor = "sexual_score"){
     summarise(trait_mean = mean(!!! syms(predictor)),
               trait_sd = sd(!!! syms(predictor)),
               trait_se = sd(!!! syms(predictor))/sqrt(length(!!! syms(predictor))),
-              #trait_max = trait_mean + trait_se*1.96,
-              #trait_min = trait_mean - trait_se*1.96,
               trait_max = trait_mean + trait_se,
               trait_min = trait_mean - trait_se,
               trait_n = length(!!! syms(predictor))) %>% na.omit()
@@ -99,29 +93,6 @@ year_terr_diet_lat_data <- model_data %>% filter(binned_lat != 75) %>%
 
 ###############################################################################
                     #### Read in  brms models ####
-
-
-# # Filter for primary and secondary data.
-# primary_data <- model_data %>% filter(trophic_binary == "Primary")
-# secondary_data <- model_data %>% filter(trophic_binary == "Secondary")
-# fruit_data <- model_data %>% filter(trophic_niche == "Frugivore")
-# invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
-
-# # Run the models.
-# allbirds_model <- lat_brms_model(response = "sexual_score")
-# cert_model <- lat_brms_model(response = "cert_reverse")
-# primary_model <- lat_brms_model(data_set = primary_data)
-# secondary_model <- lat_brms_model(data_set = secondary_data)
-# fruit_model <- lat_brms_model(data_set = fruit_data)
-# invert_model <- lat_brms_model(data_set = invert_data)
-# 
-# saveRDS(allbirds_model, "Results/Models/Nonphy_models/Latitude/allbirds_model.rds")
-# saveRDS(cert_model, "Results/Models/Nonphy_models/Latitude/cert_model.rds")
-# saveRDS(primary_model, "Results/Models/Nonphy_models/Latitude/primary_model.rds")
-# saveRDS(secondary_model, "Results/Models/Nonphy_models/Latitude/secondary_model.rds")
-# saveRDS(fruit_model, "Results/Models/Nonphy_models/Latitude/fruit_model.rds")
-# saveRDS(invert_model, "Results/Models/Nonphy_models/Latitude/invert_model.rds")
-
 
 # Read in models using raw data.
 allbirds_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/allbirds_model.rds")
@@ -172,127 +143,9 @@ write.csv(all_estimates, "Results/Tables/all_nonphy_lat_regression.csv", row.nam
 
 ###############################################################################
                     #### side plot function  ######
+
+# Change scipen. (Probs not needed now)
 options(scipen = 999)
-
-# plot_model <- fruit_model
-# Function for making the side plots using the brms models instead of the linear ones.
-# function for making the side plots.
-brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreaks = c(0,0.5,1), 
-                            lab_x_pos = 60, lab_ypos = 1, plot_label = "b", 
-                            plot_model = allbirds_model,
-                            sex_score = TRUE, r_include = FALSE){
-
-    # Extract predictions from brms model.
-    predictions <- conditional_effects(plot_model)[[1]]
-    
-    
-    
-    
-    
-    # Change sexual score back to original values (have to + 1 for ordinal regression)
-    if (sex_score){
-      predictions$estimate__ <- predictions$estimate__ - 1
-    }
-    
-    # # Extract p-values.
-    # p_values <- brms_pmap(plot_model)[2]
-    # p_value <- last(p_values[,1])
-    # 
-    # # Extract r-squared.
-    # r_squared <- Bayes_R2_MZ(plot_model)[[1]]
-    # 
-    # Sample size.
-    sample_size <- nrow(plot_model$data)
-    
-    # Estimate
-    estimate <- summary(plot_model)$fixed["abs_lat",1]
-    estimate <- as.character(format(round(estimate, 2), nsmall = 2))
-    
-    # Redo estimate if it's too small.
-    if (estimate == "0.00"){
-      estimate <- summary(plot_model)$fixed["abs_lat",1]
-      estimate <- as.character(format(round(estimate, 3), nsmall = 3))
-    }
-    
-    # Lower. 
-    lower <- summary(plot_model)$fixed["abs_lat",3]
-    lower <- as.character(format(round(lower, 2), nsmall = 2))
-    
-    # Upper
-    upper <- summary(plot_model)$fixed["abs_lat",4]
-    upper <- as.character(format(round(upper, 2), nsmall = 2))
-    
-    # Change size of CI.
-    if (lower == "0.00" | upper == "0.00"){
-      lower <- summary(plot_model)$fixed["abs_lat",3]
-      lower <- as.character(format(round(lower, 3), nsmall = 3))
-      upper <- summary(plot_model)$fixed["abs_lat",4]
-      upper <- as.character(format(round(upper, 3), nsmall = 3))
-    }
-    if (lower == "0.000" | upper == "0.000"){
-      lower <- summary(plot_model)$fixed["abs_lat",3]
-      lower <- as.character(format(round(lower, 4), nsmall = 4))
-      upper <- summary(plot_model)$fixed["abs_lat",4]
-      upper <- as.character(format(round(upper, 4), nsmall = 4))
-    }
-    # if (lower == "0.0000" | upper == "0.0000"){
-    #   lower <- summary(plot_model)$fixed["abs_lat",3]
-    #   lower <- as.character(format(round(lower, 3), nsmall = 5))
-    #   upper <- summary(plot_model)$fixed["abs_lat",4]
-    #   upper <- as.character(format(round(upper, 3), nsmall = 5))
-    # }
-    
-    # Plot labels.
-    cor_label <- paste0("\U03B2 = ", estimate, "\n[", lower, ", ", upper, "]")
- 
-    
-    # Code for R squared and P values labels.
-    
-    # # To include r-squared values in plot.
-    # if (r_include){
-    # # With R squared, which is super low without using phylogeny.
-    # if(p_value < 0.001){
-    #   cor_label <- paste0("p < 0.001", "\nR\u00b2 = ", as.character(format(round(r_squared, 2), nsmall = 2)))
-    # } else if (p_value > 0.005) {
-    #   cor_label <- paste0("p = ", as.character(format(round(p_value, 2), nsmall = 2)), "\nR\u00b2 = ", as.character(format(round(r_squared, 2), nsmall = 2)))
-    # } else {
-    #   cor_label <- paste0("p = ", as.character(format(round(p_value, 3), nsmall = 3)), "\nR\u00b2 = ", as.character(format(round(r_squared, 2), nsmall = 2)))
-    # }
-    # } else {
-    # # Without R squared
-    # if(p_value < 0.001){
-    #   cor_label <- paste0("p < 0.001", "\n\U03B2 = ", estimate)
-    #   cor_label <- paste0("\U03B2 = ", estimate, "\np < 0.001")
-    # } else if (p_value > 0.005) {
-    #   cor_label <- paste0("\U03B2 = ", estimate, "\np = ", as.character(format(round(p_value, 2), nsmall = 2)))
-    # } else {
-    #   cor_label <- paste0("\U03B2 = ", estimate, "\np = ", as.character(format(round(p_value, 3), nsmall = 3)))
-    # }
-    # }
-    
-    # ggplot function for sideplots with annotations.
-    ggplot(data_set, aes(x = binned_lat, y = trait_mean)) +
-      geom_errorbar(aes(ymin = trait_min, ymax = trait_max), 
-                    position = position_dodge(width = 1), show.legend = FALSE, col =  "darkgrey") + 
-      geom_point(position = position_dodge(width = 1), col = "black") + 
-      scale_x_continuous(breaks = seq(from = 0, to = 70, by = 35)) +
-      scale_y_continuous(breaks = ybreaks, labels = scales::number_format(accuracy = 0.1)) +
-      coord_cartesian(ylim = ylimits, xlim = c(NA, 75), clip = 'off') +
-      ylab(ylabel) +
-      xlab("Latitude") + theme_classic(base_size = 25) + 
-      theme(legend.position = "none", 
-            text = element_text(face = "bold"),
-            axis.title.y = element_text(size = rel(0.85)),
-            axis.title.x = element_text(size = rel(0.85)),
-            plot.margin = margin(t = 1, l = 0.2, b = 0.2, unit = "cm")) + 
-      annotate("text", x = lab_x_pos, y =lab_ypos, label = cor_label, size = 7, fontface = 2) +
-      annotate("text", x = 0, y = ylimits[2], label = plot_label, size = 12, fontface = 2) + 
-      # geom_ribbon(data = plot_predictions, 
-      #             aes(x = complete_latitude,  ymin = (lower__ - 1), ymax = (upper__ - 1)), 
-      #             fill = "grey70", colour = NA, alpha = 0.2, inherit.aes = FALSE)  + 
-      geom_line(data = predictions, aes(x = abs_lat, y = (estimate__)), linetype = "dashed", linewidth = 1)
-  }
-    
 
 # Function that recreates side plots using both pseudo p-values and credible intervals from centered models.
 brms_lat_side_plot_2 <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreaks = c(0,0.5,1), 
@@ -361,60 +214,6 @@ brms_lat_side_plot_2 <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybre
   } else {
     stats_label <- paste0(estimate, "\n", intervals)
   }
-  
-  # 
-  # 
-  # # Extract predictions from brms model.
-  # predictions <- conditional_effects(plot_model)[[1]]
-  # 
-  # # Change sexual score back to original values (have to + 1 for ordinal regression)
-  # if (sex_score){
-  #   predictions$estimate__ <- predictions$estimate__ - 1
-  # }
-  # 
-  # # Sample size.
-  # sample_size <- nrow(plot_model$data)
-  # 
-  # # Estimate
-  # estimate <- summary(stats_model)$fixed["centroid_z",1]
-  # estimate <- as.character(format(round(estimate, 2), nsmall = 2))
-  # 
-  # # Redo estimate if it's too small.
-  # if (estimate == "0.00"){
-  #   estimate <- summary(stats_model)$fixed["centroid_z",1]
-  #   estimate <- as.character(format(round(estimate, 3), nsmall = 3))
-  # }
-  # 
-  # # Lower. 
-  # lower <- summary(stats_model)$fixed["centroid_z",3]
-  # lower <- as.character(format(round(lower, 2), nsmall = 2))
-  # 
-  # # Upper
-  # upper <- summary(stats_model)$fixed["centroid_z",4]
-  # upper <- as.character(format(round(upper, 2), nsmall = 2))
-  # 
-  # # Change size of CI.
-  # if (lower == "0.00" | upper == "0.00"){
-  #   lower <- summary(stats_model)$fixed["centroid_z",3]
-  #   lower <- as.character(format(round(lower, 3), nsmall = 3))
-  #   upper <- summary(stats_model)$fixed["centroid_z",4]
-  #   upper <- as.character(format(round(upper, 3), nsmall = 3))
-  # }
-  # if (lower == "0.000" | upper == "0.000"){
-  #   lower <- summary(stats_model)$fixed["centroid_z",3]
-  #   lower <- as.character(format(round(lower, 4), nsmall = 4))
-  #   upper <- summary(stats_model)$fixed["centroid_z",4]
-  #   upper <- as.character(format(round(upper, 4), nsmall = 4))
-  # }
-  # # if (lower == "0.0000" | upper == "0.0000"){
-  # #   lower <- summary(plot_model)$fixed["centroid_z",3]
-  # #   lower <- as.character(format(round(lower, 3), nsmall = 5))
-  # #   upper <- summary(plot_model)$fixed["centroid_z",4]
-  # #   upper <- as.character(format(round(upper, 3), nsmall = 5))
-  # # }
-  # 
-  # # Plot labels.
-  # cor_label <- paste0("\U03B2 = ", estimate, "\n[", lower, ", ", upper, "]")
 
   # ggplot function for sideplots with annotations.
   ggplot(data_set, aes(x = binned_lat, y = trait_mean)) +
@@ -437,49 +236,8 @@ brms_lat_side_plot_2 <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybre
 }
 
 
-
-# #####################    Make the side plots   ########################
-# 
-# 
-# # Latiduinal relationship with sex.
-# sex_lat_plot <- lat_data %>% 
-#   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-#                        ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b")
-#   
-# # Lat relationship with data certainty.
-# cert_lat_plot <- cert_lat_data %>% 
-#   brms_lat_side_plot(ylabel = "Data certainty", ylimits = c(1,4), 
-#                      ybreaks =  c(1,2,3,4), lab_ypos = 1.8, plot_label = "d",
-#                      plot_model = cert_model, sex_score = FALSE)
-#   
-# # Two last models.
-# pri_lat_plot <- diet_lat_data %>% filter(trophic_binary == "Primary") %>% 
-#   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
-#                 ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
-#                 plot_label = "b", plot_model = primary_model) 
-#   
-# sec_lat_plot <- diet_lat_data %>% filter(trophic_binary == "Secondary") %>% 
-#   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
-#                 ybreaks =  c(0,1.0,2.0), lab_x_pos = 20, lab_ypos = 1.5,
-#                 plot_label = "f", plot_model = secondary_model) 
-# 
-# fruit_lat_data <- niche_lat_data %>% filter(trophic_niche == "Frugivore")
-# fruit_lat_data[9,] <- list(40, "Frugivore", 0, 0, 0, 0, 0, 1)  # Add in three monogamous frugivore species at higher lat.
-# fruit_lat_data[10,] <- list(45, "Frugivore", 0, 0, 0, 0, 0, 1)
-# fruit_lat_data[11,] <- list(50, "Frugivore", 0, 0, 0, 0, 0, 1)
-# 
-# # Trophic niche models.
-# fruit_lat_plot <- fruit_lat_data %>% 
-#   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
-#                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
-#                      plot_label = "d", plot_model = fruit_model) 
-# invert_lat_plot <- niche_lat_data %>% filter(trophic_niche == "Invertivore") %>% 
-#   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
-#                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
-#                      plot_label = "h", plot_model = invert_model) 
-
 ################################################################################
-              #### Make with centered models for stats ####
+                     #### Make the side plots  ####
 
 # Main sexual selection plot.
 sex_lat_plot <- lat_data %>% 
