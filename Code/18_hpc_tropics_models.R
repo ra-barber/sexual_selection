@@ -46,7 +46,7 @@ trop_brms_model <- function(data_set = model_data, response = "sexual_score",
   
   # Center categorical predictors.
   data_set %<>%  mutate(
-    trop_non_trop = relevel(as.factor(trop_non_trop), ref = "non_trop"),
+    trop_non_trop = relevel(as.factor(trop_non_trop), ref = "trop"),
     trop_non_trop_c = center_categorical(trop_non_trop))
   
   # Create model formula.
