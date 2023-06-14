@@ -85,26 +85,6 @@ gc()
 
 
 ################################################################################
-                    #### Prepare climatic maps ####
-# 
-# #Read in bioclim data.
-# temp_seas <- raster("Data/Chelsa/CHELSA_bio4_1981-2010_V.2.1.tif")
-# npp <- raster("Data/Chelsa/CHELSA_npp_1981-2010_V.2.1.tif")
-# rainfall <- raster("Data/Chelsa/CHELSA_bio15_1981-2010_V.2.1.tif")
-# 
-# library(terra)
-# # Resample so they're same extent / res
-# temp_seas <- resample(rast(temp_seas), rast(species_raster))
-# npp <- resample(rast(npp), rast(species_raster))
-# rainfall <- resample(rast(rainfall), rast(species_raster))
-# 
-# # Mask.
-# temp_seas <- mask(raster(temp_seas), species_raster)
-# npp <- mask(raster(npp), species_raster)
-# rainfall <- mask(raster(rainfall), species_raster)
-# gc()
-
-################################################################################
          ###### Maps of primary vs secondary consumers #########
 
 # # Primary and secondary sexual selection.
