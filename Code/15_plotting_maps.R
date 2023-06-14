@@ -46,6 +46,11 @@ rm(new_jetz_ranges)
 raster_template <- raster(ncols=8640, nrows=3600, ymn = -60)
 #raster_template <- raster(ncols=17280, nrows=7200, ymn = -60)
 
+# Code for figuring out the resolution.
+
+# library(terra)
+# distance(cbind(0,-21), cbind(0,-21.04166667), lonlat=TRUE)
+
 # Create a map of species richness by summing overlapping ranges.
 species_raster <- fasterize(sex_ranges, raster_template, fun = "sum")
 
