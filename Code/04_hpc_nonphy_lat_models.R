@@ -167,3 +167,41 @@ saveRDS(centered_terr_secondary_model, "Results/Models/Nonphy_models/Latitude/ce
 saveRDS(centered_yearterr_secondary_model, "Results/Models/Nonphy_models/Latitude/centered_yearterr_secondary_model.rds")
 
 
+
+###############################################################################
+         #### Run extended data models for territory + migration ####
+
+
+# Filter for eco roles.
+mig_data <- model_data %>% filter(migration_binary == "Strong")
+no_mig_data <- model_data %>% filter(migration_binary == "Weak")
+terr_data <- model_data %>% filter(territory_binary == "Territory")
+no_terr_data <- model_data %>% filter(territory_binary == "No territory")
+
+# Run the models.
+mig_model <- lat_brms_model(data_set = mig_data)
+no_mig_model <- lat_brms_model(data_set = no_mig_data)
+terr_model <- lat_brms_model(data_set = terr_data)
+no_terr_model <- lat_brms_model(data_set = no_terr_data)
+
+# Export the models.
+saveRDS(mig_model, "Results/Models/Nonphy_models/Latitude/mig_model.rds")
+saveRDS(no_mig_model, "Results/Models/Nonphy_models/Latitude/no_mig_model.rds")
+saveRDS(terr_model, "Results/Models/Nonphy_models/Latitude/terr_model.rds")
+saveRDS(no_terr_model, "Results/Models/Nonphy_models/Latitude/no_terr_model.rds")
+
+# Run the models with standardised predictors.
+
+mig_model <- lat_brms_model(data_set = mig_data, predictor = "centroid_z")
+no_mig_model <- lat_brms_model(data_set = no_mig_data, predictor = "centroid_z")
+terr_model <- lat_brms_model(data_set = terr_data, predictor = "centroid_z")
+no_terr_model <- lat_brms_model(data_set = no_terr_data, predictor = "centroid_z")
+
+# Export the models.
+saveRDS(mig_model, "Results/Models/Nonphy_models/Latitude/centered_mig_model.rds")
+saveRDS(no_mig_model, "Results/Models/Nonphy_models/Latitude/centered_no_mig_model.rds")
+saveRDS(terr_model, "Results/Models/Nonphy_models/Latitude/centered_terr_model.rds")
+saveRDS(no_terr_model, "Results/Models/Nonphy_models/Latitude/centered_no_terr_model.rds")
+
+
+
