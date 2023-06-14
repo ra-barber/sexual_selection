@@ -235,11 +235,11 @@ brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreak
     ylab(ylabel) +
     xlab("Latitude") + theme_classic(base_size = 25) + 
     theme(legend.position = "none", 
-          text = element_text(face = "bold"),
+          #text = element_text(face = "bold"),
           axis.title.y = element_text(size = rel(0.85)),
           axis.title.x = element_text(size = rel(0.85)),
           plot.margin = margin(t = 1, l = 0.2, b = 0.2, r =0.3, unit = "cm")) + 
-    annotate("text", x = lab_x_pos, y =lab_ypos, label = stats_label, size = 7, fontface = 2) +
+    annotate("text", x = lab_x_pos, y =lab_ypos, label = stats_label, size = 7) + # fontface = 2) +
     annotate("text", x = 0, y = ylimits[2], label = plot_label, size = 12, fontface = 2) + 
     geom_line(data = predictions, aes(x = abs_lat, y = (estimate__)), linetype = "dashed", linewidth = 1)
 }
@@ -355,46 +355,42 @@ sec_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_binary == "S
 
 # Read in models using raw data.
 mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/mig_model.rds")
-no_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/non_mig_model.rds")
+no_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/no_mig_model.rds")
 terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/terr_model.rds")
-no_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/non_terr_model.rds")
+no_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/no_terr_model.rds")
 
 # Read in centered models.
 centered_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_mig_model.rds")
-centered_no_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_non_mig_model.rds")
+centered_no_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_no_mig_model.rds")
 centered_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_terr_model.rds")
-centered_no_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_non_terr_model.rds")
+centered_no_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_no_terr_model.rds")
 
 
-
-# Sexual lat gradient for high data certainty.
+# Make the side plots.
 mig_lat_plot <- mig_lat_data %>% filter(migration_binary == "Strong") %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                     ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.0, lab_x_pos = 35, plot_label = "b",
                      plot_model = mig_model, stats_model = centered_mig_model,
                      sex_score = TRUE)
 
 no_mig_lat_plot <- mig_lat_data %>% filter(migration_binary == "Weak") %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                     ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.0, lab_x_pos = 35, plot_label = "d",
                      plot_model = no_mig_model, stats_model = centered_no_mig_model,
                      sex_score = TRUE)
 
 
-terr_lat_plot <- mig_lat_data %>% filter(migration_binary == "Territory") %>% 
-  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                     ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+terr_lat_plot <- terr_lat_data %>% filter(territory_binary == "Territory") %>% 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.5), 
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 0.6, lab_x_pos = 10, plot_label = "b",
                      plot_model = terr_model, stats_model = centered_terr_model,
                      sex_score = TRUE)
 
-no_terr_lat_plot <- mig_lat_data %>% filter(migration_binary == "No territory") %>% 
-  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                     ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+no_terr_lat_plot <- terr_lat_data %>% filter(territory_binary == "No territory") %>% 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.5), 
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 0.6, lab_x_pos = 10, plot_label = "d",
                      plot_model = no_terr_model, stats_model = centered_no_terr_model,
                      sex_score = TRUE)
-
-
-
 
 
 # Export the plots.
