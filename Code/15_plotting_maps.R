@@ -121,8 +121,6 @@ gc()
 # Load in the side plots.
 load("Plots/Maps/latitudinal_sideplots.Rdata")
 
-#source("Code/12_nonphy_sideplots.R")    # For now just read in the models and then run the code.
-
 # Create data frame of land to use to crop ggplot maps.
 land_data <- as.data.frame(land, xy=TRUE)
 
@@ -186,28 +184,12 @@ ggsave("Plots/Maps/figure_4.pdf", height = 20, width = 15, dpi = 900)
           #### Plot data certainty supplementary figure ####
 
 # Show high certainty sexual selection maps.
-h_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 4", plot_label = "a")
-# h_sex_plot <- ggplot_raster(h_sex_raster, 6, "Sexual selection") +
-#   annotate("text", x = 20, y = -48, label  = "Certainty 1", size = 8, fontface = 2) +
-#   annotate("text", x = -170, y = 80, label  = "a", size = 12, fontface = 2)
-m_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 3 & 4", plot_label = "c")
-
-# m_sex_plot <- ggplot_raster(m_sex_raster, 6, "Sexual selection") + 
-#   annotate("text", x = 30, y = -48, label  = "Certainty 1 & 2", size = 8, fontface = 2) +
-#   annotate("text", x = -170, y = 80, label  = "c", size = 12, fontface = 2)
-# And side plots.
-# hi_sex_lat_plot <- hi_lat_data  %>% 
-#   lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
-#                 ybreaks =  c(0,1.0, 2.0), lab_ypos = 1.9) + 
-#   annotate("text", x = 0, y = 2, label = "b", size = 12, fontface = 2)
-# med_sex_lat_plot <- med_lat_data  %>% 
-#     lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1), 
-#                   ybreaks =  c(0,0.5,1.0), lab_ypos = 0.1) + 
-#     annotate("text", x = 0, y = 1, label = "d", size = 12, fontface = 2)
+m_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 3 & 4", plot_label = "a")
+h_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 4", plot_label = "c")
 
 # Arrange maps together.
-cert_side_plots <- ggarrange(hi_sex_lat_plot + rremove("xlab") + rremove("x.text"), 
-                             med_sex_lat_plot, nrow = 2, ncol = 1, heights = c(1,1.2))
+cert_side_plots <- ggarrange(med_sex_lat_plot + rremove("xlab") + rremove("x.text"), 
+                             hi_sex_lat_plot, nrow = 2, ncol = 1, heights = c(1,1.2))
 cert_maps <- ggarrange(blank_plot, h_sex_plot, m_sex_plot, blank_plot, nrow = 4, ncol = 1,
                        heights = c(0.1,1,1,0.1))
 cert_both_plots <- ggarrange(cert_maps, cert_side_plots, ncol = 2, widths = c(3,1.535)) +
@@ -218,11 +200,6 @@ ggsave("Plots/Maps/figure_S1.png", height = 10, width = 15, dpi = 600)
 ggsave("Plots/Maps/figure_S1.pdf", height = 10, width = 15, dpi = 600)
 
 
-
-
-# Species richness of 3 and 4 cert species.
-l_cert_sr_plot <- ggplot_raster(l_species_raster, 6, "Species Richness")# +
-ggsave("Plots/Maps/low_cert_SR_map.png", height = 7, width = 15, dpi = 1000)
 
 
 ###############################################################################
@@ -237,37 +214,6 @@ p_year_terr_plot <- ggplot_terr_raster(p_year_terr_raster, 6, "") +
   annotate("text", x =  -170, y = 80, label  = "c", size = 12, fontface = 2)
 s_terr_plot <- panel_ggplot_raster(s_terr_raster, plot_title = expression(bold("2"^ry*" consumers")), plot_label = "e")
 s_year_terr_plot <- panel_ggplot_raster(s_year_terr_raster, plot_title = expression(bold("2"^ry*" consumers")), plot_label = "g")
-
-# p_terr_plot <- ggplot_raster(p_terr_raster, 6, "")  +
-#   annotate("text", x = 20, y = -48, label  = "Primary consumers", size = 8, fontface = 2) +
-#   annotate("text", x = -170, y = 80, label  = "a", size = 12, fontface = 2)
-# p_year_terr_plot <- ggplot_terr_raster(p_year_terr_raster, 6, "") +
-#   annotate("text", x = 20, y = -48, label  = "Primary consumers", size = 8, fontface = 2)+
-#   annotate("text", x =  -170, y = 80, label  = "c", size = 12, fontface = 2)
-# s_terr_plot <- ggplot_raster(s_terr_raster, 6, "") +
-#   annotate("text", x = 20, y = -48, label  = "Secondary consumers", size = 8, fontface = 2)+
-#   annotate("text", x =  -170, y = 80, label  = "e", size = 12, fontface = 2)
-# s_year_terr_plot <- ggplot_raster(s_year_terr_raster, 6, "") +
-#   annotate("text", x = 20, y = -48, label  = "Secondary consumers", size = 8, fontface = 2)+
-#   annotate("text", x =  -170, y = 80, label  = "g", size = 12, fontface = 2)
-
-# Territoriality side plots.
-# pri_terr_lat_plot <- terr_diet_lat_data %>% filter(trophic_binary == "Primary") %>% 
-#   lat_side_plot(ylabel = "Proportion of species", lab_ypos = 0.9) + 
-#   annotate("text", x = 0, y = 1.05, label = "b", size = 12, fontface = 2) + 
-#   annotate("text", x = 35, y = 1.05, label = "Territorial", size = 7, fontface = 2)
-# pri_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_binary == "Primary") %>% 
-#   lat_side_plot(ylabel = "Proportion of species", lab_ypos = 0.9) + 
-#   annotate("text", x = 0, y = 1.05, label = "d", size = 12, fontface = 2) + 
-#   annotate("text", x = 35, y = 1.05, label = "Year-round territorial", size = 7, fontface = 2)
-# sec_terr_lat_plot <- terr_diet_lat_data %>% filter(trophic_binary == "Secondary") %>% 
-#   lat_side_plot(ylabel = "Proportion of species", lab_ypos = 0.9) + 
-#   annotate("text", x = 0, y = 1.05, label = "f", size = 12, fontface = 2) + 
-#   annotate("text", x = 35, y = 1.05, label = "Territorial", size = 7, fontface = 2)
-# sec_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_binary == "Secondary") %>% 
-#   lat_side_plot(ylabel = "Proportion of species", lab_ypos = 0.9) + 
-#   annotate("text", x = 0, y = 1.05, label = "h", size = 12, fontface = 2) + 
-#   annotate("text", x = 35, y = 1.05, label = "Year-round territorial", size = 7, fontface = 2)
 
 # Arrange side plots and maps.
 terr_side_plots <- ggarrange(pri_terr_lat_plot + rremove("xlab") + rremove("x.text"), 
