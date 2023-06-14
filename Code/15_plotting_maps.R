@@ -73,13 +73,6 @@ plot(species_raster, col=heat.colors(50))
 
 # Create sexual selection ranges with trait data.
 sex_raster <- average_raster("sexual_score")
-
-# Plot the raster.
-#plot(sex_raster)
-
-# Sex tri groups 0-2 ss scores into a single score, but keeps lekking seperate.
-#sex_tri_raster <- average_raster("sexual_tri")
-
 cert_raster <- average_raster("cert_reverse")  # Only one we actually need.
 gc()
 
@@ -98,13 +91,6 @@ s_terr_raster <- sex_ranges %>% filter(trophic_binary == "Secondary") %>% averag
 # Primary and secondary sexual selection.
 p_year_terr_raster <- sex_ranges %>% filter(trophic_binary == "Primary") %>% average_raster_2(var_name = "year_terr_dummy")
 s_year_terr_raster <- sex_ranges %>% filter(trophic_binary == "Secondary") %>% average_raster_2(var_name = "year_terr_dummy")
-
-################################################################################
-      ###### Maps of frugivore and nectarivore species #########
-# 
-# frug_nect_sex_raster <- sex_ranges %>% filter(diet_binary == "Frug-nect") %>% average_raster_2()
-# plot(frug_nect_sex_raster)
-
 gc()
 
 ################################################################################
@@ -113,17 +99,9 @@ gc()
 
 fruit_sex_raster <- sex_ranges %>% filter(trophic_niche == "Frugivore") %>% average_raster_2()
 invert_sex_raster <- sex_ranges %>% filter(trophic_niche == "Invertivore") %>% average_raster_2()
-
-#nect_sex_raster <- sex_ranges %>% filter(trophic_niche == "Nectarivore") %>% average_raster_2()
-#gran_sex_raster <- sex_ranges %>% filter(trophic_niche == "Granivore") %>% average_raster_2()
-#herbivores <- c("Herbivore aquatic", "Herbivore terrestrial")
-#herb_sex_raster <- sex_ranges %>% filter(trophic_niche %in% herbivores) %>% average_raster_2()
 gc()
 
-# Without removing species.
-#nect_sex_raster <- sex_ranges %>% filter(trophic_niche == "Nectarivore") %>% average_raster_3()
 
-#plot(nect_sex_plot)
 
 ################################################################################
             ###### Maps of high certainty species #########
@@ -131,21 +109,7 @@ gc()
 
 h_sex_raster <- sex_ranges %>% filter(sexual_certainty == 1) %>% average_raster_2()
 m_sex_raster <- sex_ranges %>% filter(sexual_certainty < 3) %>% average_raster_2()
-#l_sex_raster <- sex_ranges %>% filter(sexual_certainty > 2) %>% average_raster_2()
 gc()
-
-
-################################################################################
-
-# Pull out those socially monogamous species.
-# mono_sex_raster <- sex_ranges %>% filter(sexual_score < 3) %>% average_raster_2()
-# 
-# # Make a binary sexual selection map.
-# sex_bin_raster <- average_raster("sexual_binary")
-# 
-# # Plot new rasters.
-# plot(mono_sex_raster)
-# plot(sex_bin_raster)
 
 # Remove big objects.
 rm(sex_ranges)
