@@ -37,6 +37,10 @@ high_data <- model_data %>% filter(sexual_certainty < 3)
 # Read in a tree.
 tree <- read.tree("Data/Trees/prum_trees.tre")[[1]]
 
+# Read in clements data.
+clements_data <- readxl::read_xlsx("Data/Clements_conversion/clements_ss_scores_12_06.xlsx")
+clements_data$sexual_score %<>% as.numeric()
+clements_data %<>% tidyr::drop_na(sexual_score)
 
 ###############################################################################
                     #### Transform data as usual ####
@@ -125,49 +129,284 @@ counts[3,2]/9989
 counts[4,2]/9989
 counts[5,2]/9989
 
-full_data %>% filter(trophic_niche == "Invertivore") %>% count(sexual_score)
-
 ###############################################################################
              #### Plot sexual selection scores barchat ####
 
 # Create a palette to match bin length.
 pal <- c('#3B9AB2', '#78B7C5', '#EBCC2A', '#E1AF00', '#F21A00')
 
-full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
-  xlab("Sexual selection") + ylab("Species count") +
-  #ylim(0, 8500) +
-  geom_bar() +  scale_fill_manual(values = pal) + 
-  theme_classic() + theme(legend.position = "none")
-full_data %>% filter(trophic_niche == "Frugivore") %>%  
-  ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
-  xlab("Sexual selection") + ylab("Species count") +
-  #ylim(0, 8500) +
-  geom_bar() +  scale_fill_manual(values = pal) + 
-  theme_classic() + theme(legend.position = "none")
-full_data %>% filter(trophic_niche == "Invertivore") %>% 
-  ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
-  xlab("Sexual selection") + ylab("Species count") +
-  #ylim(0, 8500) +
-  geom_bar() +  scale_fill_manual(values = pal) + 
-  theme_classic() + theme(legend.position = "none")
+ss_barplot <- function(dataset = full_data){
+  dataset %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) +
+    geom_bar() +  scale_fill_manual(values = pal) + 
+    theme_classic(base_size = 20) + 
+    theme(legend.position = "none",
+          line = element_line(linewidth = 0.5))
+}
 
+fruit_data <- full_data %>% filter(trophic_niche == "Frugivore")
+invert_data <- full_data %>% filter(trophic_niche == "Invertivore")
+
+jetz_y <- full_data %>% count(sexual_score) %>% pull(n) %>% max()
+clements_y <- clements_data %>% count(sexual_score) %>% pull(n) %>% max()
+fruit_y <- fruit_data %>% count(sexual_score) %>% pull(n) %>% max()
+invert_y <- invert_data %>% count(sexual_score) %>% pull(n) %>% max()
+
+# Create basic bar plots of varied zoom.
+jetz_plot <- full_data %>% ss_barplot() + scale_y_continuous(limits = c(0,jetz_y*1.1)) +
+  ylab("Species count")  + 
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.title.y = element_text(vjust = 1.5))
+
+clements_plot <- clements_data %>% ss_barplot() + scale_y_continuous(limits = c(0,clements_y*1.1), breaks = c(2500,5000,7500)) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_blank())
+
+fruit_plot <- full_data %>% filter(trophic_niche == "Frugivore") %>%  
+  ss_barplot() + xlab("Sexual selection") + ylab("Species count") +
+  scale_y_continuous(limits = c(0, fruit_y*1.1), breaks = c(0, 250, 500, 700), labels = c("0", "  250", "  500", "  750")) + 
+  theme(axis.title.y = element_text(vjust = 1.5))
+
+invert_plot <- full_data %>% filter(trophic_niche == "Invertivore") %>% 
+  ss_barplot() + scale_y_continuous(limits = c(0,invert_y*1.1)) +
+  xlab("Sexual selection") + theme(axis.title.y = element_blank())
+
+# Arrange the basic plots together.
+combined_barplots <- ggarrange(jetz_plot + annotate("text", x = -0.3, y = jetz_y*1.1, label = "a", size = 10, fontface = 2), 
+                               clements_plot  + annotate("text", x = -0.3, y = clements_y*1.1, label = "b", size = 10, fontface = 2),
+                               fruit_plot + annotate("text", x = -0.3, y = fruit_y*1.1, label = "c", size = 10, fontface = 2), 
+                               invert_plot  +  annotate("text", x = -0.3, y = invert_y*1.1, label = "d", size = 10, fontface = 2), ncol = 2, nrow = 2)
+
+ggsave("Plots/Data/simple_scores.pdf", width = 8, height = 8, device = cairo_pdf)
+ggsave("Plots/Data/simple_scores.tiff", width = 8, height = 8)
+
+# Create zoomed facets for easier displays.
+jetz_facet <- full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("") + ylab("") +
+  coord_cartesian(ylim = c(0,750)) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  theme_classic(base_size = 16) + 
+  theme(legend.position = "none", axis.title = element_blank(), axis.text.x = element_blank(), line = element_line(linewidth = 0.5))
+
+clements_factet <- clements_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("") + ylab("") +
+  coord_cartesian(ylim = c(0,750)) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  theme_classic(base_size = 16) + theme(legend.position = "none", axis.title = element_blank(), axis.text.x = element_blank(), line = element_line(linewidth = 0.5))
+
+fruit_factet <- full_data %>% filter(trophic_niche == "Frugivore") %>%  
+  ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("") + ylab("") +
+  coord_cartesian(ylim = c(0,100)) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  theme_classic(base_size = 16) + theme(legend.position = "none", axis.title = element_blank(), axis.text.x = element_blank(), line = element_line(linewidth = 0.5))
+
+invert_factet <- full_data %>% filter(trophic_niche == "Invertivore") %>% 
+  ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
+  xlab("") + ylab("") +
+  coord_cartesian(ylim = c(0,250)) +
+  geom_bar() +  scale_fill_manual(values = pal) + 
+  theme_classic(base_size = 16) + theme(legend.position = "none", axis.title = element_blank(), axis.text.x = element_blank(), line = element_line(linewidth = 0.5))
+
+
+jetz_both <- jetz_plot + annotation_custom(ggplotGrob(jetz_facet), xmin = 1, xmax = 4.5, 
+                       ymin = jetz_y*0.5, ymax = jetz_y*1.1) +
+  annotate("text", x = -0.3, y = jetz_y*1.1, label = "a", size = 10, fontface = 2)
+
+clements_both <- clements_plot + annotation_custom(ggplotGrob(clements_factet), xmin = 1, xmax = 4.5, 
+                                                   ymin = clements_y*0.5, ymax = clements_y*1.1) +
+  annotate("text", x = -0.3, y = clements_y*1.1, label = "b", size = 10, fontface = 2)
+
+fruit_both <- fruit_plot + annotation_custom(ggplotGrob(fruit_factet), xmin = 1, xmax = 4.5, 
+                                             ymin = fruit_y*0.5, ymax = fruit_y*1.1) +
+  annotate("text", x = -0.3, y = fruit_y*1.1, label = "c", size = 10, fontface = 2)
+
+invert_both <- invert_plot + annotation_custom(ggplotGrob(invert_factet), xmin = 1, xmax = 4.5, 
+                                               ymin = invert_y*0.5, ymax = invert_y*1.1) +
+  annotate("text", x = -0.3, y = invert_y*1.1, label = "d", size = 10, fontface = 2)
+
+# Arrange new plots with facets.
+ggarrange(jetz_both, clements_both, fruit_both, invert_both, 
+          ncol = 2, nrow = 2, widths = c(1.1,1), heights = c(1,1.2))
+
+ggsave("Plots/Data/sexual_selection_scores.pdf", width = 8, height = 8, device = cairo_pdf)
+ggsave("Plots/Data/sexual_selection_scores.tiff", width = 8, height = 8)
+
+
+
+###############################################################################
+               #### Do it with splits in the y axis ####
 
 library(ggbreak)
+
+jetz_plot <- full_data %>% ss_barplot() + scale_y_continuous(limits = c(0,jetz_y*1.1)) +
+  ylab("Species count")  + 
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.title.y = element_text(vjust = 1.5)) +
+  scale_y_break(c(jetz_y*0.1, jetz_y*0.5), scales = "free", ticklabels = c(4000, 5000, 6000, 7000, 8000)) + 
+  theme(axis.text.y.right = element_blank(),
+        axis.ticks.y.right  = element_blank(),
+        axis.line.y.right  = element_blank())
+
+clements_plot <- clements_data %>% ss_barplot() + scale_y_continuous(limits = c(0,clements_y*1.1), breaks = c(0, 200, 400, 600, 800)) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_blank()) +
+scale_y_break(c(clements_y*0.1, clements_y*0.5), scales = "free", ticklabels = c(4000, 5000, 6000, 7000, 8000)) + 
+  theme(axis.text.y.right = element_blank(),
+        axis.ticks.y.right  = element_blank(),
+        axis.line.y.right  = element_blank())
+
+
+fruit_plot <- full_data %>% filter(trophic_niche == "Frugivore") %>%  
+  ss_barplot() + xlab("Sexual selection") + ylab("Species count") +
+  scale_y_continuous(limits = c(0, fruit_y*1.1), breaks = c(0, 25, 50, 75), labels = c("0", "  25", "  50", "  75")) + 
+  theme(axis.title.y = element_text(vjust = 1.5)) +
+scale_y_break(c(fruit_y*0.1, fruit_y*0.5), scales = "free", ticklabels = c(500, 600, 700, 800)) + 
+  theme(axis.text.y.right = element_blank(),
+        axis.ticks.y.right  = element_blank(),
+        axis.line.y.right  = element_blank())
+fruit_plot
+
+invert_plot <- full_data %>% filter(trophic_niche == "Invertivore") %>% 
+  ss_barplot() + scale_y_continuous(limits = c(0,invert_y*1.1)) +
+  xlab("Sexual selection") + theme(axis.title.y = element_blank()) +
+scale_y_break(c(invert_y*0.1, invert_y*0.49), scales = "free", ticklabels = c(2000, 3000, 4000)) + 
+  theme(axis.text.y.right = element_blank(),
+        axis.ticks.y.right  = element_blank(),
+        axis.line.y.right  = element_blank())
+
+invert_plot
+
+# Arrange the basic plots together.
+combined_barplots <- ggarrange(print(jetz_plot + annotate("text", x = -0.3, y = jetz_y*1.1, label = "a", size = 10, fontface = 2)), 
+                                     print(clements_plot  + annotate("text", x = -0.3, y = clements_y*1.1, label = "b", size = 10, fontface = 2)),
+                                           print(fruit_plot + annotate("text", x = -0.3, y = fruit_y*1.1, label = "c", size = 10, fontface = 2)), 
+                                                 print(invert_plot  +  annotate("text", x = -0.3, y = invert_y*1.1, label = "d", size = 10, fontface = 2)), 
+                               ncol = 2, nrow = 2)
+
+
+ggsave("Plots/Data/example_broken_axis.pdf", width = 8, height = 8, device = cairo_pdf)
+ggsave("Plots/Data/sexual_selection_scores.tiff", width = 8, height = 8)
+
+
+###############################################################################
+                    #### Do it joes way ####
+
+
+jetz_plot <- full_data %>% ss_barplot() + scale_y_continuous(limits = c(0,jetz_y*1.1)) +
+  ylab("Species count")  + 
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.title.y = element_text(vjust = 1.5)) +
+  scale_y_break(c(1000, 5000), scales = "free", ticklabels = c(4000, 5000, 6000, 7000, 8000, 9000)) + ylim(0,10000) + 
+  theme(axis.text.y.right = element_blank(),
+        axis.ticks.y.right  = element_blank(),
+        axis.line.y.right  = element_blank())
+
+clements_plot <- clements_data %>% ss_barplot() + scale_y_continuous(limits = c(0,clements_y*1.1), breaks = c(0, 250, 500, 750, 1000)) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_blank()) +
+  scale_y_break(c(1000, 500), scales = "free", ticklabels = c(4000, 5000, 6000, 7000, 8000, 9000)) + ylim(0,10000) +
+  theme(axis.text.y.right = element_blank(),
+        axis.ticks.y.right  = element_blank(),
+        axis.line.y.right  = element_blank())
+
+
+fruit_plot <- fruit_data %>%  
+  ss_barplot() + xlab("Sexual selection") + ylab("Species count") +
+  scale_y_continuous(limits = c(0, 5500)) + #, breaks = c(0, 25, 50, 75), labels = c("0", "  25", "  50", "  75")) + 
+  theme(axis.title.y = element_text(vjust = 1.5)) +
+  #scale_y_break(c(250, 500), scales = "free", ticklabels = c(1000, 2000, 3000, 4000)) + 
+  scale_y_break(c(250, 500), scales = "free", ticklabels = c(500, 1500, 2500, 3500, 4500)) + 
+  theme(axis.text.y.right = element_blank(),
+        axis.ticks.y.right  = element_blank(),
+        axis.line.y.right  = element_blank())
+
+
+invert_plot <- full_data %>% filter(trophic_niche == "Invertivore") %>% 
+  ss_barplot() + scale_y_continuous(limits = c(0,5500)) +
+  xlab("Sexual selection") + theme(axis.title.y = element_blank()) +
+  scale_y_break(c(250, 500), scales = "free", ticklabels = c(500, 1500, 2500, 3500, 4500)) + 
+  theme(axis.text.y.right = element_blank(),
+        axis.ticks.y.right  = element_blank(),
+        axis.line.y.right  = element_blank())
+
+
+# Labels are 95% and 80% low than y lim.
+0.95*(5500-500) + 500
+0.8*(5500-500) + 500
+
+
+# Add the annotations. 
+jetz_anno <- jetz_plot + annotate("text", x = -0.3, y = 9750, label = "a", size = 10, fontface = 2) +
+  annotate("text", x = 3, y = 9000, label = "Taxonomy 1\nn = 9989", size = 7)
+
+clem_anno <- clements_plot  + annotate("text", x = -0.3, y = 9750, label = "b", size = 10, fontface = 2) +
+  annotate("text", x = 3, y = 9000, label = "Taxonomy 2\nn = 10671", size = 7)
+
+fruit_anno <- fruit_plot + annotate("text", x = -0.3, y = 5250, label = "c", size = 10, fontface = 2) +
+  annotate("text", x = 3, y = 4500, label = "Frugivores\nn = 1030", size = 7)
+
+invert_anno <- invert_plot  +  annotate("text", x = -0.3, y = 5250, label = "d", size = 10, fontface = 2) +
+  annotate("text", x = 3, y = 4500, label = "Invertivores\nn = 4780", size = 7)
+
+# Amaurospiza carrizalensis 
+ggarrange(print(jetz_anno), 
+          print(clem_anno),
+          print(fruit_anno), 
+          print(invert_anno), 
+          ncol = 2, nrow = 2, widths = c(1.1,1), heights = c(1, 1.1))
+
+# Export.
+ggsave("Plots/Data/extended_data_figure_1.pdf", width = 8, height = 8, device = cairo_pdf)
+ggsave("Plots/Data/extended_data_figure_1.tiff", width = 8, height = 8)
+
+?scale_y_break
+
+5000 - 10000
+500 - 5000
+4750/5000
+4000/5000
+
+
+
+4500*0.8
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+jetz_plot <- full_data %>% ss_barplot() + scale_y_log10()
+clements_plot <- clements_data %>% ss_barplot() + scale_y_log10()
+fruit_plot <- fruit_data %>% ss_barplot() + scale_y_log10()
+invert_plot <- invert_data %>% ss_barplot() + scale_y_log10()
+
+
+ggarrange(print(jetz_plot + annotate("text", x = -0.3, y = jetz_y*1.1, label = "a", size = 10, fontface = 2)), 
+          print(clements_plot  + annotate("text", x = -0.3, y = clements_y*1.1, label = "b", size = 10, fontface = 2)),
+          print(fruit_plot + annotate("text", x = -0.3, y = fruit_y*1.1, label = "c", size = 10, fontface = 2)), 
+          print(invert_plot  +  annotate("text", x = -0.3, y = invert_y*1.1, label = "d", size = 10, fontface = 2)), 
+          ncol = 2, nrow = 2)
+
+ggsave("Plots/Data/log_scale.pdf", width = 8, height = 8, device = cairo_pdf)
+ggsave("Plots/Data/log_scale.tiff", width = 8, height = 8)
+
+
+
+
 
 full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
   xlab("Sexual selection") + ylab("Species count") +
   ylim(0, 8500) +
   geom_bar() +  scale_fill_manual(values = pal) + 
-  scale_y_break(c(4500, 7000), scales = "fixed", ticklabels = c(7000, 8000)) +
+  scale_y_break(c(1000, 5000), scales = "free", ticklabels = c(5000, 6000, 7000, 8000)) +
   theme_classic() + theme(legend.position = "none",axis.text.y.right = element_blank(),
                                                           axis.ticks.y.right  = element_blank(),
                                                           axis.line.y.right  = element_blank())
                                                           
 library(ggforce)
-ggplot(df) + 
-  aes(x = b, y = a) +
-  geom_col() +
-  facet_zoom(ylim = c(0, 10))
 
 
 full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) + 
@@ -175,9 +414,10 @@ full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) +
   ylim(0, 8500) +
   geom_bar() +  scale_fill_manual(values = pal) + 
   theme_classic() + theme(legend.position = "none") +
-  facet_zoom(ylim = c(0, 1000), zoom.size = 1, show.area = FALSE, shrink = FALSE)
+  facet_zoom(ylim = c(0, 1000), zoom.size = 1, show.area = FALSE, 
+             shrink = FALSE)
 
-?scale_y_break
+
 
 ################################################################################
 
