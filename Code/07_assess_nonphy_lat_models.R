@@ -19,6 +19,9 @@ library(phytools)
 library(brms)
 library(graph4lg)
 
+# Clear the workspace.
+rm(list=ls())
+
 # Set the seed.
 set.seed(1993)
 
@@ -75,6 +78,12 @@ fruit_lat_data <- niche_lat_data %>% filter(trophic_niche == "Frugivore")
 fruit_lat_data[9,] <- list(40, "Frugivore", 0, 0, 0, 0, 0, 1) 
 fruit_lat_data[10,] <- list(45, "Frugivore", 0, 0, 0, 0, 0, 1)
 fruit_lat_data[11,] <- list(50, "Frugivore", 0, 0, 0, 0, 0, 1)
+
+# Do migration and territoriality for plots.
+mig_lat_data <- model_data %>% filter(binned_lat != 75) %>% 
+  group_by(binned_lat, migration_binary) %>% average_lat_bins()
+terr_lat_data <- model_data %>% filter(binned_lat != 75) %>% 
+  group_by(binned_lat, territory_binary) %>% average_lat_bins()
 
 # Do same for high and medium certainty.
 hi_lat_data <- model_data %>% filter(binned_lat != 75 & sexual_certainty == 1) %>% 
@@ -338,6 +347,55 @@ sec_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_binary == "S
                        ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "h",
                        plot_model = yearterr_secondary_model, stats_model = centered_yearterr_secondary_model,
                        sex_score = FALSE)
+
+
+################################################################################
+     #### Add side plots used in migration and territory plots ####
+
+
+# Read in models using raw data.
+mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/mig_model.rds")
+no_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/non_mig_model.rds")
+terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/terr_model.rds")
+no_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/non_terr_model.rds")
+
+# Read in centered models.
+centered_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_mig_model.rds")
+centered_no_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_non_mig_model.rds")
+centered_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_terr_model.rds")
+centered_no_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_non_terr_model.rds")
+
+
+
+# Sexual lat gradient for high data certainty.
+mig_lat_plot <- mig_lat_data %>% filter(migration_binary == "Strong") %>% 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
+                     ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+                     plot_model = mig_model, stats_model = centered_mig_model,
+                     sex_score = TRUE)
+
+no_mig_lat_plot <- mig_lat_data %>% filter(migration_binary == "Weak") %>% 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
+                     ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+                     plot_model = no_mig_model, stats_model = centered_no_mig_model,
+                     sex_score = TRUE)
+
+
+terr_lat_plot <- mig_lat_data %>% filter(migration_binary == "Territory") %>% 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
+                     ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+                     plot_model = terr_model, stats_model = centered_terr_model,
+                     sex_score = TRUE)
+
+no_terr_lat_plot <- mig_lat_data %>% filter(migration_binary == "No territory") %>% 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
+                     ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+                     plot_model = no_terr_model, stats_model = centered_no_terr_model,
+                     sex_score = TRUE)
+
+
+
+
 
 # Export the plots.
 save(list = ls(pattern =  "lat_plot"), file = "Plots/Maps/latitudinal_sideplots.Rdata")
