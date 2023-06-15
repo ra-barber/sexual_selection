@@ -111,6 +111,18 @@ h_sex_raster <- sex_ranges %>% filter(sexual_certainty == 1) %>% average_raster_
 m_sex_raster <- sex_ranges %>% filter(sexual_certainty < 3) %>% average_raster_2()
 gc()
 
+
+################################################################################
+       ###### Maps of migration and territorialty #########
+
+
+mig_sex_raster <- sex_ranges %>% filter(migration_binary == "Strong") %>% average_raster_2()
+no_mig_sex_raster <- sex_ranges %>% filter(migration_binary == "Weak") %>% average_raster_2()
+
+terr_sex_raster <- sex_ranges %>% filter(territory_binary == "Territory") %>% average_raster_2()
+no_terr_sex_raster <- sex_ranges %>% filter(territory_binary == "No territory") %>% average_raster_2()
+gc()
+
 # Remove big objects.
 rm(sex_ranges)
 gc()
@@ -175,8 +187,8 @@ niche_maps <- ggarrange(blank_plot, p_sex_plot, fruit_sex_plot,
 # Arrange together.
 niche_both_plots <- ggarrange(niche_maps, niche_side_plots, ncol = 2, widths = c(3,1.535)) +
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
-ggsave("Plots/Maps/figure_4.png", height = 20, width = 15, dpi = 900)
-ggsave("Plots/Maps/figure_4.pdf", height = 20, width = 15, dpi = 900)
+ggsave("Plots/Maps/figure_3.png", height = 20, width = 15, dpi = 900)
+ggsave("Plots/Maps/figure_3.pdf", height = 20, width = 15, dpi = 900)
 
 
 
@@ -184,13 +196,13 @@ ggsave("Plots/Maps/figure_4.pdf", height = 20, width = 15, dpi = 900)
           #### Plot data certainty supplementary figure ####
 
 # Show high certainty sexual selection maps.
-m_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 3 & 4", plot_label = "a")
+m_sex_plot <- panel_ggplot_raster(m_sex_raster, plot_title = "Certainty 3 & 4", plot_label = "a")
 h_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 4", plot_label = "c")
 
 # Arrange maps together.
 cert_side_plots <- ggarrange(med_sex_lat_plot + rremove("xlab") + rremove("x.text"), 
                              hi_sex_lat_plot, nrow = 2, ncol = 1, heights = c(1,1.2))
-cert_maps <- ggarrange(blank_plot, h_sex_plot, m_sex_plot, blank_plot, nrow = 4, ncol = 1,
+cert_maps <- ggarrange(blank_plot, m_sex_plot, h_sex_plot, blank_plot, nrow = 4, ncol = 1,
                        heights = c(0.1,1,1,0.1))
 cert_both_plots <- ggarrange(cert_maps, cert_side_plots, ncol = 2, widths = c(3,1.535)) +
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
@@ -229,6 +241,45 @@ terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 ggsave("Plots/Maps/territory_maps.png", height = 20, width = 15, dpi = 900)
 ggsave("Plots/Maps/territory_maps.pdf", height = 20, width = 15, dpi = 900)
+
+
+
+###############################################################################
+    #### Plot lat gradient for migration and territory partitions ####
+
+
+# Show high certainty sexual selection maps.
+mig_sex_plot <- panel_ggplot_raster(mig_sex_raster, plot_title = "Migrants (n = 901)", plot_label = "a")
+no_mig_sex_plot <- panel_ggplot_raster(no_mig_sex_raster, plot_title = "Non-migrants (n = 8935)", plot_label = "c")
+
+# Arrange maps together.
+mig_side_plots <- ggarrange(mig_lat_plot + rremove("xlab") + rremove("x.text"), 
+                             no_mig_lat_plot, nrow = 2, ncol = 1, heights = c(1,1.2))
+mig_maps <- ggarrange(blank_plot, mig_sex_plot, no_mig_sex_plot, blank_plot, nrow = 4, ncol = 1,
+                       heights = c(0.1,1,1,0.1))
+mig_both_plots <- ggarrange(mig_maps, mig_side_plots, ncol = 2, widths = c(3,1.535)) +
+  theme(plot.margin = margin(l = -0.3, unit = "cm"))
+
+# Export figure.
+ggsave("Plots/Maps/migration_maps.png", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/migration_maps.pdf", height = 10, width = 15, dpi = 600)
+
+# Show high certainty sexual selection maps.
+terr_sex_plot <- panel_ggplot_raster(terr_sex_raster, plot_title = "Territorial (n = 7261)", plot_label = "a")
+no_terr_sex_plot <- panel_ggplot_raster(no_terr_sex_raster, plot_title = "Non-territorial (n = 2575)", plot_label = "c")
+
+# Arrange maps together.
+terr_side_plots <- ggarrange(terr_lat_plot + rremove("xlab") + rremove("x.text"), 
+                            no_terr_lat_plot, nrow = 2, ncol = 1, heights = c(1,1.2))
+terr_maps <- ggarrange(blank_plot, terr_sex_plot, no_terr_sex_plot, blank_plot, nrow = 4, ncol = 1,
+                      heights = c(0.1,1,1,0.1))
+terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,1.535)) +
+  theme(plot.margin = margin(l = -0.3, unit = "cm"))
+
+# Export figure.
+ggsave("Plots/Maps/territory_sex_maps.png", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/territory_sex_maps.pdf", height = 10, width = 15, dpi = 600)
+
 
 
 
