@@ -18,6 +18,7 @@ library(ggpubr)
 library(phytools)
 library(brms)
 library(graph4lg)
+library(bayestestR)
 
 # Clear the workspace.
 rm(list=ls())
@@ -369,26 +370,26 @@ centered_no_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonph
 # Make the side plots.
 mig_lat_plot <- mig_lat_data %>% filter(migration_binary == "Strong") %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.0, lab_x_pos = 35, plot_label = "b",
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.1, lab_x_pos = 35, plot_label = "b",
                      plot_model = mig_model, stats_model = centered_mig_model,
                      sex_score = TRUE)
 
 no_mig_lat_plot <- mig_lat_data %>% filter(migration_binary == "Weak") %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.0, lab_x_pos = 35, plot_label = "d",
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.1, lab_x_pos = 35, plot_label = "d",
                      plot_model = no_mig_model, stats_model = centered_no_mig_model,
                      sex_score = TRUE)
 
 
 terr_lat_plot <- terr_lat_data %>% filter(territory_binary == "Territory") %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.5), 
-                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 0.6, lab_x_pos = 10, plot_label = "b",
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.3, lab_x_pos = 35, plot_label = "b",
                      plot_model = terr_model, stats_model = centered_terr_model,
                      sex_score = TRUE)
 
 no_terr_lat_plot <- terr_lat_data %>% filter(territory_binary == "No territory") %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.5), 
-                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 0.6, lab_x_pos = 10, plot_label = "d",
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.3, lab_x_pos = 35, plot_label = "d",
                      plot_model = no_terr_model, stats_model = centered_no_terr_model,
                      sex_score = TRUE)
 
