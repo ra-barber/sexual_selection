@@ -14,7 +14,6 @@ library(ggpubr)
 library(phytools)
 library(brms)
 library(graph4lg)
-library(chkptstanr)
 # library(posterior)
 # library(bayesplot)
 
@@ -29,7 +28,7 @@ rm(list=ls())
 
 # Get the array number from the job script.
 array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
-array_number <- 1
+array_number
 
 # Create types for hpc jobs.
 tree_number <- 1:10
