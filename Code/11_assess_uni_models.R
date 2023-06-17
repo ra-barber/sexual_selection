@@ -28,6 +28,36 @@ source("Code/functions.R")
 ###############################################################################
                     #### Read in the models #####
 
+
+# Read in the actual models. (This takes up loads of RAM)
+all_temp_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/temp_centered_all_models.rds")
+all_mig_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/mig_centered_all_models.rds")
+all_tro_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/tro_centered_all_models.rds")
+all_terr_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/terr_centered_all_models.rds")
+
+tic()
+temp_p_value <- pd_to_p(last(p_direction(all_temp_models)[,2]))
+mig_p_value <- pd_to_p(last(p_direction(all_temp_models)[,2]))
+tro_p_value <- pd_to_p(last(p_direction(all_tro_models)[,2]))
+terr_p_value <- pd_to_p(last(p_direction(all_terr_models)[,2]))
+toc()
+
+### Output ###
+# > temp_p_value
+# [1] 0
+# > mig_p_value
+# [1] 0
+# > tro_p_value
+# [1] 0.00725
+# > terr_p_value
+# [1] 0
+
+rm(all_temp_models, all_mig_models, all_tro_models, all_terr_models)
+
+###############################################################################
+          #### Read in the model data for plotting #####
+
+
 # First half of the pathway.
 first_half <- "Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/"
 list.files(first_half, pattern = "data")
@@ -43,26 +73,24 @@ terr_cen_all_data <- readRDS(paste0(first_half, "terr_centered_all_data.rds"))
 terr_uncen_all_data <- readRDS(paste0(first_half, "terr_uncentered_all_data.rds"))
 
 
+temp_cen_all_data[[3]]
+mig_cen_all_data[[3]]
+tro_cen_all_data[[3]]
+terr_cen_all_data[[3]]
+
 ## Reading in all models takes up too much RAM ## 
 
 # Read in the models using high data certainties.
-temp_cen_high_data <- readRDS(paste0(first_half, "temp_centered_high_data.rds"))
-temp_uncen_high_data <- readRDS(paste0(first_half, "temp_uncentered_high_data.rds"))
-mig_cen_high_data <- readRDS(paste0(first_half, "mig_centered_high_data.rds"))
-mig_uncen_high_data <- readRDS(paste0(first_half, "mig_uncentered_high_data.rds"))
-tro_cen_high_data <- readRDS(paste0(first_half, "tro_centered_high_data.rds"))
-tro_uncen_high_data <- readRDS(paste0(first_half, "tro_uncentered_high_data.rds"))
-terr_cen_high_data <- readRDS(paste0(first_half, "terr_centered_high_data.rds"))
-terr_uncen_high_data <- readRDS(paste0(first_half, "terr_uncentered_high_data.rds"))
-
-
-
-# all_temp_deets <- readRDS("Results/Models/Univariate/temp_model_data.rds")
-# all_mig_deets <- readRDS("Results/Models/Univariate/mig_model_data.rds")
-# all_tro_deets <- readRDS("Results/Models/Univariate/tro_model_data.rds")
-# all_terr_deets <- readRDS("Results/Models/Univariate/terr_model_data.rds")
-
-
+# temp_cen_high_data <- readRDS(paste0(first_half, "temp_centered_high_data.rds"))
+# temp_uncen_high_data <- readRDS(paste0(first_half, "temp_uncentered_high_data.rds"))
+# mig_cen_high_data <- readRDS(paste0(first_half, "mig_centered_high_data.rds"))
+# mig_uncen_high_data <- readRDS(paste0(first_half, "mig_uncentered_high_data.rds"))
+# tro_cen_high_data <- readRDS(paste0(first_half, "tro_centered_high_data.rds"))
+# tro_uncen_high_data <- readRDS(paste0(first_half, "tro_uncentered_high_data.rds"))
+# terr_cen_high_data <- readRDS(paste0(first_half, "terr_centered_high_data.rds"))
+# terr_uncen_high_data <- readRDS(paste0(first_half, "terr_uncentered_high_data.rds"))
+# 
+# 
 
 
 
@@ -92,6 +120,11 @@ write.csv(all_estimates, "Results/Tables/all_univariate_regression.csv", row.nam
 
 ###############################################################################
                 #### Prepare family level data #####
+
+# Read in model data.
+model_data <- read.csv("Data/sexual_traits.csv")
+model_data$tree_tip <- model_data$birdtree_name %>% str_replace(" ", "_")
+row.names(model_data) <- model_data$tree_tip
 
 # Read in clade function and assign.
 source("Code/clade_function.R")
@@ -145,33 +178,38 @@ names(prum_clade_colours) <- c("Palaeognathae", "Galloanserae", "Strisores",
                                "Coraciimorphae", "Australaves")
 
 
+
+
+
+
+
 # Change predictions back to same scale as original sex scores.
-all_temp_deets[[2]] %<>% 
+temp_uncen_all_data[[2]] %<>% 
   mutate(estimate__ = estimate__ - 1, lower__ = lower__ - 1, upper__ = upper__ - 1)
-all_mig_deets[[2]] %<>% 
+mig_uncen_all_data[[2]] %<>% 
   mutate(estimate__ = estimate__ - 1, lower__ = lower__ - 1, upper__ = upper__ - 1)
-all_tro_deets[[2]] %<>% 
+tro_uncen_all_data[[2]] %<>% 
   mutate(estimate__ = estimate__ - 1, lower__ = lower__ - 1, upper__ = upper__ - 1)
-all_terr_deets[[2]] %<>% 
+terr_uncen_all_data[[2]] %<>% 
   mutate(estimate__ = estimate__ - 1, lower__ = lower__ - 1, upper__ = upper__ - 1)
 
 # Estimate
-temp_estimate <- as.character(format(round(summary(all_temp_deets[[1]])$fixed[5,1], 2), nsmall = 2))
-mig_estimate <- as.character(format(round(summary(all_mig_deets[[1]])$fixed[5,1], 2), nsmall = 2))
-tro_estimate <- as.character(format(round(summary(all_tro_deets[[1]])$fixed[5,1], 2), nsmall = 2))
-terr_estimate <- as.character(format(round(summary(all_terr_deets[[1]])$fixed[5,1], 2), nsmall = 2))
+temp_estimate <- as.character(format(round(summary(temp_cen_all_data[[1]])$fixed[5,1], 2), nsmall = 2))
+mig_estimate <- as.character(format(round(summary(mig_cen_all_data[[1]])$fixed[5,1], 2), nsmall = 2))
+tro_estimate <- as.character(format(round(summary(tro_cen_all_data[[1]])$fixed[5,1], 2), nsmall = 2))
+terr_estimate <- as.character(format(round(summary(terr_cen_all_data[[1]])$fixed[5,1], 2), nsmall = 2))
 
 # Lower CI
-temp_lower <- as.character(format(round(summary(all_temp_deets[[1]])$fixed[5,3], 2), nsmall = 2))
-mig_lower <- as.character(format(round(summary(all_mig_deets[[1]])$fixed[5,3], 2), nsmall = 2))
-tro_lower <- as.character(format(round(summary(all_tro_deets[[1]])$fixed[5,3], 2), nsmall = 2))
-terr_lower <- as.character(format(round(summary(all_terr_deets[[1]])$fixed[5,3], 2), nsmall = 2))
+temp_lower <- as.character(format(round(summary(temp_cen_all_data[[1]])$fixed[5,3], 2), nsmall = 2))
+mig_lower <- as.character(format(round(summary(mig_cen_all_data[[1]])$fixed[5,3], 2), nsmall = 2))
+tro_lower <- as.character(format(round(summary(tro_cen_all_data[[1]])$fixed[5,3], 2), nsmall = 2))
+terr_lower <- as.character(format(round(summary(terr_cen_all_data[[1]])$fixed[5,3], 2), nsmall = 2))
 
 # Upper CI
-temp_upper <- as.character(format(round(summary(all_temp_deets[[1]])$fixed[5,4], 2), nsmall = 2))
-mig_upper <- as.character(format(round(summary(all_mig_deets[[1]])$fixed[5,4], 2), nsmall = 2))
-tro_upper <- as.character(format(round(summary(all_tro_deets[[1]])$fixed[5,4], 2), nsmall = 2))
-terr_upper <- as.character(format(round(summary(all_terr_deets[[1]])$fixed[5,4], 2), nsmall = 2))
+temp_upper <- as.character(format(round(summary(temp_cen_all_data[[1]])$fixed[5,4], 2), nsmall = 2))
+mig_upper <- as.character(format(round(summary(mig_cen_all_data[[1]])$fixed[5,4], 2), nsmall = 2))
+tro_upper <- as.character(format(round(summary(tro_cen_all_data[[1]])$fixed[5,4], 2), nsmall = 2))
+terr_upper <- as.character(format(round(summary(terr_cen_all_data[[1]])$fixed[5,4], 2), nsmall = 2))
 
 # Plot labels.
 temp_cor_label <- paste0("\U03B2 = ", temp_estimate, "\n[", temp_lower, ", ", temp_upper, "]")
@@ -179,6 +217,11 @@ mig_cor_label <- paste0("\U03B2 = ", mig_estimate, "\n[", mig_lower, ", ", mig_u
 tro_cor_label <- paste0("\U03B2 = ", tro_estimate, "\n[", tro_lower, ", ", tro_upper, "]")
 terr_cor_label <- paste0("\U03B2 = ", terr_estimate, "\n[", terr_lower, ", ", terr_upper, "]")
 
+# Use calculated p-values instead.
+temp_cor_label <- paste0("\U03B2 = ", temp_estimate, "\np < 0.001")
+mig_cor_label <- paste0("\U03B2 = ", mig_estimate, "\np < 0.001")
+tro_cor_label <- paste0("\U03B2 = ", tro_estimate, "\np < 0.01")
+terr_cor_label <- paste0("\U03B2 = ", terr_estimate, "\np < 0.001")
 
 
 ###############################################################################
@@ -198,7 +241,7 @@ point_settings <- list(geom_point(aes(group=higher_clade, colour = higher_clade,
                              axis.title = element_text(size = rel(0.8))))
 
 # Remove low predictions as family averages don't span as far as single species.
-temp_plot_predictions <- all_temp_deets[[2]] %>% filter(temp_log > 3.3)
+temp_plot_predictions <- temp_uncen_all_data[[2]] %>% filter(temp_log > 3.3)
 temp_plot_predictions <- temp_plot_predictions %>% filter(temp_log < 7.2)
 
 # Make some nice plots.
@@ -223,7 +266,7 @@ categorical_settings <- list(geom_point(aes(group=family, colour = higher_clade,
            position = position_jitter(0.2)),
   labs(x = "", y = NULL,  colour = "Clade"),
   scale_colour_manual(values = prum_clade_colours),
-  scale_y_continuous(breaks = c(0, 1, 2, 3, 4), limits = c(0,4.7)),
+  scale_y_continuous(breaks = c(0, 1, 2, 3, 4), limits = c(-0.1,4.7)),
   theme_classic(base_size = 20),
   theme(text = element_text(face = "bold"),
         legend.position = "none",
@@ -232,28 +275,33 @@ categorical_settings <- list(geom_point(aes(group=family, colour = higher_clade,
         axis.title.x = element_text(size = rel(0.8)),
         axis.title.y = element_text(size = rel(0.8))))
 
+
+
 # Migration plots.
 mig_plot <- migration_data %>% ggplot(aes(x=migration_binary, y=sexual_mean)) + 
   categorical_settings +
   scale_x_discrete(limits = c("Weak", "Strong"), labels = c("No", "Yes")) +
   xlab("Migration") +
-  geom_errorbar(data = all_mig_deets[[2]], inherit.aes = FALSE,
+  geom_errorbar(data = mig_uncen_all_data[[2]], inherit.aes = FALSE,
                 aes(x=migration_binary, ymin = lower__, 
                     ymax = upper__),
                 position = position_dodge(width = 1), show.legend = FALSE, width = 0.2, linewidth = 1) +
-  geom_point(data = all_mig_deets[[2]], inherit.aes = FALSE,
+  geom_point(data = mig_uncen_all_data[[2]], inherit.aes = FALSE,
              aes(x=migration_binary, y = estimate__), size = 3.6) + theme(axis.text.y = element_blank())
+
+
+
 
 # Trophic plots.
 tro_plot <- trophic_data %>% ggplot(aes(x=trophic_binary, y=sexual_mean)) + 
   categorical_settings +
   scale_x_discrete(limits = c("Primary", "Secondary"), labels = c("Primary", "Secondary")) +
   xlab("Trophic level") +
-  geom_errorbar(data = all_tro_deets[[2]], inherit.aes = FALSE,
+  geom_errorbar(data = tro_uncen_all_data[[2]], inherit.aes = FALSE,
                 aes(x=trophic_binary, ymin = lower__, 
                     ymax = upper__),
                 position = position_dodge(width = 1), show.legend = FALSE, width = 0.2, linewidth = 1) +
-  geom_point(data = all_tro_deets[[2]], inherit.aes = FALSE,
+  geom_point(data = tro_uncen_all_data[[2]], inherit.aes = FALSE,
              aes(x=trophic_binary, y = estimate__), size = 3.6)
 
 # Territory plots.
@@ -261,11 +309,11 @@ terr_plot <- teritory_data %>% ggplot(aes(x=territory_binary, y=sexual_mean)) +
   categorical_settings +
   scale_x_discrete(labels = c("No", "Yes")) +
   xlab("Territoriality") +
-  geom_errorbar(data = all_terr_deets[[2]], inherit.aes = FALSE,
+  geom_errorbar(data = terr_uncen_all_data[[2]], inherit.aes = FALSE,
                 aes(x=territory_binary, ymin = lower__, 
                     ymax = upper__),
                 position = position_dodge(width = 1), show.legend = FALSE, width = 0.2, linewidth = 1) +
-  geom_point(data = all_terr_deets[[2]], inherit.aes = FALSE,
+  geom_point(data = terr_uncen_all_data[[2]], inherit.aes = FALSE,
              aes(x=territory_binary, y = estimate__), size = 3.6) + theme(axis.text.y = element_blank())
 
 # Add labels.
@@ -301,7 +349,7 @@ point_settings <- list(geom_point(aes(group=higher_clade, colour = higher_clade,
                                       size = sqrt(clade_sum), alpha = sqrt(clade_sum))),
                        labs(x = "", y = NULL,  colour = "Clade"),
                        scale_colour_manual(values = prum_clade_colours),
-                       scale_y_continuous(breaks = c(0, 1, 2, 3, 4), limits = c(0,4.7)),
+                       scale_y_continuous(breaks = c(0, 1, 2, 3, 4), limits = c(-0.1,4.7)),
                        theme_classic(base_size = 24),
                        theme(legend.position = "none",
                              axis.line = element_line(size = 1),
@@ -314,7 +362,7 @@ categorical_settings <- list(geom_point(aes(group=family, colour = higher_clade,
                                         position = position_jitter(0.2)),
                              labs(x = "", y = NULL,  colour = "Clade"),
                              scale_colour_manual(values = prum_clade_colours),
-                             scale_y_continuous(breaks = c(0, 1, 2, 3, 4), limits = c(0,4.7)),
+                             scale_y_continuous(breaks = c(0, 1, 2, 3, 4), limits = c(-0.1,4.7)),
                              theme_classic(base_size = 24),
                              theme(legend.position = "none",
                                    axis.line = element_line(size = 1),
@@ -327,18 +375,19 @@ temp_plot <- family_average_data_data %>% ggplot(aes(x=temp_log, y=sexual_mean))
   xlab("Seasonality") + 
   geom_ribbon(data = temp_plot_predictions, inherit.aes = FALSE,
               aes(x = temp_log, ymin = lower__, ymax = upper__), fill = "grey70", colour = NA, alpha = 0.2) +
-  geom_line(data = temp_plot_predictions, aes(y = estimate__), linetype = "dashed", linewidth = 1)
+  geom_line(data = temp_plot_predictions, aes(y = estimate__), linetype = "dashed", linewidth = 1) + theme(axis.text.y = element_blank())
+
 
 # Migration plots.
 mig_plot <- migration_data %>% ggplot(aes(x=migration_binary, y=sexual_mean)) + 
   categorical_settings +
   scale_x_discrete(limits = c("Weak", "Strong"), labels = c("No", "Yes")) +
   xlab("Migration") +
-  geom_errorbar(data = all_mig_deets[[2]], inherit.aes = FALSE,
+  geom_errorbar(data = mig_uncen_all_data[[2]], inherit.aes = FALSE,
                 aes(x=migration_binary, ymin = lower__, 
                     ymax = upper__),
                 position = position_dodge(width = 1), show.legend = FALSE, width = 0.2, linewidth = 1) +
-  geom_point(data = all_mig_deets[[2]], inherit.aes = FALSE,
+  geom_point(data = mig_uncen_all_data[[2]], inherit.aes = FALSE,
              aes(x=migration_binary, y = estimate__), size = 3.6) + theme(axis.text.y = element_blank())
 
 # Trophic plots.
@@ -348,11 +397,11 @@ tro_plot <- trophic_data %>% ggplot(aes(x=trophic_binary, y=sexual_mean)) +
                    labels = c(expression("1"^ry*""), 
                               expression("2"^ry*""))) +
   xlab("Trophic level") +
-  geom_errorbar(data = all_tro_deets[[2]], inherit.aes = FALSE,
+  geom_errorbar(data = tro_uncen_all_data[[2]], inherit.aes = FALSE,
                 aes(x=trophic_binary, ymin = lower__, 
                     ymax = upper__),
                 position = position_dodge(width = 1), show.legend = FALSE, width = 0.2, linewidth = 1) +
-  geom_point(data = all_tro_deets[[2]], inherit.aes = FALSE,
+  geom_point(data = tro_uncen_all_data[[2]], inherit.aes = FALSE,
              aes(x=trophic_binary, y = estimate__), size = 3.6)
 
 # Territory plots.
@@ -360,12 +409,12 @@ terr_plot <- teritory_data %>% ggplot(aes(x=territory_binary, y=sexual_mean)) +
   categorical_settings +
   scale_x_discrete(labels = c("No", "Yes")) +
   xlab("Territoriality") +
-  geom_errorbar(data = all_terr_deets[[2]], inherit.aes = FALSE,
+  geom_errorbar(data = terr_uncen_all_data[[2]], inherit.aes = FALSE,
                 aes(x=territory_binary, ymin = lower__, 
                     ymax = upper__),
                 position = position_dodge(width = 1), show.legend = FALSE, width = 0.2, linewidth = 1) +
-  geom_point(data = all_terr_deets[[2]], inherit.aes = FALSE,
-             aes(x=territory_binary, y = estimate__), size = 3.6) + theme(axis.text.y = element_blank())
+  geom_point(data = terr_uncen_all_data[[2]], inherit.aes = FALSE,
+             aes(x=territory_binary, y = estimate__), size = 3.6) 
 
 
 # Non-bold version.
@@ -389,17 +438,36 @@ side_plots
 lab_x_pos_2 <- 0.6
 lab_y_pos_2 <- 4.6
 
-temp_plot <- temp_plot + annotate("text", x = temp_x_label_2, y = lab_y_pos_2, label = "b", size = 10, fontface = 2) 
-mig_plot <- mig_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "c", size = 10, fontface = 2) 
-tro_plot <- tro_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "d", size = 10, fontface = 2) 
-terr_plot <- terr_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "e", size = 10, fontface = 2) 
+# temp_plot <- temp_plot + annotate("text", x = temp_x_label_2, y = lab_y_pos_2, label = "b", size = 10, fontface = 2) 
+# mig_plot <- mig_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "c", size = 10, fontface = 2) 
+# tro_plot <- tro_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "d", size = 10, fontface = 2) 
+# terr_plot <- terr_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "e", size = 10, fontface = 2) 
+# 
+# side_plots <- ggarrange(temp_plot + ylab("Sexual selection"), 
+#                         mig_plot,
+#                         tro_plot + ylab("Sexual selection"), 
+#                         terr_plot, 
+#                         nrow = 2, ncol = 2, align = "h",
+#                         widths = c(1.2,1))
 
-side_plots <- ggarrange(temp_plot + ylab("Sexual selection"), 
+
+## Rearrange for joes order.
+
+tro_plot <- tro_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "b", size = 10, fontface = 2) 
+mig_plot <- mig_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "c", size = 10, fontface = 2) 
+terr_plot <- terr_plot + annotate("text", x = lab_x_pos_2, y = lab_y_pos_2, label = "d", size = 10, fontface = 2) 
+temp_plot <- temp_plot + annotate("text", x = temp_x_label_2, y = lab_y_pos_2, label = "e", size = 10, fontface = 2) 
+
+side_plots <- ggarrange(tro_plot + ylab("Sexual selection"), 
                         mig_plot,
-                        tro_plot + ylab("Sexual selection"), 
-                        terr_plot, 
+                        terr_plot + ylab("Sexual selection"), 
+                        temp_plot,
                         nrow = 2, ncol = 2, align = "h",
                         widths = c(1.2,1))
+side_plots
+
+
+
 side_plots
 
                             ######### END #########
