@@ -125,10 +125,10 @@ model_formula <- "sexual_score ~ terr_bi_c + migration_bi_c + trophic_level_c +
 trophic_level_c*temp_seasonality_z + trophic_level_c*terr_bi_c + (1|gr(tree_tip, cov=A))"
  
 # brms formula.
-brms_formula <- brmsformula(model_formula, family = cumulative(threshold = "equidistant"), decomp = "QR")
+brms_formula <- brmsformula(model_formula, family = cumulative(), decomp = "QR")
 
 # Simple models.
-model_pathway <- paste0("Results/Models/March/", data_type, "_", tree_number, ".rds") 
+model_pathway <- paste0("Results/Models/Multivariate/", data_type, "_", tree_number, ".rds") 
 
 #library(standist) ~ for visualising priors.
 # # Add un-informative priors.

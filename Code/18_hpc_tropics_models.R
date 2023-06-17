@@ -54,7 +54,7 @@ trop_brms_model <- function(data_set = model_data, response = "sexual_score",
   
   # Add the model family.
   if (family == "cumulative"){
-    brms_formula <- brmsformula(model_formula, family = cumulative(threshold = "equidistant"))
+    brms_formula <- brmsformula(model_formula, family = cumulative())
   } else {
     brms_formula <- brmsformula(model_formula, family = bernoulli())
   }

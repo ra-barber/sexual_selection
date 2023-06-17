@@ -28,14 +28,13 @@ array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
 array_number
 
 # Create types for hpc jobs.
-tree_number <- 1:50
+tree_number <- 1:10
 
 # Model (In order of size and therefore speed)
-model_type <- c("frugivore", "primary", "invertivore", "secondary", "all", 
-                "nectarivore", "frug_nect", "certainty")
+model_type <- c("frugivore", "primary", "invertivore", "secondary", "all", "certainty")
 
 # Centered or uncentered.
-center <- c("centered", "uncentered")
+center <- c("uncentered")
 
 # Set the data types.
 data_type <- c("all", "high")
@@ -147,7 +146,7 @@ if (model_type == "certainty"){
 
 
 # brms formula.
-brms_formula <- brmsformula(model_formula, family = cumulative(threshold = "equidistant"))
+brms_formula <- brmsformula(model_formula, family = cumulative())
 
 # Simple models.
 model_pathway <- paste0("Results/Models/Latitude/", model_type, "_", center, "_", data_type, "_", tree_number, ".rds") 
@@ -167,8 +166,8 @@ brms_model <- brm(
   data = model_data,
   data2 = list(A=model_covar),
   prior = normal_priors,
-  iter = 10000,
-  warmup = 5000,
+  iter = 2500,
+  warmup = 500,
   chains = 2,
   thin = 20,
   cores = 32,
