@@ -129,6 +129,34 @@ counts[3,2]/9989
 counts[4,2]/9989
 counts[5,2]/9989
 
+
+
+
+################################################################################
+    #### Calculate phylogenetic signal sexual selection scores #####
+
+model_data$tree_tip <- model_data$birdtree_name %>% str_replace(" ", "_")
+row.names(model_data) <- model_data$tree_tip
+
+sex_data <- model_data %>% select(tree_tip, sexual_binary)
+
+# Create a comparative object.
+sex_comp <- comparative.data(tree, sex_data, names.col = "tree_tip")
+
+tic()
+# Run the phylo D signal analysis for binary traits.
+phylo_signal_d <- phylo.d(data = sex_comp, binvar = sexual_binary)
+toc()
+# All species took 4978 seconds.
+
+# Return the phylo D analysis results.
+phylo_signal_d
+
+saveRDS(phylo_signal_d, "Results/Tables/phylo_d.rds")
+
+# Plot the result against expected models.
+plot(phylo_signal_d)
+
 ###############################################################################
              #### Plot sexual selection scores barchat ####
 
@@ -449,8 +477,6 @@ lat_variables <- model_data %>% dplyr::select(centroid_z, temp_seasonality_z,
  
 ggcorr(lat_variables, label = TRUE, method =c("everything","spearman"), label_round = 3)
 
-
-
 ###############################################################################
                        #### Check  VIF values ####
 
@@ -508,6 +534,11 @@ vif(test_model) %>% round(digits = 2)
 vif(test_model, type = "predictor")
 sqrt(3)
 
+
+test_model <- lm(model_formula, data = high_data)
+
+vif(test_model) %>% round(digits = 2)
+
 summary(test_model)
 
 model_data$tree_tip <- gsub(" ", "_", model_data$birdtree_name)
@@ -517,16 +548,59 @@ phylolm(model_formula, model_data, tree) %>% summary()
 
 
 ###############################################################################
-                           #### Section 4 ####
+                #### Spatial autocorrelation ####
 
-library(phylolm)
+library(spdep)
+library(rgeos)
+library(sp)
+library(sf)
 
+# Select data.
+just_sex_long_lat <- full_data %>% select(sexual_score, centroid_latitude, centroid_longitude)
+
+# Create binary trait.
+just_sex_long_lat$sexual_binary <- 0
+just_sex_long_lat$sexual_binary[just_sex_long_lat$sexual_score > 0] <- 1
+just_sex_long_lat %<>% na.omit()
+
+# Create a SpatialPoints object
+long_lat <- data.frame(lat = just_sex_long_lat$centroid_latitude, long = just_sex_long_lat$centroid_longitude)
+data_sf <- st_as_sf(long_lat, coords = c("long", "lat"),
+                    # Change to your CRS
+                    crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+coords <- st_coordinates(data_sf)
+sp_points <- SpatialPoints(coords)
+
+# Define the number of nearest neighbours
+k <- 5
+
+# Create a spatial weights object based on k nearest neighbors
+nb <- knn2nb(knearneigh(sp_points, k = k, longlat = TRUE))
+
+# Convert the spatial weights object to listw format
+w <- nb2listw(nb, style="B")
+
+# Generate random attribute values
+x <- just_sex_long_lat$sexual_binary %>% as.factor()
+x <- just_sex_long_lat$sexual_score %>% as.factor()
+just_sex_long_lat
+# Perform Monte Carlo simulation
+join_count <- joincount.mc(listw = w, fx = x, nsim = 999, alternative = "two.sided")
+
+# Simulated join count statistics
+join_count
+
+joincount.test(x, w)
+
+# Suggests significant autocorrelation.
 
 ###############################################################################
                            #### Section 5 ####
 
 ###############################################################################
                            #### Section 6 ####
+
+model_data %>% count(trophic_binary, territory)
 
 
 ###############################################################################
