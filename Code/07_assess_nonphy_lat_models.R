@@ -175,28 +175,28 @@ brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreak
   }
   
   # Estimate
-  estimate <- last(summary(stats_model)$fixed[,1])
+  estimate <- last(summary(plot_model)$fixed[,1])
   estimate <- as.character(format(round(estimate, 2), nsmall = 2))
   
   # Redo estimate if it's too small.
   if (estimate == "0.00"){
-    estimate <- last(summary(stats_model)$fixed[,1])
+    estimate <- last(summary(plot_model)$fixed[,1])
     estimate <- as.character(format(round(estimate, 3), nsmall = 3))
   }
   
   # Lower. 
-  lower <- last(summary(stats_model)$fixed[,3])
+  lower <- last(summary(plot_model)$fixed[,3])
   lower <- as.character(format(round(lower, 2), nsmall = 2))
   
   # Upper
-  upper <- last(summary(stats_model)$fixed[,4])
+  upper <- last(summary(plot_model)$fixed[,4])
   upper <- as.character(format(round(upper, 2), nsmall = 2))
   
   # Change size of CI.
   if (lower == "0.00" | upper == "0.00"){
-    lower <- last(summary(stats_model)$fixed[,3])
+    lower <- last(summary(plot_model)$fixed[,3])
     lower <- as.character(format(round(lower, 3), nsmall = 3))
-    upper <- last(summary(stats_model)$fixed[,4])
+    upper <- last(summary(plot_model)$fixed[,4])
     upper <- as.character(format(round(upper, 3), nsmall = 3))
   }
   
@@ -205,7 +205,7 @@ brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreak
   intervals <- paste0("[", lower, ", ", upper, "]")
   
   # # Extract p-values using probability of direction two-tailed test.
-  p_value <- pd_to_p(last(p_direction(stats_model)[,2]))
+  p_value <- pd_to_p(last(p_direction(plot_model)[,2]))
   
   # Change p value to a string, using standard thresholds. 
   if (p_value < 0.001 ){
@@ -397,5 +397,44 @@ no_terr_lat_plot <- terr_lat_data %>% filter(territory_binary == "No territory")
 # Export the plots.
 save(list = ls(pattern =  "lat_plot"), file = "Plots/Maps/latitudinal_sideplots.Rdata")
 gc()
+
+
+
+################################################################################
+
+
+## PP check 
+#allbirds_phy_model <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Latitude/all_centered_all_models.rds")
+
+pp_plot <- pp_check(allbirds_model)
+
+
+pp_plot  + scale_x_continuous(breaks = c(1,2,3,4,5), labels = c(0,1,2,3,4)) + 
+  theme_classic(base_size = 25) + 
+  theme(legend.position = c(0.75,0.75), 
+        legend.direction = "horizontal",
+        #text = element_text(face = "bold"),
+        axis.title.y = element_text(size = rel(0.85)),
+        axis.title.x = element_text(size = rel(0.85)),
+        plot.margin = margin(t = 1, l = 0.2, b = 0.2, r =0.3, unit = "cm"))
+
+ggsave("Plots/Diagnostics/all_birds_latitude_pp_check.png", width = 8, height = 8)
+ggsave("Plots/Diagnostics/all_birds_latitude_pp_check.pdf", width = 8, height = 8)
+
+
+phy_pp_plot <- pp_check(allbirds_phy_model)
+
+phy_pp_plot  + scale_x_continuous(breaks = c(1,2,3,4,5), labels = c(0,1,2,3,4)) + 
+  theme_classic(base_size = 25) + 
+  theme(legend.position = c(0.75,0.75), 
+        legend.direction = "horizontal",
+        #text = element_text(face = "bold"),
+        axis.title.y = element_text(size = rel(0.85)),
+        axis.title.x = element_text(size = rel(0.85)),
+        plot.margin = margin(t = 1, l = 0.2, b = 0.2, r =0.3, unit = "cm"))
+
+ggsave("Plots/Diagnostics/phy_all_birds_latitude_pp_check.png", width = 8, height = 8)
+ggsave("Plots/Diagnostics/phy_all_birds_latitude_pp_check.pdf", width = 8, height = 8)
+
 
 
