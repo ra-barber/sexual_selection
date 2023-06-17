@@ -46,8 +46,11 @@ plot(high_models)
 
 # Check the posterior distribution.
 pp_check(all_models)
+ggsave("Plots/Results/all_multivariate_ppcheck.pdf", width = 8, height = 5.5, device = cairo_pdf)
+ggsave("Plots/Results/all_multivariate_ppcheck.png", width = 8, height = 5.5)
 pp_check(high_models)
-
+ggsave("Plots/Results/high_multivariate_ppcheck.pdf", width = 8, height = 5.5, device = cairo_pdf)
+ggsave("Plots/Results/high_multivariate_ppcheck.png", width = 8, height = 5.5)
 
 ###############################################################################
                        #### Forest Plots #####
@@ -184,6 +187,10 @@ predictor_order <- c("Seasonality", "Migration", "Primary\nconsumer", "Territori
 predictor_order <- c("Seasonality", "Migration", "1ry consumer", "Territoriality",
                      "1ry consumer\nx seasonality",
                      "1ry consumer\nx territoriality")
+
+predictor_order <- c("1ry consumer", "Migration", "Territoriality","Seasonality",
+                     "1ry consumer\nx territoriality", "1ry consumer\nx seasonality")
+
 # predictor_order <- c("Seasonality", "Migration", "expression(bold("1"^ry*"")) consumer", "Territoriality",
 #                      "expression(bold("1"^ry*"")) consumer\nx seasonality",
 #                      "expression(bold("1"^ry*"")) consumer\nx territoriality")
@@ -264,10 +271,10 @@ dark_colours <- c("#214F4B", "#05299E", "#8D0801","#A88A05")
 light_colours <- c("#7494EA",  "#77AD78", "#C98986", "#D8C77B")   #F7D460   #F6CE5F
 
 light_colours <- c( "#C98986",  "#77AD78", "#7494EA", "#D8C77B")   #F7D460   #F6CE5F
-
+light_colours <- c("#77AD78", "#C98986", "#7494EA", "#D8C77B") 
 dark_colours <- c( "#05299E","#214F4B", "#8D0801","#A88A05")
 
-legend_order <- c( "Environment", "Life history","Diet interaction", "Devlopment interaction")
+legend_order <- c(  "Life history","Environment","Diet interaction", "Devlopment interaction")
 
 y_axis_labs <- rev(expression("Territoriality", "Migration", "1"^ry*" consumer",
                               "Seasonality",
@@ -279,7 +286,10 @@ y_axis_labs <- rev(expression("Seasonality", "Migration", "1"^ry*" consumer",
                      atop(NA,atop(textstyle("1"^ry*" consumer"),textstyle("× seasonality"))),
                      atop(NA,atop(textstyle("1"^ry*" consumer"), textstyle("× territoriality")))))
 
-
+y_axis_labs <- rev(expression("1"^ry*" consumer", "Migration", 
+                              "Territoriality", "Seasonality",
+                              atop(NA,atop(textstyle("1"^ry*" consumer"),textstyle("× territoriality"))),
+                              atop(NA,atop(textstyle("1"^ry*" consumer"), textstyle("× seasonality")))))
 
 ###############################################################################
                     #### Quasi random plots #####
@@ -431,12 +441,14 @@ arrow_plot <- ggplot(arrow_data) + geom_segment(mapping = aes(x = x, xend = 3, y
 all_plot <- gg_stat_eye(all_plotdata, legend_pos = c(0.2, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-3.5,3))
 ggarrange(arrow_plot, all_plot, nrow = 2, heights = c(0.2,1), align = "v")
 ggsave("Plots/Results/figure_5.pdf", width = 8, height = 5.5, device = cairo_pdf)
+ggsave("Plots/Results/figure_5.png", width = 8, height = 5.5)
 
 high_plot <- gg_stat_eye(high_plotdata, legend_pos = c(0.2, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-4.5,3))
 ggarrange(arrow_plot, high_plot, nrow = 2, heights = c(0.2,1), align = "v")
-ggsave("Plots/Results/figure_S2.pdf", width = 8, height = 5.5, device = cairo_pdf)
-
+ggsave("Plots/Results/figure_EDF2.pdf", width = 8, height = 5.5, device = cairo_pdf)
+ggsave("Plots/Results/figure_EDF2.png", width = 8, height = 5.5)
 
 
                            #### END #####
 ###############################################################################
+
