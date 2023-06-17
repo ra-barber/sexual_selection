@@ -187,8 +187,8 @@ brms_tropics_side_plot <- function(data_set = primary_data, ylabel = "Sexual sel
           plot.margin = margin(t = 1, l = 0.2, b = 0.2, r =0.3, unit = "cm")) + 
     annotate("text", x = lab_x_pos, y =lab_ypos, label = stats_label, size = 7) +
     annotate("text", x = 0.65, y = ylimits[2], label = plot_label, size = 12, fontface = 2) +
-    annotate("text", x = 1, y = predictions$upper__[1] + 0.05, label = sample_sizes[1,2], size = 5) +
-    annotate("text", x = 2, y = predictions$upper__[2] + 0.05, label = sample_sizes[2,2], size = 5)
+    annotate("text", x = 1, y = predictions$upper__[1] + 0.05, label = sample_sizes[2,2], size = 5) +
+    annotate("text", x = 2, y = predictions$upper__[2] + 0.05, label = sample_sizes[1,2], size = 5)
 }
 
 
@@ -242,6 +242,7 @@ ggarrange(primary_plot, fruit_plot, secondary_plot, invert_plot,
           mig_plot, non_mig_plot, terr_plot, non_terr_plot,
           nrow = 2, ncol = 4, widths = c(1.2,1,1,1))
 ggsave("Plots/Tropics/tropical_comparisons.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Tropics/tropical_comparisons.png", height = 10, width = 15, dpi = 600)
 
 
 
