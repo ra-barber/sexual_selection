@@ -22,7 +22,7 @@ library(janitor)
 rm(list=ls())
 
 getwd()
-read.csv("")
+
 
 ################################################################################
                             #### Data ####
@@ -303,6 +303,10 @@ ggsave("Plots/Trees/tree_and_plots.pdf", width = 17, height = 10)
 ################################################################################ 
                    #### Make a non-bold version #####
 
+# Change legend order.
+full_family_tree@data$higher_clade %<>% factor(levels = c("Palaeognathae", "Opisthocomiformes", "Galloanserae", "Accipitriformes", "Strisores", "Strigiformes",
+                               "Columbaves", "Coraciimorphae", "Gruiformes", "Australaves", "Aequorlitornithes"))
+
 # Plot a circular tree with highlighted clades and navy bars.
 family_plot <- ggtree(full_family_tree, layout="fan", #open.angle = 5, 
                       size = 0.5, colour = "grey", alpha = 0.5) +
@@ -315,10 +319,9 @@ family_plot <- ggtree(full_family_tree, layout="fan", #open.angle = 5,
              pwidth=0.35, colour = NA, orientation="y", offset = -0.605,
              stat="identity", width=1, alpha = 0.5) + 
   # Colours.
-  scale_fill_manual(values = prum_clade_colours, name = "Clade", na.value = NA,
-                    limits = names(prum_clade_colours)) +
+  scale_fill_manual(values = prum_clade_colours, name = NULL, na.value = NA) +
   scale_colour_manual(values = prum_clade_colours) +
-  guides(fill = guide_legend(byrow = TRUE, nrow = 7, title.position = "top")) + 
+  guides(fill = guide_legend(byrow = TRUE, direction = "vertical", ncol = 2)) + #nrow = 6)) + #, title.position = "none")) + 
   # Add black tip labels for family, offset inside the tree.
   geom_tiplab(size = 1.5, colour = "black", offset = -0.05,
               aes(label = family), fontface = 2, hjust =1) + 
@@ -327,9 +330,9 @@ family_plot <- ggtree(full_family_tree, layout="fan", #open.angle = 5,
   xlim(0,92) +
   theme(text = element_text(size = 12), 
         #legend.title=element_text(vjust = -5.5, hjust = 0.11), 
-        legend.position = c(0.54,0.415),     # original
+        legend.position = c(0.555, 0.42),     # original
         #legend.position = c(0.57,0.43), 
-        legend.direction = "horizontal", 
+        #legend.direction = "vertical", 
         
         #legend.title.align = 2,
         legend.key.width = unit(0.5, "cm"), 
@@ -375,7 +378,6 @@ both_plots <- ggarrange(figure_tree, side_plots, widths = c(3,2), nrow = 1,
 # Export.
 ggsave("Plots/Trees/nobold_tree_and_plots.png", dpi = 900, width = 17, height = 10)
 ggsave("Plots/Trees/nobold_tree_and_plots.pdf", width = 17, height = 10)
-
 
 
 
