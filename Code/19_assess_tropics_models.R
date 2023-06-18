@@ -120,28 +120,28 @@ brms_tropics_side_plot <- function(data_set = primary_data, ylabel = "Sexual sel
   sample_sizes <- data_set %>% count(trop_non_trop)
   
   # Estimate
-  estimate <- summary(stats_model)$fixed[5,1]
+  estimate <- summary(plot_model)$fixed[5,1]
   estimate <- as.character(format(round(estimate, 2), nsmall = 2))
   
   # Redo estimate if it's too small.
   if (estimate == "0.00"){
-    estimate <- summary(stats_model)$fixed[5,1]
+    estimate <- summary(plot_model)$fixed[5,1]
     estimate <- as.character(format(round(estimate, 3), nsmall = 3))
   }
   
   # Lower. 
-  lower <- summary(stats_model)$fixed[5,3]
+  lower <- summary(plot_model)$fixed[5,3]
   lower <- as.character(format(round(lower, 2), nsmall = 2))
   
   # Upper
-  upper <- summary(stats_model)$fixed[5,4]
+  upper <- summary(plot_model)$fixed[5,4]
   upper <- as.character(format(round(upper, 2), nsmall = 2))
   
   # Change size of CI.
   if (lower == "0.00" | upper == "0.00"){
-    lower <- summary(stats_model)$fixed[5,3]
+    lower <- summary(plot_model)$fixed[5,3]
     lower <- as.character(format(round(lower, 3), nsmall = 3))
-    upper <- summary(stats_model)$fixed[5,4]
+    upper <- summary(plot_model)$fixed[5,4]
     upper <- as.character(format(round(upper, 3), nsmall = 3))
   }
 
@@ -150,7 +150,7 @@ brms_tropics_side_plot <- function(data_set = primary_data, ylabel = "Sexual sel
   intervals <- paste0("[", lower, ", ", upper, "]")
   
   # # Extract p-values using probability of direction two-tailed test.
-  p_value <- pd_to_p(last(p_direction(stats_model)[,2]))
+  p_value <- pd_to_p(last(p_direction(plot_model)[,2]))
   
   # Change p value to a string, using standard thresholds. 
   if (p_value < 0.001 ){

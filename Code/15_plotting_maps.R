@@ -196,8 +196,8 @@ ggsave("Plots/Maps/figure_3.pdf", height = 20, width = 15, dpi = 900)
           #### Plot data certainty supplementary figure ####
 
 # Show high certainty sexual selection maps.
-m_sex_plot <- panel_ggplot_raster(m_sex_raster, plot_title = "Certainty 3 & 4", plot_label = "a")
-h_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 4", plot_label = "c")
+m_sex_plot <- panel_ggplot_raster(m_sex_raster, plot_title = "Certainty 3 & 4 (n = 7700)", plot_label = "a")
+h_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 4 (n = 2851)", plot_label = "c")
 
 # Arrange maps together.
 cert_side_plots <- ggarrange(med_sex_lat_plot + rremove("xlab") + rremove("x.text"), 
@@ -208,8 +208,8 @@ cert_both_plots <- ggarrange(cert_maps, cert_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Plots/Maps/figure_S1.png", height = 10, width = 15, dpi = 600)
-ggsave("Plots/Maps/figure_S1.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/figure_ED_2.png", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/figure_ED_2.pdf", height = 10, width = 15, dpi = 600)
 
 
 
@@ -239,8 +239,8 @@ terr_maps <- ggarrange(blank_plot, p_terr_plot, p_year_terr_plot,
 # Arrange together.
 terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,1.535)) +
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
-ggsave("Plots/Maps/territory_maps.png", height = 20, width = 15, dpi = 900)
-ggsave("Plots/Maps/territory_maps.pdf", height = 20, width = 15, dpi = 900)
+ggsave("Plots/Maps/figure_ED_7.png", height = 20, width = 15, dpi = 900)
+ggsave("Plots/Maps/figure_ED_7.pdf", height = 20, width = 15, dpi = 900)
 
 
 
@@ -261,8 +261,8 @@ mig_both_plots <- ggarrange(mig_maps, mig_side_plots, ncol = 2, widths = c(3,1.5
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Plots/Maps/migration_maps.png", height = 10, width = 15, dpi = 600)
-ggsave("Plots/Maps/migration_maps.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/figure_ED_3.png", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/figure_ED_3.pdf", height = 10, width = 15, dpi = 600)
 
 # Show high certainty sexual selection maps.
 terr_sex_plot <- panel_ggplot_raster(terr_sex_raster, plot_title = "Territorial (n = 7261)", plot_label = "a")
@@ -277,8 +277,8 @@ terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Plots/Maps/territory_sex_maps.png", height = 10, width = 15, dpi = 600)
-ggsave("Plots/Maps/territory_sex_maps.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/figure_ED_4.png", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/figure_ED_4.pdf", height = 10, width = 15, dpi = 600)
 
 
 
