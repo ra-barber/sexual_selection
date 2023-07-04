@@ -26,6 +26,9 @@ source("Code/functions.R")
 ###############################################################################
                   #### Read in the models #####
 
+all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/multivariate_all_models.rds")
+high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/multivariate_high_models.rds")
+
 
 all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/lifehistory_all_models.rds")
 high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/lifehistory_high_models.rds")

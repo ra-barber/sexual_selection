@@ -25,7 +25,7 @@ source("Code/functions.R")
                   #### Read in models ####
 
 # Read in the new files.
-model_files <- list.files(path = c("Results/Models/March/"), full.names = T, include.dirs = FALSE, recursive = FALSE)
+model_files <- list.files(path = c("Results/Models/Multivariate/"), full.names = T, include.dirs = FALSE, recursive = FALSE)
 
 # Function to extract and combine brms models.
 combine_brms <- function(model_pattern){
@@ -60,8 +60,8 @@ all_models <- combine_brms("/all")
 high_models <- combine_brms("/high")
 gc()
 
-saveRDS(object = all_models, file =  "Results/Models/Combined_models/lifehistory_all_models.rds")
-saveRDS(object = high_models, file =  "Results/Models/Combined_models/lifehistory_high_models.rds")
+saveRDS(object = all_models, file =  "Results/Models/Combined_models/Multivariate/multivariate_all_models.rds")
+saveRDS(object = high_models, file =  "Results/Models/Combined_models/Multivariate/multivariate_high_models.rds")
 
 ###############################################################################
                        #### Model R2 ####
@@ -121,23 +121,23 @@ high_r_squared
 
 ###############################################################################
                      #### Plot conditional effects ####
-
-
-pdf("Results/Models/Combined_models/cond_plots_all_nocat.pdf")
-plot(conditional_effects(all_models, categorical = FALSE), ask = FALSE)
-dev.off()
-
-pdf("Results/Models/Combined_models/cond_plots_high_nocat.pdf")
-plot(conditional_effects(high_models, categorical = FALSE), ask = FALSE)
-dev.off()
-
-pdf("Results/Models/Combined_models/cond_plots_all_cat.pdf")
-plot(conditional_effects(all_models, categorical = TRUE), ask = FALSE)
-dev.off()
-
-pdf("Results/Models/Combined_models/cond_plots_high_cat.pdf")
-plot(conditional_effects(high_models, categorical = TRUE), ask = FALSE)
-dev.off()
+# 
+# 
+# pdf("Results/Models/Combined_models/cond_plots_all_nocat.pdf")
+# plot(conditional_effects(all_models, categorical = FALSE), ask = FALSE)
+# dev.off()
+# 
+# pdf("Results/Models/Combined_models/cond_plots_high_nocat.pdf")
+# plot(conditional_effects(high_models, categorical = FALSE), ask = FALSE)
+# dev.off()
+# 
+# pdf("Results/Models/Combined_models/cond_plots_all_cat.pdf")
+# plot(conditional_effects(all_models, categorical = TRUE), ask = FALSE)
+# dev.off()
+# 
+# pdf("Results/Models/Combined_models/cond_plots_high_cat.pdf")
+# plot(conditional_effects(high_models, categorical = TRUE), ask = FALSE)
+# dev.off()
 
 ###############################################################################
                            #### Section 3 ####

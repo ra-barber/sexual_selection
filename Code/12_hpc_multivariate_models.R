@@ -28,7 +28,7 @@ array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
 array_number
 
 # Create types for hpc jobs.
-tree_number <- 1:10
+tree_number <- 1:50
 
 # Set the data types.
 data_type <- c("all", "high")

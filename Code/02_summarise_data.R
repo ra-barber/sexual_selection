@@ -449,18 +449,38 @@ full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) +
 
 ################################################################################
 
-full_data %>% group_by(sexual_certainty) %>% summarise(mean_ss = mean(sexual_score))
+model_data %>% group_by(cert_reverse) %>% summarise(mean_ss = mean(sexual_score))
+
+model_data %>% ggplot(aes(x = as.factor(cert_reverse), y = sexual_score)) + geom_boxplot() +
+  xlab("Sexual selection") + ylab("Species count") +
+  theme_classic() + theme(legend.position = "none")
 
 
+model_data %>% filter(cert_reverse == 1 & sexual_score > 0)
 
 
+# Function for looking at sexual selection vs predictor means and standard error.
+sex_meanplot <- function(predictor){
+  grouped_data <- model_data %>% 
+    group_by(!!! syms(predictor)) %>% 
+    summarise(trait = first(!!! syms(predictor)),
+              sex_mean = mean(sexual_score),
+              sex_sd = sd(sexual_score),
+              sex_se = sd(sexual_score)/sqrt(length(sexual_score)))
+  
+  ggplot(grouped_data, aes(x = trait, y = sex_mean)) +
+    geom_errorbar(aes(ymin = sex_mean - sex_se, ymax = sex_mean + sex_se), width =0.5) + 
+    geom_point(size =2) + ylab("Sexual selection") + xlab(predictor) + theme_classic()
+}
 
 
+sex_meanplot("cert_reverse") + xlab("Data certainty") +  theme_classic(base_size = 20) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5))
 
-
-
-
-
+# Export.
+ggsave("Plots/Data/figure_s2.pdf", width = 8, height = 8, device = cairo_pdf)
+ggsave("Plots/Data/figure_s2.png", width = 8, height = 8)
 
 
 ###############################################################################

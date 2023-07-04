@@ -40,21 +40,21 @@ model_list <- unique(model_names)
 
 # Do it manually to change frugnect name (don't add extra underscore next time).
 model_list <- c(
-  "all_centered_all", "all_centered_high",
+  #"all_centered_all", "all_centered_high",
   "all_uncentered_all", "all_uncentered_high",
-  "certainty_centered_all", "certainty_centered_high",   
+  #"certainty_centered_all", "certainty_centered_high",   
   "certainty_uncentered_all", "certainty_uncentered_high",
-  "frug_nect_centered_all", "frug_nect_centered_high",
-  "frug_nect_uncentered_all", "frug_nect_uncentered_high",
-  "frugivore_centered_all", "frugivore_centered_high",
+  #"frug_nect_centered_all", "frug_nect_centered_high",
+  #"frug_nect_uncentered_all", "frug_nect_uncentered_high",
+  #"frugivore_centered_all", "frugivore_centered_high",
   "frugivore_uncentered_all", "frugivore_uncentered_high",
-  "invertivore_centered_all", "invertivore_centered_high",
+  #"invertivore_centered_all", "invertivore_centered_high",
   "invertivore_uncentered_all", "invertivore_uncentered_high",
-  "nectarivore_centered_all", "nectarivore_centered_high",
-  "nectarivore_uncentered_all", "nectarivore_uncentered_high",
-  "primary_centered_all", "primary_centered_high",
+  #"nectarivore_centered_all", "nectarivore_centered_high",
+  #"nectarivore_uncentered_all", "nectarivore_uncentered_high",
+  #"primary_centered_all", "primary_centered_high",
   "primary_uncentered_all", "primary_uncentered_high",
-  "secondary_centered_all", "secondary_centered_high",
+  #"secondary_centered_all", "secondary_centered_high",
   "secondary_uncentered_all", "secondary_uncentered_high")
 
 

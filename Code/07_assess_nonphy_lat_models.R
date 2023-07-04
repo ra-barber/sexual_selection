@@ -409,7 +409,7 @@ gc()
 pp_plot <- pp_check(allbirds_model)
 
 
-pp_plot  + scale_x_continuous(breaks = c(1,2,3,4,5), labels = c(0,1,2,3,4)) + 
+pp_plot <- pp_plot  + scale_x_continuous(breaks = c(1,2,3,4,5), labels = c(0,1,2,3,4)) + 
   theme_classic(base_size = 25) + 
   theme(legend.position = c(0.75,0.75), 
         legend.direction = "horizontal",
