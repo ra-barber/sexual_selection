@@ -91,6 +91,7 @@ primary_data <- model_data %>% filter(trophic_binary == "Primary")
 secondary_data <- model_data %>% filter(trophic_binary == "Secondary")
 fruit_data <- model_data %>% filter(trophic_niche == "Frugivore")
 invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
+gran_data <- model_data %>% filter(trophic_niche == "Granivore")
 
 # Run the main paper models.
 allbirds_model <- lat_brms_model(response = "sexual_score")
@@ -99,6 +100,7 @@ primary_model <- lat_brms_model(data_set = primary_data)
 secondary_model <- lat_brms_model(data_set = secondary_data)
 fruit_model <- lat_brms_model(data_set = fruit_data)
 invert_model <- lat_brms_model(data_set = invert_data)
+gran_model <- lat_brms_model(data_set = gran_data)
 
 # Export the models.
 saveRDS(allbirds_model, "Results/Models/Nonphy_models/Latitude/allbirds_model.rds")
@@ -107,6 +109,8 @@ saveRDS(primary_model, "Results/Models/Nonphy_models/Latitude/primary_model.rds"
 saveRDS(secondary_model, "Results/Models/Nonphy_models/Latitude/secondary_model.rds")
 saveRDS(fruit_model, "Results/Models/Nonphy_models/Latitude/fruit_model.rds")
 saveRDS(invert_model, "Results/Models/Nonphy_models/Latitude/invert_model.rds")
+saveRDS(gran_model, "Results/Models/Nonphy_models/Latitude/gran_model.rds")
+
 
 # Run the models with standardised predictors.
 allbirds_model <- lat_brms_model(response = "sexual_score", predictor = "centroid_z")
@@ -115,6 +119,7 @@ primary_model <- lat_brms_model(data_set = primary_data, predictor = "centroid_z
 secondary_model <- lat_brms_model(data_set = secondary_data, predictor = "centroid_z")
 fruit_model <- lat_brms_model(data_set = fruit_data, predictor = "centroid_z")
 invert_model <- lat_brms_model(data_set = invert_data, predictor = "centroid_z")
+gran_model <- lat_brms_model(data_set = gran_data, predictor = "centroid_z")
 
 # Export the models.
 saveRDS(allbirds_model, "Results/Models/Nonphy_models/Latitude/centered_allbirds_model.rds")
@@ -123,6 +128,7 @@ saveRDS(primary_model, "Results/Models/Nonphy_models/Latitude/centered_primary_m
 saveRDS(secondary_model, "Results/Models/Nonphy_models/Latitude/centered_secondary_model.rds")
 saveRDS(fruit_model, "Results/Models/Nonphy_models/Latitude/centered_fruit_model.rds")
 saveRDS(invert_model, "Results/Models/Nonphy_models/Latitude/centered_invert_model.rds")
+saveRDS(gran_model, "Results/Models/Nonphy_models/Latitude/centered_gran_model.rds")
 
 
 ###############################################################################
