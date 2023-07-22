@@ -31,7 +31,7 @@ array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
 array_number
 
 # Create types for hpc jobs.
-tree_number <- 1:10
+tree_number <- 1:20
 
 # Set the data types.
 data_type <- c("all", "high")
@@ -40,7 +40,7 @@ data_type <- c("all", "high")
 response <- c("temp", "mig", "tro", "terr")
 
 # Centered or uncentered.
-center <- c("centered", "uncentered")
+center <- c("uncentered")
 
 # Expand the grid.
 all_combos <- expand.grid(response, center, data_type, tree_number)
@@ -150,7 +150,7 @@ if (center == "centered"){
 model_formula <- paste0("sexual_score ~ ", model_response, " + (1|gr(tree_tip, cov=A))")
  
 # brms formula.
-brms_formula <- brmsformula(model_formula, family = cumulative(threshold = "equidistant"))
+brms_formula <- brmsformula(model_formula, family = cumulative())
 
 # Simple models.
 model_pathway <- paste0("Results/Models/Univariate/", response, "_", center, "_", data_type, "_", tree_number, ".rds") 
@@ -167,8 +167,8 @@ normal_priors <- c(prior(normal(0,1), class="Intercept"),
     data = model_data,
     data2 = list(A=model_covar),
     prior = normal_priors,
-    iter = 2500,
-    warmup = 500,
+    iter = 10000,
+    warmup = 5000,
     chains = 2,
     thin = 5,
     cores = 32,
