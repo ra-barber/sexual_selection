@@ -11,20 +11,112 @@ rm(list=ls())
 
 # Load packages.
 library(magrittr)
-library(skimr)
 library(tictoc)
-library(stringr)
 library(caper)
 library(dplyr)
-library(janitor)
+library(effectsize)
+library(car)
+library(ggplot2)
 library(ggpubr)
+library(phytools)
+library(brms)
+library(graph4lg)
 
 # Read in the functions. 
 source("Code/functions.R")
 
 
+
+
 ###############################################################################
-                             #### Data ####
+                       #### Prepare Baker data ####
+
+
+# Read in some data.
+model_data <- read.csv("Data/teste_mass/baker_teste_mass.csv") %>% clean_names()
+model_data$tree_tip <- gsub(" ", "_", model_data$birdtree_name)
+
+# Read in the tree.
+model_tree <- read.tree("Data/Trees/prum_trees.tre")[[1]]
+
+# Drop tips on the tree.
+model_tree <- drop.tip(model_tree, setdiff(model_tree$tip.label, model_data$tree_tip))
+
+# Make a covariance matrix, and order data the same.
+model_covar <- ape::vcv.phylo(model_tree)
+
+# Reorder the matrix so it's random, to maximise parallel processing speed.
+mat_order <- sample(1:nrow(model_covar), size = nrow(model_covar), replace = FALSE)
+model_covar <- reorder_mat(model_covar, rownames(model_covar)[mat_order])
+row.names(model_data) <- model_data$tree_tip
+model_data <- model_data[row.names(model_covar),]
+
+# Scale continuous predictors to two SD.
+model_data %<>% mutate(
+  teste_z = standardize(teste, two_sd = TRUE)
+)
+
+# Prepare response variables.
+model_data$sexual_selection <- model_data$sexual_selection + 1
+
+
+###############################################################################
+                    #### Set model formula ######
+
+
+# Brms formula.
+model_formula <- "sexual_selection ~ teste_z + (1|gr(tree_tip, cov=A))"
+brms_formula <- brmsformula(model_formula, family = cumulative())
+
+# # Add un-informative priors.
+normal_priors <- c(prior(normal(0,1), class="Intercept"),
+                   prior(normal(0,1), class="b"),
+                   prior(gamma(2,1), "sd")) # Gamma 2,1 probs seems to work well given all previous models end up with values around 1
+
+# Run brms models.
+testes_model <- brm(
+  brms_formula,
+  data = model_data,
+  data2 = list(A=model_covar),
+  prior = normal_priors,
+  iter = 10000,
+  warmup = 5000,
+  chains = 2,
+  thin = 2,
+  cores = 4,
+  init = 0,
+  #file = model_pathway,
+  normalize = FALSE,
+  backend = "cmdstanr",
+  #control = list(adapt_delta = 0.6),
+  threads = threading(2),
+)
+
+
+ordinal_bayes_r2 <- Bayes_R2_MZ(brms_model)
+
+plot(conditional_effects(brms_model), points = TRUE, point_args = list(height = 0.3))
+
+
+# Create a palette to match bin length.
+pal <- c('#3B9AB2', '#78B7C5', '#EBCC2A', '#E1AF00', '#F21A00')
+
+
+model_data %>% ggplot(aes(group = as.factor(sexual_selection), x = sexual_selection,
+                          colour = as.factor(sexual_selection),
+                          fill = as.factor(sexual_selection), y = teste)) + 
+  geom_jitter(size = 3, alpha = 0.5) + 
+  geom_boxplot(alpha = 1, colour = "black", fill = NA, outlier.shape = NA, size = 0.75) + 
+  theme_classic(base_size = 20) +  
+  scale_fill_manual(values = pal) + 
+  scale_colour_manual(values = pal) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5)) + 
+  xlab("Sexual selection") + ylab("Residual testes mass")
+
+
+
+
 
 
 
