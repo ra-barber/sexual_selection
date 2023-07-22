@@ -26,14 +26,8 @@ source("Code/functions.R")
 ###############################################################################
                   #### Read in the models #####
 
-all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/multivariate_all_models.rds")
-high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/multivariate_high_models.rds")
-
-
-all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/lifehistory_all_models.rds")
-high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/lifehistory_high_models.rds")
-
-
+all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/multivariate_all_models.rds")
+high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/multivariate_high_models.rds")
 
 ###############################################################################
                     #### Model Diagnostics #####
@@ -85,14 +79,14 @@ brms_pmap(high_models)
 
 ###############################################################################
            #### Lambda values (Shouldn't work for this family) #####
-
-
-# Look at lambda values.
-hyp <- "sd_tree_tip__Intercept^2 / (sd_tree_tip__Intercept^2 + disc^2) = 0"
-
-(all_lambda <- hypothesis(all_models, hyp, class = NULL))
-(high_models <- hypothesis(high_models, hyp, class = NULL))
-plot(all_lambda)
+# 
+# 
+# # Look at lambda values.
+# hyp <- "sd_tree_tip__Intercept^2 / (sd_tree_tip__Intercept^2 + disc^2) = 0"
+# 
+# (all_lambda <- hypothesis(all_models, hyp, class = NULL))
+# (high_models <- hypothesis(high_models, hyp, class = NULL))
+# plot(all_lambda)
 
 
 ###############################################################################
@@ -120,20 +114,25 @@ high_estimates <- summary(high_models)$fixed[5:10,c(1,3,4)]
 # Paste together values for reporting in a table.
 all_estimates %<>% mutate(
   round_est = round(Estimate, 2),
-  intervals = paste0("[", round(`l-95% CI`, 2), ", ", 
-                     round(`u-95% CI`, 2), "]"),
+  intervals = paste0(round(`l-95% CI`, 2), ", ", 
+                     round(`u-95% CI`, 2)),
   est_intervals = paste0(round_est, " ", intervals))
 
 high_estimates %<>% mutate(
   round_est = round(Estimate, 2),
-  intervals = paste0("[", round(`l-95% CI`, 2), ", ", 
-                     round(`u-95% CI`, 2), "]"),
+  intervals = paste0(round(`l-95% CI`, 2), ", ",
+                     round(`u-95% CI`, 2)),
   est_intervals = paste0(round_est, " ", intervals))
 
+# Reorder.
+order <- c("trophic_level_c", "migration_bi_c","terr_bi_c","temp_seasonality_z","terr_bi_c:trophic_level_c","trophic_level_c:temp_seasonality_z") 
+
+all_estimates <- all_estimates[order,]
+high_estimates <- high_estimates[order,]
 
 # Export the results.
-write.csv(all_estimates, "Results/Tables/all_regression.csv", row.names = TRUE)
-write.csv(high_estimates, "Results/Tables/high_regression.csv", row.names = TRUE)
+write.csv(all_estimates, "Results/Tables/all_multivariate_regression.csv", row.names = TRUE)
+write.csv(high_estimates, "Results/Tables/high_multivariate_regression.csv", row.names = TRUE)
 
 
 ###############################################################################
@@ -162,16 +161,16 @@ extract_draws <- function(model, column_names){
   model_draws %>% tidyr::pivot_longer(cols = column_names)
 }
 
-# Extract draws function.
-log_extract_draws <- function(model, column_names){
-  # Pull out the draws.
-  model_draws <- as_draws_df(model, c("^b"), regex = TRUE)[,-c(1)] %>% 
-    as.data.frame() %>% dplyr::select(-c(.chain, .iteration, .draw))
-  # Change column names.
-  colnames(model_draws) <- column_names
-  # Pivot longer.
-  model_draws %>% tidyr::pivot_longer(cols = column_names)
-}
+# # Extract draws function.
+# log_extract_draws <- function(model, column_names){
+#   # Pull out the draws.
+#   model_draws <- as_draws_df(model, c("^b"), regex = TRUE)[,-c(1)] %>% 
+#     as.data.frame() %>% dplyr::select(-c(.chain, .iteration, .draw))
+#   # Change column names.
+#   colnames(model_draws) <- column_names
+#   # Pivot longer.
+#   model_draws %>% tidyr::pivot_longer(cols = column_names)
+# }
 
 # Simple models first.
 all_plotdata <- extract_draws(all_models, predictor_names)
@@ -338,6 +337,10 @@ gg_quasi_forst(high_plotdata, legend_pos = c(0.15, 0.125), alpha_val = 0.2)
 ggsave("Plots/Results/high_model.tiff", dpi = 600, width = 8, height = 4)
 
 
+###############################################################################
+                           #### Eye plots #####
+
+
 library(ggdist)
 gg_stat_eye <- function(plotdata, pred_n = 6, legend_pos = c(0.15, 0.15), col_pal = light_colours, alpha_val = 0.1){
 ggplot(plotdata, aes(x = value, y = name, fill = trait, height =  0.6)) +
@@ -373,7 +376,10 @@ ggsave("Plots/Results/high_model.tiff", dpi = 1200, width = 8, height = 5, compr
 #gg_stat_eye(log_high_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours)
 #ggsave("Plots/Results/loghigh_model.tiff", dpi = 1200, width = 8, height = 4, compression = "lzw")
 
-## Add arrows ##
+
+###############################################################################
+                          #### Add arrows #####
+
 
 # Create arrow data for gradient.
 arrow_data <- data.frame(x = seq(from = -3.5, to = 2.5, by = 0.01), xend = 3, y = 1, yend = 1)
