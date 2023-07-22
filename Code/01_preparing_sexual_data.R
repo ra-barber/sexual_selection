@@ -450,3 +450,41 @@ write.csv(phylo_data, "Data/sexual_traits.csv", row.names = FALSE)
 
 
 
+
+################################################################################
+                            #### END #####
+################################################################################
+
+
+# Showing territoriality interactions.
+  grouped_data <- phylo_data %>% 
+    group_by(territory_binary, trophic_binary) %>% 
+    summarise(sex_mean = mean(sexual_score),
+              sex_sd = sd(sexual_score),
+              sex_se = sd(sexual_score)/sqrt(length(sexual_score)))
+  
+  grouped_data$label <- c("No territory x ")
+
+  ggplot(grouped_data, aes(x = trophic_binary , y = sex_mean, 
+                           col = territory_binary, group = territory_binary)) +
+    geom_errorbar(aes(ymin = sex_mean - sex_se*1.96, ymax = sex_mean + sex_se*1.96), 
+                  position = position_dodge(width = 1), linewidth = 1, width = 0.2) + 
+    geom_point(position = position_dodge(width = 1)) + 
+    ylab("Sexual Selection") + xlab("Territory x Diet") + theme_classic()
+
+  
+  
+  
+  grouped_data <- phylo_data %>% 
+    group_by(territory_binary, migration_binary) %>% 
+    summarise(sex_mean = mean(sexual_score),
+              sex_sd = sd(sexual_score),
+              sex_se = sd(sexual_score)/sqrt(length(sexual_score)))
+  
+  ggplot(grouped_data, aes(x = migration_binary , y = sex_mean, 
+                           col = territory_binary, group = territory_binary)) +
+    geom_errorbar(aes(ymin = sex_mean - sex_se*1.96, ymax = sex_mean + sex_se*1.96), 
+                  position = position_dodge(width = 1), linewidth = 1, width = 0.2) + 
+    geom_point(position = position_dodge(width = 1)) + 
+    ylab("Sexual Selection") + xlab("Territory x Migration") + theme_classic()
+  
