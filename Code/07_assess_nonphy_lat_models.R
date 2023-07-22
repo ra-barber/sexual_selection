@@ -111,7 +111,7 @@ primary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/
 secondary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/secondary_model.rds")
 fruit_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/fruit_model.rds")
 invert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/invert_model.rds")
-
+#gran_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/gran_model.rds")
 
 # Read in centered models.
 centered_allbirds_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_allbirds_model.rds")
@@ -285,6 +285,13 @@ invert_lat_plot <- niche_lat_data %>% filter(trophic_niche == "Invertivore") %>%
                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
                      plot_label = "h", plot_model = invert_model, 
                      stats_model = centered_invert_model) 
+
+gran_lat_plot <- niche_lat_data %>% filter(trophic_niche == "Granivore") %>% 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
+                     ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
+                     plot_label = "h", plot_model = gran_model, 
+                     stats_model = gran_model) 
+
 
 
 ################################################################################
