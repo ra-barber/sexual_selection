@@ -102,37 +102,46 @@ year_terr_diet_lat_data <- model_data %>% filter(binned_lat != 75) %>%
 
 
 ###############################################################################
-                    #### Read in  brms models ####
+                    #### Read in brms models ####
 
-# Read in models using raw data.
-allbirds_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/allbirds_model.rds")
-cert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/cert_model.rds")
-primary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/primary_model.rds")
-secondary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/secondary_model.rds")
-fruit_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/fruit_model.rds")
-invert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/invert_model.rds")
-#gran_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/gran_model.rds")
+first_half <- "Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/"
 
-# Read in centered models.
-centered_allbirds_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_allbirds_model.rds")
-centered_cert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_cert_model.rds")
-centered_primary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_primary_model.rds")
-centered_secondary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_secondary_model.rds")
-centered_fruit_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_fruit_model.rds")
-centered_invert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Latitude/centered_invert_model.rds")
+list.files(first_half)
+
+# Function to read in models.
+read_lat_model <- function(model_name){
+  model_file <- paste0(first_half, model_name, "_model.rds")
+  readRDS(model_file)
+}
+
+allbirds_all_model <- read_lat_model("allbirds_all")
+certainty_all_model <- read_lat_model("certainty_all")
+primary_all_model <- read_lat_model("primary_all")
+fruit_all_model <- read_lat_model("fruit_all")
+secondary_all_model <- read_lat_model("secondary_all")
+invert_all_model <- read_lat_model("invert_all")
+
+allbirds_high_model <- read_lat_model("allbirds_high")
+certainty_high_model <- read_lat_model("certainty_high")
+primary_high_model <- read_lat_model("primary_high")
+fruit_high_model <- read_lat_model("fruit_high")
+secondary_high_model <- read_lat_model("secondary_high")
+invert_high_model <- read_lat_model("invert_high")
+
+
 
 
 ################################################################################
                     #### Export summary tables ####
 
 
-# Extract relevant coeffcient information.
-allbirds_all_estimates <- summary(centered_allbirds_model)$fixed[5,c(1,3,4)]
-cert_all_estimates <- summary(centered_cert_model)$fixed[4,c(1,3,4)]
-primary_all_estimates <- summary(centered_primary_model)$fixed[5,c(1,3,4)]
-fruit_all_estimates <- summary(centered_fruit_model)$fixed[5,c(1,3,4)]
-secondary_all_estimates <- summary(centered_secondary_model)$fixed[5,c(1,3,4)]
-invert_all_estimates <- summary(centered_invert_model)$fixed[5,c(1,3,4)]
+allbirds_all_estimates <- summary(allbirds_all_model)$fixed[5,c(1,3,4)]
+cert_all_estimates <- summary(certainty_all_model)$fixed[4,c(1,3,4)]
+primary_all_estimates <- summary(primary_all_model)$fixed[5,c(1,3,4)]
+fruit_all_estimates <- summary(fruit_all_model)$fixed[5,c(1,3,4)]
+secondary_all_estimates <- summary(secondary_all_model)$fixed[5,c(1,3,4)]
+invert_all_estimates <- summary(invert_all_model)$fixed[5,c(1,3,4)]
+
 all_estimates <- rbind(allbirds_all_estimates, cert_all_estimates, 
                        primary_all_estimates, fruit_all_estimates,
                        secondary_all_estimates, invert_all_estimates)
@@ -141,12 +150,38 @@ row.names(all_estimates) <- c("all_birds", "certainty", "primary",
 # Paste together values for reporting in a table.
 all_estimates %<>% mutate(
   round_est = round(Estimate, 2),
-  intervals = paste0("[", round(`l-95% CI`, 2), ", ", 
-                     round(`u-95% CI`, 2), "]"),
-  est_intervals = paste0(round_est, " ", intervals))
+  intervals = paste0(round(`l-95% CI`, 2), ", ", 
+                     round(`u-95% CI`, 2)),
+  est_intervals = paste0(round_est, ", ", intervals))
 
 # Export the results.
 write.csv(all_estimates, "Results/Tables/all_nonphy_lat_regression.csv", row.names = TRUE)
+
+
+# High certainty estimates
+allbirds_high_estimates <- summary(allbirds_high_model)$fixed[5,c(1,3,4)]
+cert_high_estimates <- summary(certainty_high_model)$fixed[4,c(1,3,4)]
+primary_high_estimates <- summary(primary_high_model)$fixed[5,c(1,3,4)]
+fruit_high_estimates <- summary(fruit_high_model)$fixed[5,c(1,3,4)]
+secondary_high_estimates <- summary(secondary_high_model)$fixed[5,c(1,3,4)]
+invert_high_estimates <- summary(invert_high_model)$fixed[5,c(1,3,4)]
+
+high_estimates <- rbind(allbirds_high_estimates, cert_high_estimates, 
+                       primary_high_estimates, fruit_high_estimates,
+                       secondary_high_estimates, invert_high_estimates)
+row.names(high_estimates) <- c("all_birds", "certainty", "primary",
+                              "fruit", "secondary", "invert")
+
+high_estimates %<>% mutate(
+  round_est = round(Estimate, 2),
+  intervals = paste0(round(`l-95% CI`, 2), ", ", 
+                     round(`u-95% CI`, 2)),
+  est_intervals = paste0(round_est, ", ", intervals))
+
+# Export the results.
+write.csv(high_estimates, "Results/Tables/high_nonphy_lat_regression.csv", row.names = TRUE)
+
+
 
 
 
