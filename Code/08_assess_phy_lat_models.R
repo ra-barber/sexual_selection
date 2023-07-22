@@ -60,7 +60,7 @@ source("Code/functions.R")
 first_half <- "Z:/home/sexual_selection/Results/Models/Combined_models/Latitude/"
 
 # Read in the centered models.
-allbirds_cen_all_data <- readRDS(paste0(first_half, "all_centered_all_data.rds"))
+allbirds_uncen_all_data <- readRDS(paste0(first_half, "all_uncentered_all_data.rds"))
 
 #cert_cen_all_data <- readRDS(paste0(first_half, "certainty_centered_all_data.rds"))
 

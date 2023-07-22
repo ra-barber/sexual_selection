@@ -31,8 +31,8 @@ source("Code/functions.R")
 
 # Read in the actual models. (This takes up loads of RAM)
 all_temp_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/temp_centered_all_models.rds")
-all_mig_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/mig_centered_all_models.rds")
-all_tro_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/tro_centered_all_models.rds")
+all_mig_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/mig_uncentered_all_models.rds")
+all_tro_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/tro_uncentered_all_models.rds")
 all_terr_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/terr_centered_all_models.rds")
 
 tic()
@@ -54,6 +54,35 @@ toc()
 
 rm(all_temp_models, all_mig_models, all_tro_models, all_terr_models)
 
+cond_effects <- conditional_effects(all_tro_models, method = "posterior_predict")
+
+cond_effects[[1]]
+
+cond_effects_2 <- conditional_effects(all_tro_models, method = "posterior_linpred")
+
+cond_effects_2[[1]]
+
+
+cond_effects_3 <- conditional_effects(all_tro_models, categorical = TRUE)
+
+
+cond_effects_4 <- conditional_effects(all_tro_models)
+
+cond_effects_4[[1]]
+
+cond_effects_5 <- conditional_effects(all_tro_models, robust = FALSE)
+
+1.400160 + 1.96*0.2416373
+
+1.400160 - 1.96*0.2416373
+
+2.111444 + 1.96*0.3788015 
+2.111444  - 1.96*0.3788015 
+
+cond_effects_5[[1]]
+
+
+1.364378 + 0.2317354
 ###############################################################################
           #### Read in the model data for plotting #####
 

@@ -69,6 +69,37 @@ gc()
 file_pathway <- paste0("Results/Models/Combined_models/Latitude/", current_model_name, "_models.rds")
 saveRDS(object = current_model, file =  file_pathway)
 
+# model_pattern = current_model_name
+# # Function to extract and combine brms models.
+# combine_brms <- function(model_pattern, file_pathways = lat_files){
+#   pattern_matched <- file_pathways %>% str_subset(pattern = model_pattern)
+#   if (length(pattern_matched) == 1){
+#     brms_models <- readRDS(pattern_matched)
+#   } else {
+#     
+#     for (x in 1:length(pattern_matched)){
+#       if (x ==1){
+#         brms_model1 <- readRDS(pattern_matched[x])
+#         print(summary(brms_model1))
+#       } else if (x == 2){
+#         brms_model2 <- readRDS(pattern_matched[x])
+#         print(summary(brms_model2))
+#         brms_models <- combine_models(brms_model1, brms_model2, check_data = FALSE)
+#         rm(brms_model1, brms_model2)
+#       } else {
+#         brms_model <- readRDS(pattern_matched[x])
+#         print(summary(brms_model))
+#         brms_models <- combine_models(brms_models, brms_model, check_data = FALSE)
+#         rm(brms_model)
+#       }
+#       print(x)
+#     }
+#   }
+#   return(brms_models)
+# }
+# 
+
+
 
 ###############################################################################
              ##### Extract r squared and model predictions #####
