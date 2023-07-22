@@ -92,12 +92,7 @@ if (model_type == "frugivore"){
 if (model_type == "invertivore"){
   model_data %<>% filter(trophic_niche == "Invertivore")
 }
-if (model_type == "nectarivore"){
-  model_data %<>% filter(trophic_niche == "Invertivore")
-}
-if (model_type == "frug_nect"){
-  model_data %<>% filter(trophic_niche == "Invertivore")
-}
+
 
 # Drop tips on the tree.
 model_tree <- drop.tip(model_tree, setdiff(model_tree$tip.label, model_data$tree_tip))
@@ -166,8 +161,8 @@ brms_model <- brm(
   data = model_data,
   data2 = list(A=model_covar),
   prior = normal_priors,
-  iter = 2500,
-  warmup = 500,
+  iter = 10000,
+  warmup = 5000,
   chains = 2,
   thin = 20,
   cores = 32,
