@@ -128,6 +128,16 @@ fruit_high_model <- read_lat_model("fruit_high")
 secondary_high_model <- read_lat_model("secondary_high")
 invert_high_model <- read_lat_model("invert_high")
 
+# Read in mig and terr models.
+mig_all_model <- read_lat_model("mig_all")
+no_mig_all_model <- read_lat_model("no_mig_all")
+terr_all_model <- read_lat_model("terr_all")
+no_terr_all_model <- read_lat_model("no_terr_all")
+
+mig_high_model <- read_lat_model("mig_high")
+no_mig_high_model <- read_lat_model("no_mig_high")
+terr_high_model <- read_lat_model("terr_high")
+no_terr_high_model <- read_lat_model("no_terr_high")
 
 
 
@@ -142,11 +152,19 @@ fruit_all_estimates <- summary(fruit_all_model)$fixed[5,c(1,3,4)]
 secondary_all_estimates <- summary(secondary_all_model)$fixed[5,c(1,3,4)]
 invert_all_estimates <- summary(invert_all_model)$fixed[5,c(1,3,4)]
 
+mig_all_estimates <- summary(mig_all_model)$fixed[5,c(1,3,4)]
+no_mig_all_estimates <- summary(no_mig_all_model)$fixed[5,c(1,3,4)]
+terr_all_estimates <- summary(terr_all_model)$fixed[5,c(1,3,4)]
+no_terr_all_estimates <- summary(no_terr_all_model)$fixed[5,c(1,3,4)]
+
 all_estimates <- rbind(allbirds_all_estimates, cert_all_estimates, 
                        primary_all_estimates, fruit_all_estimates,
-                       secondary_all_estimates, invert_all_estimates)
+                       secondary_all_estimates, invert_all_estimates,
+                       mig_all_estimates, no_mig_all_estimates,
+                       terr_all_estimates, no_terr_all_estimates)
 row.names(all_estimates) <- c("all_birds", "certainty", "primary",
-                              "fruit", "secondary", "invert")
+                              "fruit", "secondary", "invert", "migration", 
+                              "no_migration", "territorial", "non_territorial")
 # Paste together values for reporting in a table.
 all_estimates %<>% mutate(
   round_est = round(Estimate, 2),
@@ -166,24 +184,35 @@ fruit_high_estimates <- summary(fruit_high_model)$fixed[5,c(1,3,4)]
 secondary_high_estimates <- summary(secondary_high_model)$fixed[5,c(1,3,4)]
 invert_high_estimates <- summary(invert_high_model)$fixed[5,c(1,3,4)]
 
+mig_high_estimates <- summary(mig_high_model)$fixed[5,c(1,3,4)]
+no_mig_high_estimates <- summary(no_mig_high_model)$fixed[5,c(1,3,4)]
+terr_high_estimates <- summary(terr_high_model)$fixed[5,c(1,3,4)]
+no_terr_high_estimates <- summary(no_terr_high_model)$fixed[5,c(1,3,4)]
+
 high_estimates <- rbind(allbirds_high_estimates, cert_high_estimates, 
                        primary_high_estimates, fruit_high_estimates,
-                       secondary_high_estimates, invert_high_estimates)
+                       secondary_high_estimates, invert_high_estimates,
+                       mig_high_estimates, no_mig_high_estimates,
+                       terr_high_estimates, no_terr_high_estimates)
 row.names(high_estimates) <- c("all_birds", "certainty", "primary",
-                              "fruit", "secondary", "invert")
-
+                              "fruit", "secondary", "invert", "migration", 
+                              "no_migration", "territorial", "non_territorial")
+# Paste together values for reporting in a table.
 high_estimates %<>% mutate(
   round_est = round(Estimate, 2),
   intervals = paste0(round(`l-95% CI`, 2), ", ", 
                      round(`u-95% CI`, 2)),
   est_intervals = paste0(round_est, ", ", intervals))
 
+
 # Export the results.
 write.csv(high_estimates, "Results/Tables/high_nonphy_lat_regression.csv", row.names = TRUE)
 
-
-
-
+# Count the number of species.
+model_data %>% count(migration_binary)
+model_data %>% filter(sexual_certainty < 3) %>% count(migration_binary)
+model_data %>% count(territory_binary)
+model_data %>% filter(sexual_certainty < 3) %>% count(territory_binary)
 
 
 ###############################################################################
@@ -382,10 +411,10 @@ sec_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_binary == "S
 
 
 # Read in all cert models.
-mig_all_model <- read_lat_model("mig_all")
-no_mig_all_model <- read_lat_model("no_mig_all")
-terr_all_model <- read_lat_model("terr_all")
-no_terr_all_model <- read_lat_model("no_terr_all")
+# mig_all_model <- read_lat_model("mig_all")
+# no_mig_all_model <- read_lat_model("no_mig_all")
+# terr_all_model <- read_lat_model("terr_all")
+# no_terr_all_model <- read_lat_model("no_terr_all")
 
 
 # Make the side plots.
@@ -418,6 +447,11 @@ no_terr_lat_plot <- terr_lat_data %>% filter(territory_binary == "No territory")
 # Export the plots.
 save(list = ls(pattern =  "lat_plot"), file = "Plots/Maps/latitudinal_sideplots.Rdata")
 gc()
+
+
+
+
+
 
 
 
