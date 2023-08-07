@@ -51,18 +51,24 @@ ss_scores %<>% select(birdtree_name, family_bird_tree, sexual_selection, data_ce
 # Add in the extra dunn data species.
 baker_data <- baker_data %>% select(birdtree_name, residual_testes_mass)
 extra_dunn_data <- dunn_data %>% filter(!birdtree_name %in% baker_data$birdtree_name)
+
+baker_data$dataset <- "Baker"
+extra_dunn_data$dataset <- "Dunn"
+
 both_data <- rbind(extra_dunn_data, baker_data)
 
 # Join up the SS scores.
 both_data %<>% left_join(ss_scores)
+both_data$tree_tip <- gsub(" ", "_", both_data$birdtree_name)
+  
+# Remove low certainty species.
+#both_data %<>% filter(data_certainty > 2)
 
 # Get the polygamous and lekkers with smallest testes mass.
 both_data %>% filter(sexual_selection > 2) %>% arrange(residual_testes_mass)
 
 
-
-
-
+write.csv(both_data, "Data/teste_mass/both_testes_datasets_01_08.csv", row.names = FALSE)
 
 # Read in the tree.
 model_tree <- read.tree("Data/Trees/prum_trees.tre")[[1]]
@@ -79,91 +85,13 @@ model_covar <- reorder_mat(model_covar, rownames(model_covar)[mat_order])
 row.names(both_data) <- both_data$tree_tip
 both_data <- both_data[row.names(model_covar),]
 
-
-
-###############################################################################
-            #### Prepare teste response variables ####
-
-# # Logged teste mass vs body mass.
-# baker_data %>% ggplot(aes(x = body_mass, y = teste,
-#                           colour = as.factor(sexual_selection),
-#                           fill = as.factor(sexual_selection))) + 
-#   geom_point(size = 3, alpha = 0.5) + 
-#   theme_classic(base_size = 20) +  
-#   scale_fill_manual(values = pal) + 
-#   scale_colour_manual(values = pal) + 
-#   theme(legend.position = "none",
-#         line = element_line(linewidth = 0.5)) + 
-#   xlab("Body Mass") + ylab("Raw testes mass")
-
-# # Raw teste mass vs body mass.
-# baker_data %>% ggplot(aes(x = (10^body_mass), y = (10^teste),
-#                           colour = as.factor(sexual_selection),
-#                           fill = as.factor(sexual_selection))) + 
-#   geom_point(size = 3, alpha = 0.5) + 
-#   theme_classic(base_size = 20) +  
-#   scale_fill_manual(values = pal) + 
-#   scale_colour_manual(values = pal) + 
-#   theme(legend.position = "none",
-#         line = element_line(linewidth = 0.5)) + 
-#   xlab("Body Mass") + ylab("Raw testes mass")
-
-# Get logged relative teste mass.
-#baker_data$log_relative_teste <- baker_data$teste / baker_data$body_mass
-
-# Get relative teste size before log transformation.
-baker_data$relative_teste <- baker_data$teste - baker_data$body_mass
-
-# Take the residuals from a linear model.
-teste_lm <- lm(teste ~ body_mass, data = baker_data)
-baker_data$model_resids <- teste_lm$residuals
-
-# Phylo lm of residuals.
-# library(phylolm)
-# teste_phy <- phylolm(teste ~ body_mass, data = baker_data, phy = model_tree)
-# phy_resid_data <- data.frame(tree_tip = names(teste_phy$residuals), phy_resids = teste_phy$residuals)
-# baker_data %<>% left_join(phy_resid_data)
-
-test_data <- left_join(baker_data, dunn_data)
-
-# Show correlation between scores to check it's calculated the same way.
-test_data %>% ggplot(aes(x = residual_testes_mass, y = model_resids,
-                          colour = as.factor(sexual_selection),
-                          fill = as.factor(sexual_selection))) + 
-  geom_point(size = 3, alpha = 0.5) + 
-  theme_classic(base_size = 20) +  
-  scale_fill_manual(values = pal) + 
-  scale_colour_manual(values = pal) + 
-  theme(legend.position = "none",
-        line = element_line(linewidth = 0.5)) + 
-  xlab("Dunn Data") + ylab("Baker Data")
-
-extra_dunn_data <- dunn_data %>% filter(!birdtree_name %in% baker_data$birdtree_name)
-
-baker_merge_data <- baker_data %>% select(birdtree_name, residual_testes_mass = model_resids)
-
-model_data <- read.csv("Data/sexual_traits.csv") %>% clean_names()
-model_data %<>% select(birdtree_name, family, sexual_score, sexual_certainty = cert_reverse)
-
-
-both_data <- rbind(extra_dunn_data, baker_merge_data)
-
-both_data %<>% left_join(model_data)
-
-both_data %>% filter(sexual_score > 2) %>% arrange(residual_testes_mass)
-
-
 # Scale continuous predictors to two SD.
-baker_data %<>% mutate(
-  teste_z = standardize(teste, two_sd = TRUE),
-  lm_resid_teste_z = standardize(model_resids, two_sd = TRUE),
-  phy_resid_teste_z = standardize(phy_resids, two_sd = TRUE)
+both_data %<>% mutate(
+  resid_teste_z = standardize(residual_testes_mass, two_sd = TRUE)
 )
 
 # Prepare response variables.
-baker_data$sexual_selection <- baker_data$sexual_selection + 1
-
-
+both_data$sexual_selection <- both_data$sexual_selection + 1
 
 
 
@@ -173,8 +101,7 @@ baker_data$sexual_selection <- baker_data$sexual_selection + 1
 
 
 # Brms formula.
-model_formula <- "sexual_selection ~ teste_z + (1|gr(tree_tip, cov=A))"
-model_formula <- "sexual_selection ~ lm_resid_teste_z + (1|gr(tree_tip, cov=A))"
+model_formula <- "sexual_selection ~ resid_teste_z + (1|gr(tree_tip, cov=A))"
 brms_formula <- brmsformula(model_formula, family = cumulative())
 
 # # Add un-informative priors.
@@ -183,11 +110,11 @@ normal_priors <- c(prior(normal(0,1), class="Intercept"),
                    prior(gamma(2,1), "sd")) # Gamma 2,1 probs seems to work well given all previous models end up with values around 1
 
 # Run brms models.
-testes_model <- brm(
+phy_testes_model <- brm(
   brms_formula,
-  data = baker_data,
+  data = both_data,
   data2 = list(A=model_covar),
-  #prior = normal_priors,
+  prior = normal_priors,
   iter = 1000,
   warmup = 500,
   chains = 4,
@@ -199,10 +126,7 @@ testes_model <- brm(
   threads = threading(2),
 )
 
-adapt_delta(as.mcmc(testes_model))
-rstanarm::adapt_delta(as.mcmc(testes_model))
 
-testes_model$fit
 
 # Export the model.
 saveRDS(testes_model, "Results/Models/Testes/lm_teste_model.rds")
@@ -315,11 +239,21 @@ both_data %>% ggplot(aes(group = as.factor(sexual_selection), x = sexual_selecti
         line = element_line(linewidth = 0.5)) + 
   xlab("Sexual selection") + ylab("Residual testes mass")
 
+no_srr <- both_data %>% filter(sex_role_reversal == 0)
+both_data %>% filter(data_certainty > 3) %>%  ggplot(aes(group = as.factor(sexual_selection), x = sexual_selection,
+                                                        colour = as.factor(sexual_selection),
+                                                        fill = as.factor(sexual_selection), y = residual_testes_mass)) + 
+  geom_jitter(size = 3, alpha = 0.5) + 
+  geom_boxplot(alpha = 1, colour = "black", fill = NA, outlier.shape = NA, size = 0.75) + 
+  theme_classic(base_size = 20) +  
+  scale_fill_manual(values = pal) + 
+  scale_colour_manual(values = pal) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5)) + 
+  xlab("Sexual selection") + ylab("Residual testes mass")
 
 
-
-
-
+both_data %>% filter(data_certainty > 2) %>% nrow()
 
 
 model_formula <- "sexual_selection ~ raw_relative_teste_2"

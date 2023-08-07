@@ -26,19 +26,22 @@ library(readxl)
 # Read in crosswalk.
 
 ## Need to use most up to date version of crosswalk.
+ebird_tree <- read.tree("Data/Trees/ebird_24may.tre")
+ebird_species <- ebird_tree$tip.label %>% str_replace("_", " ") %>% as.data.frame()
 
-clements_crosswalk <- read_excel("Data/jetz_to_clements_crosswalk_07_06.xlsx") %>% clean_names()
+clements_crosswalk <- read_excel("Data/Clements_conversion/jetz_to_clements_crosswalk_07_06.xlsx") %>% clean_names()
 
 # Read in ecotraits.
 eco_traits <- read.csv("Data/ecotraits_09_05_without_invalids.csv") %>% clean_names()
+eco_traits <- read.csv("Data/sexual_selection_cleaned_01_08.csv") %>% clean_names()  # We have since cleaned this data even more.
+
 colnames(eco_traits)[1] <- "bird_tree_species"
 
 # # # This section you can change for different traits # # #
 
 # Select the traits you want, plus species name.
-trait_to_merge <- eco_traits %>% select(bird_tree_species, sexual_score, sexual_certainty, 
-                                        sexual_selection_notes, sexual_selection_source, 
-                                        sexual_selection_observer)
+trait_to_merge <- eco_traits %>% select(bird_tree_species, sexual_selection, data_certainty, 
+                                        sex_role_reversal, notes, source, recorder)
 
 # Merge together.
 crosswalk_traits <- clements_crosswalk %>% left_join(trait_to_merge)
@@ -63,8 +66,8 @@ unique(crosswalk_traits$match_type)
 # Filter for lumps.
 one_to_many <- crosswalk_traits %>% filter(match_type == "1BT to many eBird")
 
-one_to_many[one_to_many$nominate == "No", "sexual_selection_notes"] <- "Inferred from nominate species in clements split"
-one_to_many[one_to_many$nominate == "No", "sexual_selection_source"] <- "Clements split (2023)"
+one_to_many[one_to_many$nominate == "No", "notes"] <- "Inferred from nominate species in clements split"
+one_to_many[one_to_many$nominate == "No", "source"] <- "Clements split (2023)"
 
 ## Write a loop to lower certainty scores for high cert species.
 
@@ -76,11 +79,11 @@ for(birdtree_spec in unique(one_to_many$bird_tree_species)){
   loop_spec <- one_to_many %>% filter(bird_tree_species == birdtree_spec)
   
   # Nominate cert score.
-  nom_cert <- loop_spec$sexual_certainty[loop_spec$nominate == "Yes"]
+  nom_cert <- loop_spec$data_certainty[loop_spec$nominate == "Yes"]
   
   # If the nominate sexual certainty score is 1, change it 2 for now due to inferrence.
   if (nom_cert == 1){
-    one_to_many$sexual_certainty[one_to_many$bird_tree_species == birdtree_spec & one_to_many$nominate == "No"] <- 2
+    one_to_many$data_certainty[one_to_many$bird_tree_species == birdtree_spec & one_to_many$nominate == "No"] <- 2
   }
   
 }
@@ -100,7 +103,7 @@ unique(crosswalk_traits$match_type)
 many_to_one <- crosswalk_traits %>% filter(match_type == "Many BT to 1eBird")
 
 # Function for finding conflicts when lumping jetz species.
-get_lump_conflicts <- function(dataset = many_to_one, predictor = "sexual_score"){
+get_lump_conflicts <- function(dataset = many_to_one, predictor = "sexual_selection"){
   
   # Empty vector to save problem species.
   problem_lumps <- c()
@@ -131,13 +134,38 @@ get_lump_conflicts <- function(dataset = many_to_one, predictor = "sexual_score"
 score_conflict_species <- get_lump_conflicts()
 
 # Check certainty scores (undoubtedly will be many more conflicts.)
-cert_conflict_species <- get_lump_conflicts(predictor = "sexual_certainty")
+cert_conflict_species <- get_lump_conflicts(predictor = "data_certainty")
 
 # Combine lists.
 conflict_species <- c(score_conflict_species, cert_conflict_species)
 
 # Filter traits for conflict species.
 conflict_data <- crosswalk_traits %>% filter(ebird_species %in% conflict_species)
+
+
+### Green pheasant should be scored as 3 for SS due to conflict.
+# Note to remmber for later.
+
+# The jetz species where the nominate has worse data certainty: 
+# Catharacta antarctica 
+# Catharacta lonnbergi   - better known
+#
+# Sporophila melanops   - better known 
+# Sporophila ruficollis
+#
+# Laterallus jamaicensis 
+# Laterallus tuerosi - better known 
+# 
+# Lamprotornis chloropterus
+# Lamprotornis elisabeth  - better known 
+#
+#
+#
+#
+#
+#
+#
+#
 
 # Export species to manually change.
 write.csv(conflict_data, "Data/Clements_conversion/sexual_selection_lump_conflicts.csv", row.names = FALSE)
@@ -168,7 +196,7 @@ manual_1 <- many_to_one_manual %>% filter(ebird_species == "Ramphocelus passerin
 # Pick this species because it had correct sources, but update sex score to match nominate.
 manual_2 <- many_to_one_manual %>% filter(ebird_species == "Stercorarius antarcticus" & nominate == "No")
 manual_2$sexual_score <- 2
-manual_2$sexual_certainty <- 1
+manual_2$data_certainty <- 1
 
 
 ###############################################################################
