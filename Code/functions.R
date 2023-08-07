@@ -664,3 +664,36 @@ Bayes_R2_MZ <- function(fit, ...) {
 }
 
 
+# Marginal version
+marginal_R2_MZ <- function(fit, ...) {
+  y_pred <- fitted(fit, scale = "linear", summary = FALSE, re_formula = NA, ...)
+  var_fit <- apply(y_pred, 1, var)
+  
+  if (fit$formula$family$family == "cumulative" ||
+      fit$formula$family$family == "bernoulli") {
+    if (fit$formula$family$link == "probit" || 
+        fit$formula$family$link == "probit_approx") {
+      var_res <- 1
+    }
+    else if (fit$formula$family$link == "logit") {
+      var_res <- pi^2 / 3 
+    }
+  } 
+  else {
+    sum_fit <- summary(fit)
+    sig_res <- sum_fit$spec_pars["sigma", "Estimate"]
+    var_res <- sig_res^2
+  } 
+  R2_MZ <- var_fit / (var_fit + var_res)
+  print(
+    data.frame(
+      Estimate = mean(R2_MZ), 
+      Est.Error = sd(R2_MZ), 
+      "l-95% CI" = quantile(R2_MZ, 0.025),
+      "u-95% CI" = quantile(R2_MZ, 0.975),
+      row.names = "Bayes_R2_MZ", 
+      check.names = FALSE), 
+    digits = 2)
+}
+
+
