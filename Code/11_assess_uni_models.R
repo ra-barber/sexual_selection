@@ -54,35 +54,7 @@ toc()
 
 rm(all_temp_models, all_mig_models, all_tro_models, all_terr_models)
 
-cond_effects <- conditional_effects(all_tro_models, method = "posterior_predict")
 
-cond_effects[[1]]
-
-cond_effects_2 <- conditional_effects(all_tro_models, method = "posterior_linpred")
-
-cond_effects_2[[1]]
-
-
-cond_effects_3 <- conditional_effects(all_tro_models, categorical = TRUE)
-
-
-cond_effects_4 <- conditional_effects(all_tro_models)
-
-cond_effects_4[[1]]
-
-cond_effects_5 <- conditional_effects(all_tro_models, robust = FALSE)
-
-1.400160 + 1.96*0.2416373
-
-1.400160 - 1.96*0.2416373
-
-2.111444 + 1.96*0.3788015 
-2.111444  - 1.96*0.3788015 
-
-cond_effects_5[[1]]
-
-
-1.364378 + 0.2317354
 ###############################################################################
           #### Read in the model data for plotting #####
 
@@ -110,13 +82,13 @@ terr_cen_all_data[[3]]
 ## Reading in all models takes up too much RAM ## 
 
 # Read in the models using high data certainties.
-# temp_cen_high_data <- readRDS(paste0(first_half, "temp_centered_high_data.rds"))
+temp_cen_high_data <- readRDS(paste0(first_half, "temp_centered_high_data.rds"))
 # temp_uncen_high_data <- readRDS(paste0(first_half, "temp_uncentered_high_data.rds"))
-# mig_cen_high_data <- readRDS(paste0(first_half, "mig_centered_high_data.rds"))
+mig_cen_high_data <- readRDS(paste0(first_half, "mig_centered_high_data.rds"))
 # mig_uncen_high_data <- readRDS(paste0(first_half, "mig_uncentered_high_data.rds"))
-# tro_cen_high_data <- readRDS(paste0(first_half, "tro_centered_high_data.rds"))
+tro_cen_high_data <- readRDS(paste0(first_half, "tro_centered_high_data.rds"))
 # tro_uncen_high_data <- readRDS(paste0(first_half, "tro_uncentered_high_data.rds"))
-# terr_cen_high_data <- readRDS(paste0(first_half, "terr_centered_high_data.rds"))
+terr_cen_high_data <- readRDS(paste0(first_half, "terr_centered_high_data.rds"))
 # terr_uncen_high_data <- readRDS(paste0(first_half, "terr_uncentered_high_data.rds"))
 # 
 # 
@@ -128,23 +100,43 @@ terr_cen_all_data[[3]]
 
 
 # Extract relevant coeffcient information.
-temp_all_estimates <- summary(temp_cen_all_data[[1]])$fixed[5,c(1,3,4)]
-mig_all_estimates <- summary(mig_cen_all_data[[1]])$fixed[5,c(1,3,4)]
 tro_all_estimates <- summary(tro_cen_all_data[[1]])$fixed[5,c(1,3,4)]
+mig_all_estimates <- summary(mig_cen_all_data[[1]])$fixed[5,c(1,3,4)]
 terr_all_estimates <- summary(terr_cen_all_data[[1]])$fixed[5,c(1,3,4)]
-all_estimates <- rbind(temp_all_estimates, mig_all_estimates, 
-                       tro_all_estimates, terr_all_estimates)
+temp_all_estimates <- summary(temp_cen_all_data[[1]])$fixed[5,c(1,3,4)]
+
+all_estimates <- rbind(tro_all_estimates, mig_all_estimates, 
+                       terr_all_estimates, temp_all_estimates)
 
 # Paste together values for reporting in a table.
 all_estimates %<>% mutate(
   round_est = round(Estimate, 2),
-  intervals = paste0("[", round(`l-95% CI`, 2), ", ", 
-                     round(`u-95% CI`, 2), "]"),
-  est_intervals = paste0(round_est, " ", intervals))
+  intervals = paste0(round(`l-95% CI`, 2), ", ", 
+                     round(`u-95% CI`, 2)),
+  est_intervals = paste0(round_est, ", ", intervals))
 
 # Export the results.
 write.csv(all_estimates, "Results/Tables/all_univariate_regression.csv", row.names = TRUE)
 
+
+# High certainty,
+tro_high_estimates <- summary(tro_cen_high_data[[1]])$fixed[5,c(1,3,4)]
+mig_high_estimates <- summary(mig_cen_high_data[[1]])$fixed[5,c(1,3,4)]
+terr_high_estimates <- summary(terr_cen_high_data[[1]])$fixed[5,c(1,3,4)]
+temp_high_estimates <- summary(temp_cen_high_data[[1]])$fixed[5,c(1,3,4)]
+
+high_estimates <- rbind(tro_high_estimates, mig_high_estimates, 
+                       terr_high_estimates, temp_high_estimates)
+
+# Paste together values for reporting in a table.
+high_estimates %<>% mutate(
+  round_est = round(Estimate, 2),
+  intervals = paste0(round(`l-95% CI`, 2), ", ", 
+                     round(`u-95% CI`, 2)),
+  est_intervals = paste0(round_est, ", ", intervals))
+
+# Export the results.
+write.csv(high_estimates, "Results/Tables/high_univariate_regression.csv", row.names = TRUE)
 
 
 ###############################################################################
