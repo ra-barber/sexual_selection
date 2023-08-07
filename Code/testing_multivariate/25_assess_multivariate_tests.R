@@ -62,6 +62,8 @@ high_seasonality_models <- readRDS("Z:/home/sexual_selection/Results/Models/Comb
 high_migration_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/migration_high_models.rds")
 
 
+all_seasonality_migration_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/seasonality_mig_all_models.rds")
+high_seasonality_migration_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/seasonality_mig_high_models.rds")
 
 ############################################################################### 
                  #### Model Diagnostics #####
@@ -95,6 +97,9 @@ brms_forest <- function(model){
 brms_forest(all_interaction_models)
 brms_forest(all_seasonality_models)
 brms_forest(all_migration_models)
+
+brms_forest(all_seasonality_migration_models)
+brms_forest(high_seasonality_migration_models)
 
 
 # coef(all_interaction_models)
@@ -174,12 +179,43 @@ seasonality_plot <- brms_forest(all_seasonality_models) +
 
 
 
+
+interaction_plot <- brms_forest(all_interaction_models) + 
+  scale_y_discrete(limits = rev(c("b_terr_bi_c", "b_migration_bi_c", "b_trophic_level_c","b_temp_seasonality_z", 
+                                  "b_terr_bi_c:migration_bi_c", "b_terr_bi_c:trophic_level_c", "b_terr_bi_c:temp_seasonality_z", 
+                                  "b_migration_bi_c:trophic_level_c",  "b_trophic_level_c:temp_seasonality_z")),
+                   labels = rev(c("Territory", "Migration", "Trophic Level", "Seasonality", 
+                                  "Territory x Migration", "Territory x Trophic Level", 
+                                  "Territory x Seasonality", "Migration x Trophic Level", 
+                                  "Trophic Level x Seasonality"))) + theme_classic(base_size = 20)
+ggsave("Plots/Results/Predictor_tests/all_nomig_interaction_model.png")
+
+
+
+
+
+
+
+
+
+interaction_plot <- brms_forest(high_interaction_models) + 
+  scale_y_discrete(limits = rev(c("b_terr_bi_c", "b_migration_bi_c", "b_trophic_level_c","b_temp_seasonality_z", 
+                                  "b_terr_bi_c:migration_bi_c", "b_terr_bi_c:trophic_level_c", "b_terr_bi_c:temp_seasonality_z", 
+                                  "b_migration_bi_c:trophic_level_c",  "b_trophic_level_c:temp_seasonality_z")),
+                   labels = rev(c("Territory", "Migration", "Trophic Level", "Seasonality", 
+                                  "Territory x Migration", "Territory x Trophic Level", 
+                                  "Territory x Seasonality", "Migration x Trophic Level", 
+                                  "Trophic Level x Seasonality"))) + theme_classic(base_size = 20)
+ggsave("Plots/Results/Predictor_tests/high_nomig_interaction_model.png")
+
+
 ###############################################################################
                          #### P mapping #####
 
 
 brms_pmap(all_interation_sample_models)
 brms_pmap(all_seasonality_test_models)
+brms_pmap(all_seasonality_models)
 
 
 
@@ -191,9 +227,20 @@ predictor_names <- c("Territoriality", "Migration", "1ry consumer",
                      "Seasonality", "1ry consumer\nx seasonality",
                      "1ry consumer\nx territoriality")
 
+predictor_names <- c("Territoriality", "Migration", "1ry consumer",
+                     "Seasonality", "Seasonality\nx Territoriality",
+                     "Seasonality\nx 1ry consumer")
+
+
+migration_predictor_names <- c("Territoriality", "Migration", "1ry consumer",
+                     "Seasonality", "Seasonality\nx Territoriality",
+                     "Seasonality\nx Migration",
+                     "Seasonality\nx 1ry consumer")
+
+all_seasonality_migration_models
 
 ###############################################################################
-#### Extract the draws for each model #####
+                #### Extract the draws for each model #####
 
 # Extract draws function.
 extract_draws <- function(model, column_names){
@@ -209,14 +256,16 @@ extract_draws <- function(model, column_names){
 
 
 # Simple models first.
-all_plotdata <- extract_draws(all_models, predictor_names)
-high_plotdata <- extract_draws(high_models, predictor_names)
+all_plotdata <- extract_draws(all_seasonality_models, predictor_names)
+high_plotdata <- extract_draws(high_seasonality_models, predictor_names)
 
 
-
+# Simple models first.
+all_mig_plotdata <- extract_draws(all_seasonality_migration_models, migration_predictor_names)
+high_mig_plotdata <- extract_draws(high_seasonality_migration_models, migration_predictor_names)
 
 ###############################################################################
-#### Add axis label and legend information #####
+           #### Add axis label and legend information #####
 
 # Change order for plotting.
 predictor_order <- c("Seasonality", "Migration", "Primary\nconsumer", "Territoriality",
@@ -229,43 +278,43 @@ predictor_order <- c("Seasonality", "Migration", "1ry consumer", "Territoriality
 predictor_order <- c("1ry consumer", "Migration", "Territoriality","Seasonality",
                      "1ry consumer\nx territoriality", "1ry consumer\nx seasonality")
 
-# predictor_order <- c("Seasonality", "Migration", "expression(bold("1"^ry*"")) consumer", "Territoriality",
-#                      "expression(bold("1"^ry*"")) consumer\nx seasonality",
-#                      "expression(bold("1"^ry*"")) consumer\nx territoriality")
+predictor_order <- c("1ry consumer", "Migration", "Territoriality","Seasonality",
+                     "Seasonality\nx 1ry consumer", "Seasonality\nx Territoriality")
+
+mig_predictor_order <- c("1ry consumer", "Migration", "Territoriality","Seasonality",
+                     "Seasonality\nx 1ry consumer", "Seasonality\nx Migration","Seasonality\nx Territoriality")
 
 
 # Vector of predictors in reverse order of plotting.
 all_plotdata$name %<>% factor(levels = rev(predictor_order))
 high_plotdata$name %<>% factor(levels = rev(predictor_order))
-#log_high_plotdata$name %<>% factor(levels = rev(predictor_order))
+
+all_mig_plotdata$name %<>% factor(levels = rev(mig_predictor_order))
+high_mig_plotdata$name %<>% factor(levels = rev(mig_predictor_order))
 
 # Add info on models.
-lifehistory <- c("Territoriality",  "Migration",  "Primary\nconsumer", "1ry consumer",
-                 "(Pr) Precocial", "Chick maturity")
-resource <-   c("Seasonality", "Productivity")
-interaction <-  c("Primary\nconsumer\n x \nTerritoriality", 
-                  "Primary\nconsumer\n x \nSeasonality",
-                  "Primary\nconsumer\n x \nProductivity",
-                  "1ry consumer\nx seasonality",
-                  "1ry consumer\nx territoriality")
-
-devo_interaction <- c("DM x PC", "DM x \ngeneration length", "DM x Migration", "DM x \nseasonality",
-                      "DM x \nproductivity", "DM x \nterritoriality","CM x \nSeasonality",
-                      "CM x \nProductivity", "CM x \nTerritoriality")
+lifehistory <- c("Territoriality",  "Migration", "1ry consumer")
+resource <-   c("Seasonality")
+interaction <-  c("Seasonality\nx 1ry consumer", "Seasonality\nx Migration", "Seasonality\nx Territoriality")
 
 # Function for adding colour to legends.
 add_legend_info <- function(plotdata){
   plotdata$trait <- NA
   plotdata$trait[plotdata$name %in% lifehistory] <- "Life history"
   plotdata$trait[plotdata$name %in% resource] <- "Environment"
-  plotdata$trait[plotdata$name %in% interaction] <- "Diet interaction"
-  plotdata$trait[plotdata$name %in% devo_interaction] <- "Devlopment interaction"
+  plotdata$trait[plotdata$name %in% interaction] <- "Climate interaction"
   plotdata
 }
 
 # Add the legend info.
 all_plotdata %<>% add_legend_info()
 high_plotdata %<>% add_legend_info()
+
+all_mig_plotdata %<>% add_legend_info()
+high_mig_plotdata %<>% add_legend_info()
+
+
+
 #log_high_plotdata %<>% add_legend_info()
 
 # Group plot settings.
@@ -312,25 +361,34 @@ light_colours <- c( "#C98986",  "#77AD78", "#7494EA", "#D8C77B")   #F7D460   #F6
 light_colours <- c("#77AD78", "#C98986", "#7494EA", "#D8C77B") 
 dark_colours <- c( "#05299E","#214F4B", "#8D0801","#A88A05")
 
-legend_order <- c(  "Life history","Environment","Diet interaction", "Devlopment interaction")
+legend_order <- c("Life history","Environment","Climate interaction")
 
 y_axis_labs <- rev(expression("Territoriality", "Migration", "1"^ry*" consumer",
                               "Seasonality",
                               "1"^ry*" consumer\nx seasonality",
                               "1"^ry*" consumer\nx territoriality"))
 
-y_axis_labs <- rev(expression("Seasonality", "Migration", "1"^ry*" consumer",
-                              "Territoriality",
-                              atop(NA,atop(textstyle("1"^ry*" consumer"),textstyle("× seasonality"))),
-                              atop(NA,atop(textstyle("1"^ry*" consumer"), textstyle("× territoriality")))))
+# y_axis_labs <- rev(expression("Seasonality", "Migration", "1"^ry*" consumer",
+#                               "Territoriality",
+#                               atop(NA,atop(textstyle("1"^ry*" consumer"),textstyle("× seasonality"))),
+#                               atop(NA,atop(textstyle("1"^ry*" consumer"), textstyle("× territoriality")))))
+
+
+
 
 y_axis_labs <- rev(expression("1"^ry*" consumer", "Migration", 
                               "Territoriality", "Seasonality",
-                              atop(NA,atop(textstyle("1"^ry*" consumer"),textstyle("× territoriality"))),
-                              atop(NA,atop(textstyle("1"^ry*" consumer"), textstyle("× seasonality")))))
+                              atop(NA,atop(textstyle("Seasonality"),textstyle("× 1"^ry*" consumer"))),
+                              atop(NA,atop(textstyle("Seasonality"), textstyle("× territoriality")))))
+
+# y_axis_labs <- rev(expression("1"^ry*" consumer", "Migration", 
+#                               "Territoriality", "Seasonality",
+#                               atop(NA,atop(textstyle("Seasonality ×"),textstyle("1"^ry*" consumer"))),
+#                               atop(NA,atop(textstyle("Seasonality ×"), textstyle("territoriality")))))
+
 
 ###############################################################################
-#### Quasi random plots #####
+                       #### Quasi random plots #####
 
 gg_quasi_forst <- function(plotdata, pred_n = 6, legend_pos = c(0.15, 0.15), col_pal = light_colours, alpha_val = 0.1){
   # Main publication design for simple models.
@@ -365,12 +423,12 @@ gg_quasi_forst <- function(plotdata, pred_n = 6, legend_pos = c(0.15, 0.15), col
           strip.text.y = element_blank())
 }
 
-# Export model figures.
-gg_quasi_forst(all_plotdata, legend_pos = c(0.14, 0.9), alpha_val = 0.1, col_pal = light_colours) + xlim(c(-3.75,3))
-ggsave("Plots/Results/all_model.tiff", dpi = 1200, width = 8, height = 4, compression = "lzw")
-
-gg_quasi_forst(high_plotdata, legend_pos = c(0.15, 0.125), alpha_val = 0.2)
-ggsave("Plots/Results/high_model.tiff", dpi = 600, width = 8, height = 4)
+# # Export model figures.
+# gg_quasi_forst(all_plotdata, legend_pos = c(0.14, 0.9), alpha_val = 0.1, col_pal = light_colours) + xlim(c(-3.75,3))
+# ggsave("Plots/Results/all_model.tiff", dpi = 1200, width = 8, height = 4, compression = "lzw")
+# 
+# gg_quasi_forst(high_plotdata, legend_pos = c(0.15, 0.125), alpha_val = 0.2)
+# ggsave("Plots/Results/high_model.tiff", dpi = 600, width = 8, height = 4)
 
 
 library(ggdist)
@@ -399,14 +457,11 @@ gg_stat_eye <- function(plotdata, pred_n = 6, legend_pos = c(0.15, 0.15), col_pa
 }
 
 
-all_plot <- gg_stat_eye(all_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-3.5,3))
-ggsave("Plots/Results/all_model.tiff", dpi = 1200, width = 8, height = 5, compression = "lzw")
-
-high_plot <- gg_stat_eye(high_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-4.5,3))
-ggsave("Plots/Results/high_model.tiff", dpi = 1200, width = 8, height = 5, compression = "lzw")
-
-#gg_stat_eye(log_high_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours)
-#ggsave("Plots/Results/loghigh_model.tiff", dpi = 1200, width = 8, height = 4, compression = "lzw")
+# all_plot <- gg_stat_eye(all_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-3.5,3))
+# ggsave("Plots/Results/all_model.tiff", dpi = 1200, width = 8, height = 5, compression = "lzw")
+# 
+# high_plot <- gg_stat_eye(high_plotdata, legend_pos = c(0.25, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-4.5,3))
+# ggsave("Plots/Results/high_model.tiff", dpi = 1200, width = 8, height = 5, compression = "lzw")
 
 ## Add arrows ##
 
@@ -424,18 +479,18 @@ arrow_plot <- ggplot(arrow_data) + geom_segment(mapping = aes(x = x, xend = 3, y
         panel.background = element_rect(fill = 'white', colour = NA))
 
 
-ggarrange(arrow_plot, all_plot, nrow = 2, heights = c(0.2,1), align = "v")
-ggsave("Plots/Results/all_model_arrow.tiff", dpi = 1200, width = 8, height = 5.5, compression = "lzw")
-ggsave("Plots/Results/all_model.pdf", width = 8, height = 5.5, device = cairo_pdf)
-
-ggarrange(arrow_plot, high_plot, nrow = 2, heights = c(0.2,1), align = "v")
-ggsave("Plots/Results/high_model.pdf", width = 8, height = 5.5, device = cairo_pdf)
-ggsave("Plots/Results/high_model_arrow.tiff", dpi = 1200, width = 8, height = 5.5, compression = "lzw")
-
+# ggarrange(arrow_plot, all_plot, nrow = 2, heights = c(0.2,1), align = "v")
+# ggsave("Plots/Results/all_model_arrow.tiff", dpi = 1200, width = 8, height = 5.5, compression = "lzw")
+# ggsave("Plots/Results/all_model.pdf", width = 8, height = 5.5, device = cairo_pdf)
+# 
+# ggarrange(arrow_plot, high_plot, nrow = 2, heights = c(0.2,1), align = "v")
+# ggsave("Plots/Results/high_model.pdf", width = 8, height = 5.5, device = cairo_pdf)
+# ggsave("Plots/Results/high_model_arrow.tiff", dpi = 1200, width = 8, height = 5.5, compression = "lzw")
+# 
 
 
 ################################################################################
-##### Non-bold version ####
+                         #### Non-bold version ####
 
 
 
@@ -476,17 +531,74 @@ arrow_plot <- ggplot(arrow_data) + geom_segment(mapping = aes(x = x, xend = 3, y
         panel.background = element_rect(fill = 'white', colour = NA))
 
 
-all_plot <- gg_stat_eye(all_plotdata, legend_pos = c(0.2, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-3.5,3))
+all_plot <- gg_stat_eye(all_plotdata, legend_pos = c(0.2, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-3.9,3))
 ggarrange(arrow_plot, all_plot, nrow = 2, heights = c(0.2,1), align = "v")
 ggsave("Plots/Results/figure_5.pdf", width = 8, height = 5.5, device = cairo_pdf)
 ggsave("Plots/Results/figure_5.png", width = 8, height = 5.5)
 
-high_plot <- gg_stat_eye(high_plotdata, legend_pos = c(0.2, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-4.5,3))
+high_plot <- gg_stat_eye(high_plotdata, legend_pos = c(0.2, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-4.6,3))
 ggarrange(arrow_plot, high_plot, nrow = 2, heights = c(0.2,1), align = "v")
 ggsave("Plots/Results/figure_EDF2.pdf", width = 8, height = 5.5, device = cairo_pdf)
 ggsave("Plots/Results/figure_EDF2.png", width = 8, height = 5.5)
 
 
-#### END #####
+#################################################################################
+                    ##### Migration seasonality models #####
+
+
+y_axis_labs <- rev(expression("1"^ry*" consumer", "Migration", 
+                              "Territoriality", "Seasonality",
+                              atop(NA,atop(textstyle("Seasonality"),textstyle("× 1"^ry*" consumer"))),
+                              atop(NA,atop(textstyle("Seasonality"),textstyle("× migration"))),
+                              atop(NA,atop(textstyle("Seasonality"), textstyle("× territoriality")))))
+
+pred_n <- 7
+
+
+gg_stat_eye <- function(plotdata, pred_n = 6, legend_pos = c(0.15, 0.15), col_pal = light_colours, alpha_val = 0.1){
+  ggplot(plotdata, aes(x = value, y = name, fill = trait, height =  0.6)) +
+    stat_slab(alpha = alpha_val, side = "both", normalize = "none", fill_type = "gradient") +
+    stat_pointinterval(size = rep(c(12, 4), times = pred_n), colour = "black", show.legend = FALSE) + 
+    scale_colour_manual(values = col_pal, breaks = legend_order) +
+    scale_fill_manual(values = col_pal, breaks = legend_order) +
+    scale_y_discrete(labels = y_axis_labs) +
+    geom_vline(xintercept=0, lty=2, size = 0.5, alpha = 0.6) + 
+    labs(x = "Standardised effect size", y = NULL, fill = NULL, colour = NULL) +
+    guides(colour = "none", size = "none", fill = guide_legend(byrow = TRUE, override.aes = list(alpha = 1))) +
+    theme_classic2(base_size = 20) +  # Theme.
+    theme(legend.position = legend_pos,
+          axis.text.x=element_text(size=rel(1), colour = "black"), 
+          axis.text.y=element_text(size=rel(0.9), colour = "black"),
+          axis.title.x=element_text(size=rel(0.8)),
+          #axis.line = element_line(linewidth = 0.5),
+          line = element_line(linewidth = 0.5),
+          legend.text = element_text(size=rel(0.7)), 
+          #legend.key.height = unit(0.2, 'cm'),
+          #legend.key.size = unit(0.2, 'cm'),
+          #legend.key.width = unit(0.5, 'cm'),
+          legend.spacing.y = unit(0.1, 'cm'),
+          legend.title = element_blank(),
+          strip.text.y = element_blank())
+}
+
+
+
+
+
+
+
+
+all_plot <- gg_stat_eye(all_mig_plotdata, pred_n = 7, legend_pos = c(0.2, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-3.9,3))
+ggarrange(arrow_plot, all_plot, nrow = 2, heights = c(0.2,1), align = "v")
+ggsave("Plots/Results/all_season_migration.png", width = 8, height = 5.5)
+
+high_plot <- gg_stat_eye(high_mig_plotdata, pred_n = 7, legend_pos = c(0.2, 0.9), alpha_val = 0.5, col_pal = light_colours) + xlim(c(-4.6,3))
+ggarrange(arrow_plot, high_plot, nrow = 2, heights = c(0.2,1), align = "v")
+ggsave("Plots/Results/high_season_migration.png", width = 8, height = 5.5)
+
+
+
+
+                                  #### END #####
 ###############################################################################
 

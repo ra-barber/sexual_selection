@@ -126,7 +126,7 @@ model_data$sexual_score <- model_data$sexual_score + 1
 
 
 model_formula <- "sexual_score ~ terr_bi_c + migration_bi_c + trophic_level_c + 
-terr_bi_c*temp_seasonality_z + migration_bi_c*temp_seasonality_z + trophic_level_c*temp_seasonality_z + (1|gr(tree_tip, cov=A))"
+terr_bi_c*temp_seasonality_z + trophic_level_c*temp_seasonality_z + (1|gr(tree_tip, cov=A))"
 
 
 # brms formula.
