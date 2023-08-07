@@ -2,7 +2,6 @@
                 ##### Combine brms models for latitude #####
 ###############################################################################
 
-# This script does something new. Pretty sick eh.
 
 
 # Clean the environment.

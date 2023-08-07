@@ -31,7 +31,8 @@ array_number
 tree_number <- 1:50
 
 # Model (In order of size and therefore speed)
-model_type <- c("frugivore", "primary", "invertivore", "secondary", "all", "certainty")
+model_type <- c("frugivore", "primary", "invertivore", "secondary", "all", "certainty",
+                "mig", "no_mig", "terr", "no_terr")
 
 # Centered or uncentered.
 center <- c("uncentered")
@@ -91,6 +92,20 @@ if (model_type == "frugivore"){
 }
 if (model_type == "invertivore"){
   model_data %<>% filter(trophic_niche == "Invertivore")
+}
+
+# Filter for ecological partition.
+if (model_type == "mig"){
+  model_data %<>% filter(migration_binary == "Strong")
+}
+if (model_type == "no_mig"){
+  model_data %<>% filter(migration_binary == "Weak")
+}
+if (model_type == "terr"){
+  model_data %<>% filter(territory_binary == "Territory")
+}
+if (model_type == "no_terr"){
+  model_data %<>% filter(territory_binary == "No territory")
 }
 
 
