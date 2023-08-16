@@ -102,6 +102,18 @@ average_raster_2 <- function(ranges = sex_ranges, var_name = "sexual_score"){
   return(var_raster)
 }
 
+# Function to make species richness raster.
+spec_raster_func <- function(ranges = sex_ranges){
+  
+  # Create the species richness raster.
+  spec_raster <- fasterize(ranges, raster_template, fun = "sum")
+  spec_raster[which(getValues(spec_raster) < 10)] <- NA
+  spec_raster <- mask(spec_raster, land)
+
+  return(spec_raster)
+}
+
+
 # Function to make average raster but without filtering out less than 10 species.
 average_raster_3 <- function(ranges = sex_ranges, var_name = "sexual_score"){
   
