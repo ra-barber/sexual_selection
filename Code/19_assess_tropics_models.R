@@ -74,31 +74,89 @@ centered_non_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonph
 centered_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_terr_model.rds")
 centered_non_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_non_terr_model.rds")
 
+# Read in models using raw data.
+high_primary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_primary_model.rds")
+high_secondary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_secondary_model.rds")
+high_fruit_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_fruit_model.rds")
+high_invert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_invert_model.rds")
+
+high_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_mig_model.rds")
+high_non_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_non_mig_model.rds")
+high_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_terr_model.rds")
+high_non_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_non_terr_model.rds")
 
 
 ################################################################################
                     #### Export summary tables ####
 
 # 
-# # Extract relevant coeffcient information.
-# primary_all_estimates <- summary(centered_primary_model)$fixed[5,c(1,3,4)]
-# fruit_all_estimates <- summary(centered_fruit_model)$fixed[5,c(1,3,4)]
-# secondary_all_estimates <- summary(centered_secondary_model)$fixed[5,c(1,3,4)]
-# invert_all_estimates <- summary(centered_invert_model)$fixed[5,c(1,3,4)]
-# all_estimates <- rbind(allbirds_all_estimates, cert_all_estimates, 
-#                        primary_all_estimates, fruit_all_estimates,
-#                        secondary_all_estimates, invert_all_estimates)
-# row.names(all_estimates) <- c("all_birds", "certainty", "primary",
-#                               "fruit", "secondary", "invert")
-# # Paste together values for reporting in a table.
-# all_estimates %<>% mutate(
-#   round_est = round(Estimate, 2),
-#   intervals = paste0("[", round(`l-95% CI`, 2), ", ", 
-#                      round(`u-95% CI`, 2), "]"),
-#   est_intervals = paste0(round_est, " ", intervals))
-# 
-# # Export the results.
-# write.csv(all_estimates, "Results/Tables/all_nonphy_lat_regression.csv", row.names = TRUE)
+# # Extract relevant coefficient information.
+primary_all_estimates <- summary(primary_model)$fixed[5,c(1,3,4)]
+fruit_all_estimates <- summary(fruit_model)$fixed[5,c(1,3,4)]
+secondary_all_estimates <- summary(secondary_model)$fixed[5,c(1,3,4)]
+invert_all_estimates <- summary(invert_model)$fixed[5,c(1,3,4)]
+
+mig_all_estimates <- summary(mig_model)$fixed[5,c(1,3,4)]
+non_mig_all_estimates <- summary(non_mig_model)$fixed[5,c(1,3,4)]
+terr_all_estimates <- summary(terr_model)$fixed[5,c(1,3,4)]
+non_terr_all_estimates <- summary(non_terr_model)$fixed[5,c(1,3,4)]
+
+all_estimates <- rbind(primary_all_estimates, fruit_all_estimates,
+                       secondary_all_estimates, invert_all_estimates,
+                       mig_all_estimates, non_mig_all_estimates,
+                       terr_all_estimates, non_terr_all_estimates)
+row.names(all_estimates) <- c("primary", "fruit", "secondary", "invert", "migration", 
+                              "no_migration", "territorial", "non_territorial")
+# Paste together values for reporting in a table.
+all_estimates %<>% mutate(
+  round_est = round(Estimate, 2),
+  intervals = paste0(round(`l-95% CI`, 2), ", ", 
+                     round(`u-95% CI`, 2)),
+  est_intervals = paste0(round_est, ", ", intervals))
+
+# Export the results.
+write.csv(all_estimates, "Results/Tables/all_tropical_regression.csv", row.names = TRUE)
+
+
+## High cert ##
+
+# # Extract relevant coefficient information.
+primary_high_estimates <- summary(high_primary_model)$fixed[5,c(1,3,4)]
+fruit_high_estimates <- summary(high_fruit_model)$fixed[5,c(1,3,4)]
+secondary_high_estimates <- summary(high_secondary_model)$fixed[5,c(1,3,4)]
+invert_high_estimates <- summary(high_invert_model)$fixed[5,c(1,3,4)]
+mig_high_estimates <- summary(high_mig_model)$fixed[5,c(1,3,4)]
+non_mig_high_estimates <- summary(high_non_mig_model)$fixed[5,c(1,3,4)]
+terr_high_estimates <- summary(high_terr_model)$fixed[5,c(1,3,4)]
+non_terr_high_estimates <- summary(high_non_terr_model)$fixed[5,c(1,3,4)]
+
+high_estimates <- rbind(primary_high_estimates, fruit_high_estimates,
+                       secondary_high_estimates, invert_high_estimates,
+                       mig_high_estimates, non_mig_high_estimates,
+                       terr_high_estimates, non_terr_high_estimates)
+row.names(high_estimates) <- c("primary", "fruit", "secondary", "invert", "migration", 
+                              "no_migration", "territorial", "non_territorial")
+# Paste together values for reporting in a table.
+high_estimates %<>% mutate(
+  round_est = round(Estimate, 2),
+  intervals = paste0(round(`l-95% CI`, 2), ", ", 
+                     round(`u-95% CI`, 2)),
+  est_intervals = paste0(round_est, ", ", intervals))
+
+# Export the results.
+write.csv(high_estimates, "Results/Tables/high_tropical_regression.csv", row.names = TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
 
 ###############################################################################
                     #### side plot function  ######

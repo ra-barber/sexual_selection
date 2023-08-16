@@ -106,6 +106,9 @@ if (model_type == "no_terr"){
   model_data %<>% filter(territory_binary == "No territory")
 }
 
+# Read in the tree.
+model_tree <- read.tree("Data/Trees/prum_trees.tre")[[tree_number]]
+
 # Drop tips on the tree.
 model_tree <- drop.tip(model_tree, setdiff(model_tree$tip.label, model_data$tree_tip))
 
@@ -133,7 +136,7 @@ trop_brms_model <- function(data_set = model_data, response = "sexual_score",
     trop_non_trop_c = center_categorical(trop_non_trop))
   
   # Create model formula.
-  model_formula <- formula(paste0(response, " ~ ", predictor))
+  model_formula <- formula(paste0(response, " ~ ", predictor, " + (1|gr(tree_tip, cov=A))"))
   
   # Add the model family.
   if (family == "cumulative"){
@@ -144,11 +147,13 @@ trop_brms_model <- function(data_set = model_data, response = "sexual_score",
   
   # Priors
   linear_priors <- c(prior(normal(0,1), class="Intercept"),
-                     prior(normal(0,1), class="b"))
+                     prior(normal(0,1), class="b"),
+                     prior(gamma(2,1), "sd"))
   # Run brms models.
   brm(
     brms_formula,
     data = data_set,
+    data2 = list(A=model_covar),
     prior = linear_priors,
     iter = 10000,
     warmup = 5000,
@@ -168,3 +173,6 @@ trop_brms_model <- function(data_set = model_data, response = "sexual_score",
 first_half <- "Results/Models/Tropics/"
 model_pathway <- paste0(first_half, model_type, "_", data_type, "_", tree_number, ".rds")
 
+
+# Run the niche models.
+trop_brms_model()

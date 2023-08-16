@@ -81,6 +81,17 @@ trop_brms_model <- function(data_set = model_data, response = "sexual_score",
 }
 
 ###############################################################################
+           ### Run models on all birds (not shown in publication) ##
+
+all_model <- trop_brms_model(data_set = model_data)
+saveRDS(all_model, "Results/Models/Nonphy_models/Tropics/all_model.rds")
+
+high_model <- trop_brms_model(data_set = model_data %>% filter(sexual_certainty < 3))
+saveRDS(high_model, "Results/Models/Nonphy_models/Tropics/high_model.rds")
+
+
+
+###############################################################################
               #### Run main publication models ######
 
 
@@ -141,3 +152,77 @@ saveRDS(mig_model, "Results/Models/Nonphy_models/Tropics/centered_mig_model.rds"
 saveRDS(non_mig_model, "Results/Models/Nonphy_models/Tropics/centered_non_mig_model.rds")
 saveRDS(terr_model, "Results/Models/Nonphy_models/Tropics/centered_terr_model.rds")
 saveRDS(non_terr_model, "Results/Models/Nonphy_models/Tropics/centered_non_terr_model.rds")
+
+
+################################################################################
+                   ##### High certainty models #########
+
+# Filter for high cert.
+model_data %<>% filter(sexual_certainty < 3)
+
+
+
+# Filter for dietary data.
+primary_data <- model_data %>% filter(trophic_binary == "Primary")
+secondary_data <- model_data %>% filter(trophic_binary == "Secondary")
+fruit_data <- model_data %>% filter(trophic_niche == "Frugivore")
+invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
+
+# Filter for eco roles.
+mig_data <- model_data %>% filter(migration_binary == "Strong")
+non_mig_data <- model_data %>% filter(migration_binary == "Weak")
+terr_data <- model_data %>% filter(territory_binary == "Territory")
+non_terr_data <- model_data %>% filter(territory_binary == "No territory")
+
+
+# Run the niche models.
+primary_model <- trop_brms_model(data_set = primary_data)
+secondary_model <- trop_brms_model(data_set = secondary_data)
+fruit_model <- trop_brms_model(data_set = fruit_data)
+invert_model <- trop_brms_model(data_set = invert_data)
+
+mig_model <- trop_brms_model(data_set = mig_data)
+non_mig_model <- trop_brms_model(data_set = non_mig_data)
+terr_model <- trop_brms_model(data_set = terr_data)
+non_terr_model <- trop_brms_model(data_set = non_terr_data)
+
+# Export the models.
+saveRDS(primary_model, "Results/Models/Nonphy_models/Tropics/high_primary_model.rds")
+saveRDS(secondary_model, "Results/Models/Nonphy_models/Tropics/high_secondary_model.rds")
+saveRDS(fruit_model, "Results/Models/Nonphy_models/Tropics/high_fruit_model.rds")
+saveRDS(invert_model, "Results/Models/Nonphy_models/Tropics/high_invert_model.rds")
+
+saveRDS(mig_model, "Results/Models/Nonphy_models/Tropics/high_mig_model.rds")
+saveRDS(non_mig_model, "Results/Models/Nonphy_models/Tropics/high_non_mig_model.rds")
+saveRDS(terr_model, "Results/Models/Nonphy_models/Tropics/high_terr_model.rds")
+saveRDS(non_terr_model, "Results/Models/Nonphy_models/Tropics/high_non_terr_model.rds")
+
+# Run the models with standardised predictors.
+primary_model <- trop_brms_model(data_set = primary_data, predictor = "trop_non_trop_c")
+secondary_model <- trop_brms_model(data_set = secondary_data, predictor = "trop_non_trop_c")
+fruit_model <- trop_brms_model(data_set = fruit_data, predictor = "trop_non_trop_c")
+invert_model <- trop_brms_model(data_set = invert_data, predictor = "trop_non_trop_c")
+
+mig_model <- trop_brms_model(data_set = mig_data, predictor = "trop_non_trop_c")
+non_mig_model <- trop_brms_model(data_set = non_mig_data, predictor = "trop_non_trop_c")
+terr_model <- trop_brms_model(data_set = terr_data, predictor = "trop_non_trop_c")
+non_terr_model <- trop_brms_model(data_set = non_terr_data, predictor = "trop_non_trop_c")
+
+
+# Export the models.
+saveRDS(primary_model, "Results/Models/Nonphy_models/Tropics/high_centered_primary_model.rds")
+saveRDS(secondary_model, "Results/Models/Nonphy_models/Tropics/high_centered_secondary_model.rds")
+saveRDS(fruit_model, "Results/Models/Nonphy_models/Tropics/high_centered_fruit_model.rds")
+saveRDS(invert_model, "Results/Models/Nonphy_models/Tropics/high_centered_invert_model.rds")
+
+saveRDS(mig_model, "Results/Models/Nonphy_models/Tropics/high_centered_mig_model.rds")
+saveRDS(non_mig_model, "Results/Models/Nonphy_models/Tropics/high_centered_non_mig_model.rds")
+saveRDS(terr_model, "Results/Models/Nonphy_models/Tropics/high_centered_terr_model.rds")
+saveRDS(non_terr_model, "Results/Models/Nonphy_models/Tropics/high_centered_non_terr_model.rds")
+
+
+
+
+
+
+
