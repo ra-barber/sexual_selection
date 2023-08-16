@@ -459,19 +459,34 @@ gc()
 
 
 ## PP check 
-#allbirds_phy_model <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Latitude/all_centered_all_models.rds")
+allbirds_phy_model <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Latitude/all_uncentered_all_models.rds")
 
-pp_plot <- pp_check(allbirds_model)
-
+pp_plot <- pp_check(allbirds_all_model, type = "rootogram", ndraws = 10)
+pp_check(fruit_high_model, size = 2, ndraws = 3)
+pp_check(fruit_high_model, size = 2, ndraws = 3, type = "rootogram")
+pp_plot <- pp_check(allbirds_all_model, size = 0.5, ndraws = 5)
 
 pp_plot <- pp_plot  + scale_x_continuous(breaks = c(1,2,3,4,5), labels = c(0,1,2,3,4)) + 
-  theme_classic(base_size = 25) + 
-  theme(legend.position = c(0.75,0.75), 
+  theme_classic(base_size = 30) + 
+  #scale_y_sqrt(breaks = c(0.05, 0.25, 0.5, 1.0, 2.0)) +
+  #scale_colour_manual(values = c("darkgrey", "black"), labels = c("Data", "Predictions")) +
+  #scale_colour_viridis_d() +
+  labs(colour = NULL) +
+  theme(legend.position = c(0.55,0.75), 
         legend.direction = "horizontal",
         #text = element_text(face = "bold"),
         axis.title.y = element_text(size = rel(0.85)),
         axis.title.x = element_text(size = rel(0.85)),
         plot.margin = margin(t = 1, l = 0.2, b = 0.2, r =0.3, unit = "cm"))
+
+ggsave("Plots/Diagnostics/all_birds_latitude_pp_check.png", width = 8, height = 8)
+ggsave("Plots/Diagnostics/all_birds_latitude_pp_check.pdf", width = 8, height = 8)
+
+
+
+library(bayesplot)
+mcmc_trace(allbirds_all_model, pars = "b_abs_lat", highlight = c(2))
+
 
 ggsave("Plots/Diagnostics/all_birds_latitude_pp_check.png", width = 8, height = 8)
 ggsave("Plots/Diagnostics/all_birds_latitude_pp_check.pdf", width = 8, height = 8)
