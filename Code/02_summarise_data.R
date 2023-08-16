@@ -449,14 +449,32 @@ full_data %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) +
 
 ################################################################################
 
-model_data %>% group_by(cert_reverse) %>% summarise(mean_ss = mean(sexual_score))
+# Read in the cleaner data for this.
 
-model_data %>% ggplot(aes(x = as.factor(cert_reverse), y = sexual_score)) + geom_boxplot() +
-  xlab("Sexual selection") + ylab("Species count") +
-  theme_classic() + theme(legend.position = "none")
+clean_data <- read.csv("Data/sexual_selection_cleaned_01_08.csv") %>% clean_names()  # We have since cleaned this data even more.
 
 
-model_data %>% filter(cert_reverse == 1 & sexual_score > 0)
+clean_data %>% group_by(data_certainty) %>% summarise(mean_ss = mean(sexual_selection))
+
+grouped_data <- clean_data %>% 
+  group_by(data_certainty) %>% 
+  summarise(trait = first(sexual_selection),
+            sex_mean = mean(sqrt(sexual_selection)),
+            sex_sd = sd(sqrt(sexual_selection)),
+            sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
+
+clean_data %>% ggplot(aes(x = as.factor(data_certainty), y = sexual_selection, colour = as.factor(sexual_selection))) +
+  xlab("Data certainty") + ylab("Sexual selection") + geom_jitter(alpha = 0.5, position = position_jitternormal(sd_y = 0.05)) +
+  theme_classic() + theme(legend.position = "none") +  scale_colour_manual(values = pal) +
+  geom_errorbar(data = grouped_data, inherit.aes = FALSE,
+                aes(x = data_certainty, ymin = sex_mean - sex_se*1.96, ymax = sex_mean + sex_se*1.96), colour = "black", width = 0.2, linewidth = 1)
+
+
+
+
+library(ggforce)
+library(ggdist)
+library(ggbeeswarm)
 
 
 # Function for looking at sexual selection vs predictor means and standard error.
@@ -474,14 +492,345 @@ sex_meanplot <- function(predictor){
 }
 
 
-sex_meanplot("cert_reverse") + xlab("Data certainty") +  theme_classic(base_size = 20) + 
+whisker_plot <- sex_meanplot("cert_reverse") + xlab("Data certainty") +  theme_classic(base_size = 30) + 
   theme(legend.position = "none",
-        line = element_line(linewidth = 0.5))
+        line = element_line(linewidth = 0.5)) +
+  annotate("text", x = 1, y = .15, label = "35", size = 5) +
+  annotate("text", x = 2, y = .235, label = "2253", size = 5) +
+  annotate("text", x = 3, y = .295, label = "4909", size = 5) +
+  annotate("text", x = 4, y = .895, label = "2792", size = 5) 
 
 # Export.
 ggsave("Plots/Data/figure_s2.pdf", width = 8, height = 8, device = cairo_pdf)
 ggsave("Plots/Data/figure_s2.png", width = 8, height = 8)
 
+
+###############################################################################
+             ##### Proportion plot #####
+
+
+grouped_data <- clean_data %>% 
+  group_by(data_certainty) %>% 
+  summarise(sex_mean = mean(sqrt(sexual_selection)),
+            sex_sd = sd(sqrt(sexual_selection)),
+            sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
+
+merged_data <- clean_data %>% 
+  left_join(grouped_data, by = "data_certainty")
+merged_data$sex_fact <- factor(merged_data$sexual_selection, levels = 4:0)
+
+prop_plot <- ggplot(merged_data, aes(x = data_certainty, y = sex_mean, col = sex_fact, fill = as.factor(sex_fact))) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_manual(values = pal, breaks = 0:4) +
+  scale_colour_manual(values = pal, breaks = 0:4) + ylab("% of species") + xlab("Data certainty") +
+  theme_classic(base_size = 30) + 
+  scale_y_continuous(limits = c(0,1),expand = expansion(add = c(0.02, 0.09)))+
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5),
+        axis.title.x = element_text(size = rel(0.9)))
+prop_plot
+
+# Function for looking at sexual selection vs predictor means and standard error.
+sex_meanplot <- function(predictor){
+  grouped_data <- model_data %>% 
+    group_by(!!! syms(predictor)) %>% 
+    summarise(trait = first(!!! syms(predictor)),
+              sex_mean = mean(sexual_score),
+              sex_sd = sd(sexual_score),
+              sex_se = sd(sexual_score)/sqrt(length(sexual_score)))
+  
+  ggplot(grouped_data, aes(x = trait, y = sex_mean)) +
+    geom_errorbar(aes(ymin = sex_mean - sex_se, ymax = sex_mean + sex_se),  width = 0.2, linewidth = 0.5) + 
+    geom_point(size =2) + ylab("Sexual selection") + xlab(predictor) + theme_classic()
+}
+
+# Create the labels with italic "n"
+one_sample_n <-  expression(~italic(n)~'= 35')
+two_sample_n <-  expression(~italic(n)~'= 2253')
+three_sample_n <-  expression(~italic(n)~'= 4909')
+four_sample_n <-  expression(~italic(n)~'= 2792')
+
+whisker_plot <- sex_meanplot("cert_reverse") + xlab("Data certainty") +  theme_classic(base_size = 30) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5),
+        axis.title.x = element_text(size = rel(0.9))) +
+  scale_y_continuous(limits = c(0,1),expand = expansion(add = c(0.02, 0.09)))+
+  scale_x_continuous(expand = expansion(mult = 0.1))+
+  coord_cartesian(clip = "off") +
+  # annotate("text", x = 1, y = .16, label = "35", size = 5) +
+  # annotate("text", x = 2, y = .245, label = "2253", size = 5) +
+  # annotate("text", x = 3, y = .305, label = "4909", size = 5) +
+  # annotate("text", x = 4, y = .905, label = "2792", size = 5) 
+  annotate("text", x = 1, y = 1, label = one_sample_n, size = 6) +
+  annotate("text", x = 2, y = 1, label = two_sample_n, size = 6) +
+  annotate("text", x = 3, y = 1, label = three_sample_n, size = 6) +
+  annotate("text", x = 4, y = 1, label = four_sample_n, size = 6)
+
+
+ggarrange(whisker_plot, prop_plot, labels = c("a", "b"), align = "v",
+          #hjust = c(-8, -7), 
+          hjust = c(-1.5, -1.5), 
+          font.label = list(size = 28), widths = c(1,1))
+
+
+ggsave("Plots/Data/figure_s2.png", width = 12, height = 6)
+
+ggarrange(whisker_plot +xlim(c(0.5,4.5)) + rremove("xlab") + rremove("x.text"), prop_plot, ncol = 1, 
+          labels = c("a", "b"), heights = c(1,1.25),
+          hjust = c(-8, -7), font.label = list(size = 28))
+
+
+?rremove
+
+
+################################################################################
+              ##### Try bars ######
+
+# Basic bar plot.
+grouped_data <- clean_data %>% 
+  group_by(data_certainty) %>% 
+  summarise(sex_mean = mean(sexual_selection),
+            sex_sd = sd(sexual_selection),
+            sex_se = sd(sexual_selection)/sqrt(length(sexual_selection)))
+# test_plot <- grouped_data %>% ggplot(aes(x = data_certainty, y = sex_mean, alpha = data_certainty, fill = as.factor(sex_mean))) +
+#     geom_bar(stat = "identity") +  scale_fill_manual(values = pal) + 
+#     theme_classic(base_size = 20) + 
+#     theme(legend.position = "none",
+#           line = element_line(linewidth = 0.5))
+# 
+# after_stat()
+
+
+# Try merging data.
+  merged_data <- clean_data %>% left_join(grouped_data)
+
+
+
+merged_data$mean_y <- merged_data$sex_mean
+
+merged_data$mean_y[merged_data$data_certainty == 1] <- mean(merged_data$mean_y[merged_data$data_certainty == 1])/length(merged_data$mean_y[merged_data$data_certainty == 1])
+merged_data$mean_y[merged_data$data_certainty == 2] <- mean(merged_data$mean_y[merged_data$data_certainty == 2])/length(merged_data$mean_y[merged_data$data_certainty == 2])
+merged_data$mean_y[merged_data$data_certainty == 3] <- mean(merged_data$mean_y[merged_data$data_certainty == 3])/length(merged_data$mean_y[merged_data$data_certainty == 3])
+merged_data$mean_y[merged_data$data_certainty == 4] <- mean(merged_data$mean_y[merged_data$data_certainty == 4])/length(merged_data$mean_y[merged_data$data_certainty == 4])
+
+merged_data %>% filter(data_certainty == 4) %>% pull(sex_mean)
+
+merged_data$sex_fact <- factor(merged_data$sexual_selection, levels = 4:0)
+
+merged_data %>% ggplot(aes(x = data_certainty, y = mean_y, 
+                                        fill = sex_fact, col = sex_fact)) + 
+  geom_col(position = "stack") + 
+  scale_fill_manual(values = pal, breaks = 0:4) +
+  scale_colour_manual(values = pal, breaks = 0:4) +
+  theme_classic(base_size = 20) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5)) + 
+  geom_errorbar(aes(ymin = sex_mean - sex_se, ymax = sex_mean + sex_se), colour = "black", width = 0.2, linewidth = 0.5) + 
+  geom_point(aes(y = sex_mean), size =3, colour = "black", show.legend = FALSE) + ylab("Sexual selection") + xlab("Data certainty")
+
+
+ggsave("Plots/Data/figure_s2_test.png", width = 8, height = 8)
+
+
+test_data <- inspect_after_stat(test_plot)
+
+test_plot + aes(y = after_stat(y))
+
+test_data %>% filter( x == 1) %>% pull(y) %>% sum()
+
+test_data %>% ggplot(aes(x = x, y = y/length(y), fill = fill)) + geom_col() 
+  
+
+test_data %>% ggplot(aes(x = x, y = y_2, fill = fill, colour = fill)) + geom_bar(stat = "identity") +
+  scale_fill_manual(values = pal, breaks = 0:4) + scale_colour_manual(values = pal, breaks = 0:4) 
+ggsave("Plots/Data/test_cert.png")
+
+test_data$y_2 <- test_data$y
+
+test_data$y_2[test_data$x == 1] <- mean(test_data$y_2[test_data$x == 1])/length(test_data$y_2[test_data$x == 1])
+test_data$y_2[test_data$x == 2] <- mean(test_data$y_2[test_data$x == 2])/length(test_data$y_2[test_data$x == 2])
+test_data$y_2[test_data$x == 3] <- mean(test_data$y_2[test_data$x == 3])/length(test_data$y_2[test_data$x == 3])
+test_data$y_2[test_data$x == 4] <- mean(test_data$y_2[test_data$x == 4])/length(test_data$y_2[test_data$x == 4])
+
+
+grouped_data_both <- clean_data %>% 
+  group_by(data_certainty, sexual_selection) %>% 
+  summarise(sex_mean = mean(sqrt(sexual_selection)),
+            sex_sd = sd(sqrt(sexual_selection)),
+            sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
+
+grouped_data_both %>% filter(data_certainty == 1) %>% ggplot(aes(x = data_certainty, y = sex_mean, fill = as.factor(sexual_selection))) + 
+  geom_bar(position = "dodge", stat = "identity")
+
+
+grouped_data_both %>% filter(data_certainty == 1) %>% ggplot(aes(x = data_certainty, y = mean(sex_mean), fill = as.factor(sexual_selection))) + 
+  geom_bar(position = "stack", stat = "identity") + 
+  scale_fill_manual(values = pal)
+
+
+p_bar_prop <- ggplot(grouped_data, aes(data_certainty)) +
+  geom_bar(
+    aes(
+      y = sex_mean,
+      group = data_certainty == 1 # Assign the 3 bars into 2 groups
+    )
+  )
+p_bar_prop
+
+
+library(ggplot2)
+library(dplyr)
+
+# Assuming you have defined `pal` somewhere for the color palette
+
+grouped_data <- clean_data %>% 
+  group_by(data_certainty) %>% 
+  summarise(sex_mean = mean(sqrt(sexual_selection)),
+            sex_sd = sd(sqrt(sexual_selection)),
+            sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
+
+merged_data <- clean_data %>% 
+  left_join(grouped_data, by = "data_certainty")
+
+ggplot(merged_data, aes(x = data_certainty, y = sex_mean, col = sex_fact, fill = as.factor(sex_fact))) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_manual(values = pal, breaks = 0:4) +
+  scale_colour_manual(values = pal, breaks = 0:4) + ylab("% of species") +
+  theme_classic(base_size = 20) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5))
+
+
+library(ggplot2)
+library(dplyr)
+
+library(ggplot2)
+library(dplyr)
+
+# Assuming you have defined `pal` somewhere for the color palette
+
+grouped_data <- clean_data %>% 
+  group_by(data_certainty) %>% 
+  summarise(sex_mean = mean(sqrt(sexual_selection)),
+            sex_sd = sd(sqrt(sexual_selection)),
+            sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection))) %>%
+  mutate(sexual_selection = "All")
+
+ggplot(merged_data, aes(x = data_certainty, y = sex_mean, fill = as.factor(sexual_selection))) +
+  geom_bar(position = "fill", stat = "summary", fun = "sum") +
+  scale_fill_manual(values = pal) +
+  theme_classic(base_size = 20) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5))
+
+
+library(ggplot2)
+library(dplyr)
+
+# Assuming you have defined `pal` somewhere for the color palette
+
+grouped_data <- clean_data %>% 
+  group_by(data_certainty) %>% 
+  summarise(sex_mean = mean(sqrt(sexual_selection)),
+            sex_sd = sd(sqrt(sexual_selection)),
+            sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
+
+# Join the grouped_data back to the clean_data
+clean_data_2 <- clean_data %>% left_join(grouped_data, by = "data_certainty")
+
+ggplot(clean_data_2, aes(x = data_certainty, y =sex_mean, fill = as.factor(sexual_selection))) +
+  geom_bar(aes(y = sex_mean), position = "stack", stat = "identity") +
+  scale_fill_manual(values = pal) +
+  theme_classic(base_size = 20) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5))
+
+clean_data_2 %>% filter(data_certainty == 4) %>% pull(sex_mean) %>% sum()
+clean_data_2 %>% filter(data_certainty == 1) %>% pull(sex_mean) %>% sum()
+
+
+library(ggplot2)
+library(dplyr)
+
+# Assuming you have defined `pal` somewhere for the color palette
+
+grouped_data <- clean_data %>% 
+  group_by(data_certainty) %>% 
+  summarise(sex_mean = mean(sqrt(sexual_selection)),
+            sex_sd = sd(sqrt(sexual_selection)),
+            sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
+
+# Join the grouped_data back to the clean_data
+clean_data_2 <- clean_data %>% left_join(grouped_data, by = "data_certainty")
+
+# Custom position function to stack bars based on sex_mean
+position_stackv <- function (width = NULL, preserve = "total", reverse = FALSE) {
+  ggproto(NULL, PositionStackv, width = width, preserve = preserve, reverse = reverse)
+}
+
+PositionStackv <- ggproto("PositionStackv", PositionStack,
+                          setup_params = function(self, data) {
+                            if (is.null(data$y)) 
+                              stop("This position requires a y aesthetic")
+                            y <- data$y
+                            y_range <- ggplot2:::position_stack_scales(self, data)$y
+                            y_position <- if (self$reverse) {
+                              y_range - (1 - y)
+                            } else {
+                              y
+                            }
+                            transform(data, y = y_position, ymin = y, ymax = y_position)
+                          }
+)
+
+ggplot(clean_data_2, aes(x = data_certainty, y = sex_mean, fill = as.factor(sexual_selection))) +
+  geom_bar(position = position_stack(), stat = "identity") +
+  scale_fill_manual(values = pal) +
+  theme_classic(base_size = 20) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5))
+
+
+grouped_data_both <- clean_data %>% 
+  group_by(data_certainty, sexual_selection) %>% 
+  summarise(sex_mean = mean(sqrt(sexual_selection)),
+            sex_sd = sd(sqrt(sexual_selection)),
+            sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
+
+ggplot(grouped_data_both, aes(x = data_certainty, y = sex_mean, fill = as.factor(sexual_selection))) +
+  geom_bar(position = "stack", stat = "summary", fun = "mean") +
+  scale_fill_manual(values = pal) +
+  theme_classic(base_size = 20) + 
+  theme(legend.position = "none",
+        line = element_line(linewidth = 0.5))
+
+
+
+
+
+###############################################################################
+                 ##### Try average data certainty for each SS #######
+
+grouped_data <- clean_data %>% 
+  group_by(sexual_selection) %>% 
+  summarise(data_mean = mean(sqrt(data_certainty)),
+            data_sd = sd(sqrt(data_certainty)),
+            data_se = sd(sqrt(data_certainty))/sqrt(length(data_certainty)))
+
+ggplot(grouped_data, aes(x = sexual_selection, y = data_mean)) +
+  geom_errorbar(aes(ymin = data_mean - data_se, ymax = data_mean + data_se),  width = 0.2, linewidth = 0.5) + 
+  geom_point(size =3) + ylab("Data certainty") + xlab("Sexual selection") + theme_classic() + 
+  geom_jitter(data = clean_data, inherit.aes = FALSE, aes(x = sexual_selection, y = data_certainty),
+              position = position_jitternormal(sd_y = 0.05))
+
+
+ss_barplot <- function(dataset = full_data){
+  dataset %>% ggplot(aes(x = sexual_score, fill = as.factor(sexual_score))) +
+    geom_bar() +  scale_fill_manual(values = pal) + 
+    theme_classic(base_size = 20) + 
+    theme(legend.position = "none",
+          line = element_line(linewidth = 0.5))
+}
 
 ###############################################################################
                     #### Check raw correlations ####
