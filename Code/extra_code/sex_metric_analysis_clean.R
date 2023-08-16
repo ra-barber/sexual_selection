@@ -178,13 +178,20 @@ phy_teste_model <- readRDS("Z:/home/sexual_selection/Results/Models/Testes/teste
 # Brms formula.
 teste_formula <- brmsformula("sexual_selection ~ residual_testes_mass", family = cumulative())
 
+teste_formula_2 <- brmsformula("sexual_selection ~ residual_testes_mass + I(residual_testes_mass^2)", family = cumulative())
+
+
+
 # Run models.
 teste_model <- brm(
   teste_formula, data = teste_data, 
   iter = 10000, warmup = 5000, chains = 8, thin = 20, cores = 8, init = 0, control = list(adapt_delta = 0.99),
   normalize = FALSE, backend = "cmdstanr")
 
-
+teste_model_2 <- brm(
+  teste_formula_2, data = teste_data, 
+  iter = 10000, warmup = 5000, chains = 8, thin = 20, cores = 8, init = 0, control = list(adapt_delta = 0.99),
+  normalize = FALSE, backend = "cmdstanr")
 
 ###############################################################################
                     #### Run brms models ######
