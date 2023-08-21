@@ -60,12 +60,6 @@ colnames(density_data)[3] <- "birdtree_name"
 density_data %<>% dplyr::select(-c(order, family))
 density_data$birdtree_name %<>% gsub(pattern = "_", replacement =  " ")
 
-# Read in the greisser data.
-greisser_data <- read.csv("Data/greisser_data.csv") %>% clean_names()
-colnames(greisser_data)[1] <- "birdtree_name"
-greisser_data$birdtree_name %<>% gsub(pattern = "_", replacement =  " ")
-greisser_data %<>% dplyr::select(birdtree_name, devo_mode, devo_mode_full, time_fed)
-
 # Read in the wang data.
 wang_data <- read.csv("Data/Developmental/wang_and_kimball.csv") %>% clean_names() %>% dplyr::select(-c(cb))
 wang_data$birdtree_name %<>% gsub(pattern = "_", replacement =  " ")
@@ -73,46 +67,19 @@ colnames(wang_data)[2] <- "devo_mode_wang"
 wang_data[wang_data$devo_mode_wang == "1","devo_mode_wang"] <- "altricial"
 wang_data[wang_data$devo_mode_wang == "0","devo_mode_wang"] <- "precocial"
 
-# Read in the cooney data.
-cooney_data <- read.csv("Data/cooney_developmental_data.csv") %>% clean_names() %>% dplyr::select(binomial, dev_mod) %>% tidyr::drop_na(dev_mod)
-colnames(cooney_data) <- c("birdtree_name", "devo_mode_cooney")
-cooney_data$birdtree_name %<>% gsub(pattern = "_", replacement =  " ")
-cooney_data$devo_binary_cooney <- cooney_data$devo_mode_cooney
-cooney_data$devo_binary_cooney[cooney_data$devo_binary_cooney == "semi-precocial"] <- "precocial"
-
-# Read in the remes data.
-remes_data <- read.csv("Data/Developmental/remes_pnas_data.csv") %>% clean_names() %>% dplyr::select(species_name, chick_dev)
-colnames(remes_data) <- c("birdtree_name", "devo_mode_remes")
-remes_data$birdtree_name %<>% gsub(pattern = "_", replacement =  " ")
-remes_data$devo_mode_remes %<>% as.character()
-remes_data$devo_mode_remes[remes_data$devo_mode_remes == "1"] <- "altricial"
-remes_data$devo_mode_remes[remes_data$devo_mode_remes == "2"] <- "precocial"
-
 
 # Add the developmental and density data.
-phylo_data %<>% left_join(developmental_data) %>% left_join(density_data) %>% left_join(greisser_data) %>% left_join(wang_data) %>% left_join(cooney_data) %>% left_join(remes_data)
+phylo_data %<>% left_join(developmental_data) %>% left_join(density_data)%>% left_join(wang_data) 
 
 # Check extra species that are missing.
 skim(phylo_data)
 #phylo_data %<>% na.omit()
-
-# Check correlations between developmental datasets.
-dev_corr <- phylo_data %>% dplyr::select(birdtree_name, order, devo_mode, devo_mode_full, devo_mode_wang, devo_binary_cooney, devo_mode_remes)
-
-dev_corr$devo_mode %<>% as.factor() %>% as.numeric()
-dev_corr$devo_binary_cooney %<>% as.factor() %>% as.numeric()
-dev_corr$devo_mode_wang %<>% as.factor() %>% as.numeric()
-dev_corr$devo_mode_remes %<>% as.factor() %>% as.numeric()
-GGally::ggcorr(dev_corr, label = TRUE)
 
 # Change these families to be correct altrcial / precocial families.
 phylo_data$wang_edited <- phylo_data$devo_mode_wang
 phylo_data$wang_edited[phylo_data$family %in% c("Ciconiidae", "Ardeidae", "Threskiornithidae", "Musophagidae", "Dromadidae", "Eurypygidae", "Heliornithidae")] <- "altricial"
 phylo_data$wang_edited[phylo_data$family %in% c("Alcidae", "Laridae", "Caprimulgidae", "Stercorariidae","Diomedeidae", "Gaviidae")] <- "precocial"
 
-
-sex_meanplot("devo_mode")
-sex_meanplot("devo_binary_cooney")
 sex_meanplot("devo_mode_wang")
 sex_meanplot("wang_edited")
 
@@ -159,59 +126,35 @@ phylo_data[phylo_data$sexual_binary> 0,"sexual_binary"] <- 1
 (mass_plot <- ggplot(phylo_data, aes(x = mass)) + geom_density(cex=1) + theme_classic())
 (lat_plot <- ggplot(phylo_data, aes(x = abs(complete_latitude))) + geom_density(cex=1) + theme_classic())
 (temp_plot <- ggplot(phylo_data, aes(x = bio4)) + geom_density(cex=1) + theme_classic())
-#(rain_plot <- ggplot(phylo_data, aes(x = bio15)) + geom_density(cex=1) + theme_classic())
 (npp_plot <- ggplot(phylo_data, aes(x = npp)) + geom_density(cex=1) + theme_classic())
 (gen_plot <- ggplot(phylo_data, aes(x = gen_length)) + geom_density(cex=1) + theme_classic())
-#(survival_plot <- ggplot(phylo_data, aes(x = adult_survival)) + geom_density(cex=1) + theme_classic())
-#(breeding_plot <- ggplot(phylo_data, aes(x = age_at_first_breeding)) + geom_density(cex=1) + theme_classic())
-#(longevity_plot <- ggplot(phylo_data, aes(x = maximum_longevity)) + geom_density(cex=1) + theme_classic())
 (chick_plot <- ggplot(phylo_data %>% filter(chick_pc_ascores == "RealData"), aes(x = chick_pc1)) + geom_density(cex=1) + theme_classic())
 (hatch_plot <- ggplot(phylo_data %>% filter(hatchling_pc_ascores == "RealData"), aes(x = hatchling_pc1)) + geom_density(cex=1) + theme_classic())
 (hatch_plot <- ggplot(phylo_data, aes(x = hatchling_pc1)) + geom_density(cex=1) + theme_classic())
 (dens_plot <- ggplot(phylo_data, aes(x = predicted_density)) + geom_density(cex=1) + theme_classic())
-(fed_plot <- ggplot(phylo_data, aes(x = time_fed)) + geom_density(cex=1) + theme_classic())
-
-
 
 # Transform variables by taking logs.
 phylo_data$body_mass_log <- log(phylo_data$mass)
 phylo_data$centroid_sqrt <- sqrt(abs(phylo_data$complete_latitude))
 phylo_data$dens_sqrt <- sqrt(phylo_data$predicted_density)
-#phylo_data$range_log <- log(phylo_data$range_size)
 phylo_data$temp_log <- log(phylo_data$bio4)
 
 # This transformation works but it's a bit sketchy. Should assess both.
 phylo_data$npp_sqrt <- sqrt(max(phylo_data$npp, na.rm = TRUE) - phylo_data$npp)*-1
 phylo_data$gen_log <- log(phylo_data$gen_length)
 
-phylo_data$fed_sqrt <- sqrt(phylo_data$time_fed)
-
-
-
 # Regress seasonality against productivity.
 seasonal_linear <- lm(phylo_data$temp_log ~ phylo_data$npp_sqrt)
 plot(seasonal_linear)
 
-# Doesn't work when you don't remove NAs.
-#phylo_data$new_seasonal <- seasonal_linear$residuals
-# cor(phylo_data$new_seasonal, phylo_data$temp_log)
-# cor(phylo_data$new_seasonal, phylo_data$npp_sqrt)
-# hist(phylo_data$new_seasonal)
-
-#phylo_data$breed_log <- log(phylo_data$age_at_first_breeding)
-#phylo_data$long_log <- log(phylo_data$maximum_longevity)
 
 # Look at the new plots.
 (log_mass_plot <- ggplot(phylo_data, aes(x = body_mass_log)) + geom_density(cex=1) + theme_classic())
 (sqrt_lat_plot <- ggplot(phylo_data, aes(x = centroid_sqrt)) + geom_density(cex=1) + theme_classic())
-#(log_range_plot <- ggplot(phylo_data, aes(x = range_log)) + geom_density(cex=1) + theme_classic())
 (log_temp_plot <- ggplot(phylo_data, aes(x = temp_log)) + geom_density(cex=1) + theme_classic())
 (sqrt_npp_plot <- ggplot(phylo_data, aes(x = npp_sqrt)) + geom_density(cex=1) + theme_classic())
 (log_gen_plot <- ggplot(phylo_data, aes(x = gen_log)) + geom_density(cex=1) + theme_classic())
-#(log_breeding_plot <- ggplot(phylo_data, aes(x = breed_log)) + geom_density(cex=1) + theme_classic())
-#(log_longevity_plot <- ggplot(phylo_data, aes(x = long_log)) + geom_density(cex=1) + theme_classic())
 (sqrt_dens_plot <- ggplot(phylo_data, aes(x = dens_sqrt)) + geom_density(cex=1) + theme_classic())
-(sqrt_fed_plot <- ggplot(phylo_data, aes(x = fed_sqrt)) + geom_density(cex=1) + theme_classic())
 
 
 # This data is pretty horrible so i guess don't transform.
@@ -225,12 +168,9 @@ phylo_data$chick_sqrt <- sqrt(phylo_data$chick_pc1 + abs(min(phylo_data$chick_pc
 # Check together
 ggarrange(mass_plot, log_mass_plot)
 ggarrange(lat_plot, sqrt_lat_plot)
-#ggarrange(range_plot, log_range_plot)
 ggarrange(temp_plot, log_temp_plot)
 ggarrange(npp_plot, sqrt_npp_plot)
 ggarrange(gen_plot, log_gen_plot)
-#ggarrange(breeding_plot, log_breeding_plot)
-#ggarrange(longevity_plot, log_longevity_plot)
 ggarrange(dens_plot, sqrt_dens_plot)
 ggarrange(chick_plot, sqrt_chick_plot)
 cor(phylo_data$npp, phylo_data$npp_sqrt)
