@@ -37,17 +37,17 @@ high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/
 summary(all_models)
 summary(high_models)
 
-# # Plot the model.
-plot(all_models)
-plot(high_models)
-
-# Check the posterior distribution.
-pp_check(all_models)
-ggsave("Plots/Results/all_multivariate_ppcheck.pdf", width = 8, height = 5.5, device = cairo_pdf)
-ggsave("Plots/Results/all_multivariate_ppcheck.png", width = 8, height = 5.5)
-pp_check(high_models)
-ggsave("Plots/Results/high_multivariate_ppcheck.pdf", width = 8, height = 5.5, device = cairo_pdf)
-ggsave("Plots/Results/high_multivariate_ppcheck.png", width = 8, height = 5.5)
+# # # Plot the model.
+# plot(all_models)
+# plot(high_models)
+# 
+# # Check the posterior distribution.
+# pp_check(all_models)
+# ggsave("Plots/Results/all_multivariate_ppcheck.pdf", width = 8, height = 5.5, device = cairo_pdf)
+# ggsave("Plots/Results/all_multivariate_ppcheck.png", width = 8, height = 5.5)
+# pp_check(high_models)
+# ggsave("Plots/Results/high_multivariate_ppcheck.pdf", width = 8, height = 5.5, device = cairo_pdf)
+# ggsave("Plots/Results/high_multivariate_ppcheck.png", width = 8, height = 5.5)
 
 ###############################################################################
                        #### Forest Plots #####
@@ -76,17 +76,6 @@ brms_pmap <- function(model){
 # Feb models.
 brms_pmap(all_models)
 brms_pmap(high_models)
-
-###############################################################################
-           #### Lambda values (Shouldn't work for this family) #####
-# 
-# 
-# # Look at lambda values.
-# hyp <- "sd_tree_tip__Intercept^2 / (sd_tree_tip__Intercept^2 + disc^2) = 0"
-# 
-# (all_lambda <- hypothesis(all_models, hyp, class = NULL))
-# (high_models <- hypothesis(high_models, hyp, class = NULL))
-# plot(all_lambda)
 
 
 ###############################################################################
@@ -340,7 +329,7 @@ ggsave("Plots/Results/high_model.tiff", dpi = 600, width = 8, height = 4)
 ###############################################################################
                            #### Eye plots #####
 
-
+?stat_slab
 library(ggdist)
 gg_stat_eye <- function(plotdata, pred_n = 6, legend_pos = c(0.15, 0.15), col_pal = light_colours, alpha_val = 0.1){
 ggplot(plotdata, aes(x = value, y = name, fill = trait, height =  0.6)) +
