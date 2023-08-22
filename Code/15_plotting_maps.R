@@ -68,7 +68,7 @@ plot(species_raster, col=heat.colors(50))
 
 ### should try using this function instead of the previous code to make a species richness map.
 # spec_raster_func()
-
+# Need to remember that spec raster doesn't filter for less than 10 species.
 
 
 ################################################################################
@@ -217,7 +217,7 @@ cert_both_plots <- ggarrange(cert_maps, cert_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Plots/Maps/figure_ED_2.png", height = 10, width = 15, dpi = 600)
+ggsave("Plots/Maps/figure_ED_2.png", height = 10, width = 15, dpi = 600)   
 ggsave("Plots/Maps/figure_ED_2.pdf", height = 10, width = 15, dpi = 600)
 
 
@@ -300,6 +300,24 @@ ggsave("Plots/Maps/figure_ED_4.pdf", height = 10, width = 15, dpi = 600)
 h_spec_plot <- panel_ggplot_raster(h_spec_raster, plot_title = "Certainty 4 (n = 2851)", plot_label = "") +
   theme(plot.margin = margin(l = -0.3, r =0.3, unit = "cm"))
 
+  
+# Change scipen so that it plots 
+options(scipen=999)
+
+# Make the histogram.
+h_spec_hist <- ggplot_colour_hist(h_spec_raster, "Species richness", scaled = FALSE, 
+                                  nbins = 10, hist_bins = 65, # 120 if you don't exlude <10 spec grid cells
+                               x_axis_breaks = c(0, 100, 200, 250), x_axis_lim = c(0,230))
+# Put together with map. Kept the code in for now for addling plot label.
+h_spec_hist_plot <- ggplot_raster(h_spec_raster, nbins = 10) +
+  theme(plot.margin = margin(l = -0.3, r = 0.3,  unit = "cm")) +
+  annotation_custom(ggplotGrob(h_spec_hist), xmin = -180, xmax = -80, ymin = -60, ymax = 15) +
+  annotate("text", x = 20, y = -48, label  = "Certainty 4 (n = 2851)", size = 12, fontface = 2) #+
+  #annotate("text", x = -170, y = 80, label  = plot_label, size = 12, fontface = 2)
+#annotate("text", x = -170, y = 75, label  = "a", size = 70, fontface = 2)
+ggsave("Plots/Maps/high_cert_spec_hist.png", height = 7, width = 15, dpi = 300)
+  
+  
 # Arrange maps together.
 # cert_side_plots <- ggarrange(med_sex_lat_plot + rremove("xlab") + rremove("x.text"), 
 #                              hi_sex_lat_plot, nrow = 2, ncol = 1, heights = c(1,1.2))

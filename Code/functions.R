@@ -257,7 +257,8 @@ ggplot_raster <- function(raster, nbins = 6, variable = ""){
     theme_classic(base_size = 18) + theme(axis.text = element_blank(),
                                           axis.ticks = element_blank(),
                                           axis.line = element_blank(),
-                                          legend.position = c(0.13, 0.2),
+                                          #legend.position = c(0.13, 0.2),
+                                          legend.position = "none",  # For the hist plot.
                                           legend.key.height = unit(0.2, 'cm'),
                                           legend.spacing.y = unit(0.3, 'cm'),
                                           legend.title = element_blank(),
@@ -443,65 +444,14 @@ ggplot_terr_raster <- function(raster, nbins = 6, variable = ""){
 
 
 
-# Make a function with the legend as bins.
-ggplot_cont_raster <- function(raster, nbins = 6, variable = ""){
-  
-  # Create raster data.
-  raster_data <- as.data.frame(raster, xy=TRUE)
-  colnames(raster_data) <- c("long", "lat", "values")
-  #raster_data$values %<>% as.factor()
-  
-  # Get rid of areas without land.
-  raster_data$land <- land_data$layer
-  raster_data %<>% drop_na(land)
-  
-  #labels <- c("", labels)
-  # Plot with ggplot.
-  ggplot() +
-    
-    # Clip to world extent.
-    xlim(-180, 180) +  
-    ylim(-57, 80) +
-    
-    # Add the raster data.
-    geom_tile(aes(x=long, y=lat, fill= values), colour = NA, data=raster_data) +
-    
-    # Specify colours, legend labels and legend title.
-    scale_fill_gradient(low = pal[1], high = pal[5], na.value = "lightgrey") +
-    #scale_fill_manual(values = rev(colorRampPalette(pal)(nbins)), breaks = rev(1:nbins), labels = rev(labels), na.value = "lightgrey") +     #na.value = "grey"
-    guides(fill = guide_legend(title = NULL, byrow = TRUE)) +
-    
-    # Make map closer to the edge.
-    #scale_x_discrete(expand=c(0,1))+
-    #scale_y_discrete(expand=c(0,1))+
-    scale_y_continuous(limits = c(-57, 80), expand = expansion()) +
-    scale_x_continuous(limits = c(-180, 180), expand = expansion()) +
-    # Theme stuff.
-    theme_classic(base_size = 18) + theme(axis.text = element_blank(),
-                                          axis.ticks = element_blank(),
-                                          axis.line = element_blank(),
-                                          # legend.position = c(0.075, 0.3),
-                                          legend.position = c(0.13, 0.2),
-                                          legend.key.height = unit(0.2, 'cm'),
-                                          legend.spacing.y = unit(0.3, 'cm'),
-                                          #legend.title = element_text(face = "bold"),
-                                          legend.title = element_blank(),
-                                          legend.background = element_rect(fill = NA, colour = "lightgrey"),
-                                          legend.margin = margin(t = 0, r = 0.4, b = 0.3, l = 0.4, unit = "cm"),
-                                          #plot.margin = margin(t = 15, l = -20000, b = -150, r = 2)
-                                          plot.margin = margin(t =0, l = -10, b = 0, r = 0.5, unit = "cm")#unit(c(0,0,0,0), "null")
-    ) +
-    ylab("") + 
-    xlab("") #+ 
-  #coord_fixed() + 
-  #coord_cartesian(ylim=c(-50, 80))
-  
-  
-}
 
 # Function to make the histogram of the colour scale for inserting in plots.
-ggplot_colour_hist <- function(raster, legend_title, x_axis_breaks, 
+ggplot_colour_hist <- function(raster, legend_title, x_axis_breaks, hist_pal = pal,
+                               hist_bins = 150,
                                x_axis_lim, scaled = TRUE, nbins = 10){
+  
+  # Make a pal that matches number of bins.
+  hist_pal <- colorRampPalette(hist_pal)(nbins)
   
   # First convert female elaboration raster into xy data.
   plot_data <- as.data.frame(raster, xy=TRUE) %>% drop_na()
@@ -521,13 +471,16 @@ ggplot_colour_hist <- function(raster, legend_title, x_axis_breaks,
                          aes(x = values, 
                              # Get fill to be discrete version of x axis, using cuts from quantile breaks.
                              fill = cut(..x.., breaks = breaks, 
-                                        include.lowest = TRUE, na.rm = TRUE))) + 
+                                        include.lowest = TRUE, na.rm = TRUE),
+                             colour = cut(..x.., breaks = breaks, 
+                                        include.lowest = TRUE, na.rm = TRUE)
+                             )) + 
       # Set the number of breaks.
-      geom_histogram(bins = 150) +
+      geom_histogram(bins = hist_bins) +
       
       # Colour scale.
-      scale_fill_manual(values = pal, labels = labels) +
-      
+      scale_fill_manual(values = hist_pal, labels = labels) +
+      scale_colour_manual(values = hist_pal, labels = labels) +
       # Add breaks for the x-axis, and then cut off the greyyed out bars until we can fix that.
       scale_x_continuous(breaks=x_axis_breaks) + coord_cartesian(xlim = x_axis_lim) +
       
@@ -535,52 +488,18 @@ ggplot_colour_hist <- function(raster, legend_title, x_axis_breaks,
       labs(x = legend_title, y = NULL, fill = NULL, colour = NULL) + 
       
       # Standard theme stuff.
-      theme_pubr(base_size = 20, legend = "none") +
-      theme(axis.text.x=element_text(size=rel(0.7), face = "bold"),
-            axis.text.y=element_text(size=rel(0.7), face = "bold"),
+      theme_pubr(base_size = 30, legend = "none") +
+      theme(axis.text.x=element_text(size=rel(0.7)),
+            #axis.text.y=element_text(size=rel(0.7), face = "bold"),
             axis.title.x=element_text(size=rel(0.8), face = "bold"),
-            axis.line = element_line(size = 1)))
+            axis.line = element_line(size = 1),
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.line.y = element_blank(),
+            panel.background = element_rect(fill='transparent'), #transparent panel bg
+            plot.background = element_rect(fill='transparent', color=NA)))
 }
 
-
-################################################################################
-
-# Summarise data for means and CIs for boxplots.
-summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
-                      conf.interval=.95, .drop=TRUE) {
-  #library(plyr)
-  
-  # New version of length which can handle NA's: if na.rm==T, don't count them
-  length2 <- function (x, na.rm=FALSE) {
-    if (na.rm) sum(!is.na(x))
-    else       length(x)
-  }
-  
-  # This does the summary. For each group's data frame, return a vector with
-  # N, mean, and sd
-  datac <- ddply(data, groupvars, .drop=.drop,
-                 .fun = function(xx, col) {
-                   c(N    = length2(xx[[col]], na.rm=na.rm),
-                     mean = mean   (xx[[col]], na.rm=na.rm),
-                     sd   = sd     (xx[[col]], na.rm=na.rm)
-                   )
-                 },
-                 measurevar
-  )
-  
-  # Rename the "mean" column    
-  datac <- rename(datac, c("mean" = measurevar))
-  
-  datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
-  
-  # Confidence interval multiplier for standard error
-  # Calculate t-statistic for confidence interval: 
-  # e.g., if conf.interval is .95, use .975 (above/below), and use df=N-1
-  ciMult <- qt(conf.interval/2 + .5, datac$N-1)
-  datac$ci <- datac$se * ciMult
-  
-  return(datac)
-}
 
 
 ################################################################################
@@ -709,3 +628,64 @@ marginal_R2_MZ <- function(fit, ...) {
 }
 
 
+################################################################################
+
+                   ##### Extra functions #######
+
+
+
+# Make a function with the legend as bins.
+ggplot_cont_raster <- function(raster, nbins = 6, variable = ""){
+  
+  # Create raster data.
+  raster_data <- as.data.frame(raster, xy=TRUE)
+  colnames(raster_data) <- c("long", "lat", "values")
+  #raster_data$values %<>% as.factor()
+  
+  # Get rid of areas without land.
+  raster_data$land <- land_data$layer
+  raster_data %<>% drop_na(land)
+  
+  #labels <- c("", labels)
+  # Plot with ggplot.
+  ggplot() +
+    
+    # Clip to world extent.
+    xlim(-180, 180) +  
+    ylim(-57, 80) +
+    
+    # Add the raster data.
+    geom_tile(aes(x=long, y=lat, fill= values), colour = NA, data=raster_data) +
+    
+    # Specify colours, legend labels and legend title.
+    scale_fill_gradient(low = pal[1], high = pal[5], na.value = "lightgrey") +
+    #scale_fill_manual(values = rev(colorRampPalette(pal)(nbins)), breaks = rev(1:nbins), labels = rev(labels), na.value = "lightgrey") +     #na.value = "grey"
+    guides(fill = guide_legend(title = NULL, byrow = TRUE)) +
+    
+    # Make map closer to the edge.
+    #scale_x_discrete(expand=c(0,1))+
+    #scale_y_discrete(expand=c(0,1))+
+    scale_y_continuous(limits = c(-57, 80), expand = expansion()) +
+    scale_x_continuous(limits = c(-180, 180), expand = expansion()) +
+    # Theme stuff.
+    theme_classic(base_size = 18) + theme(axis.text = element_blank(),
+                                          axis.ticks = element_blank(),
+                                          axis.line = element_blank(),
+                                          # legend.position = c(0.075, 0.3),
+                                          legend.position = c(0.13, 0.2),
+                                          legend.key.height = unit(0.2, 'cm'),
+                                          legend.spacing.y = unit(0.3, 'cm'),
+                                          #legend.title = element_text(face = "bold"),
+                                          legend.title = element_blank(),
+                                          legend.background = element_rect(fill = NA, colour = "lightgrey"),
+                                          legend.margin = margin(t = 0, r = 0.4, b = 0.3, l = 0.4, unit = "cm"),
+                                          #plot.margin = margin(t = 15, l = -20000, b = -150, r = 2)
+                                          plot.margin = margin(t =0, l = -10, b = 0, r = 0.5, unit = "cm")#unit(c(0,0,0,0), "null")
+    ) +
+    ylab("") + 
+    xlab("") #+ 
+  #coord_fixed() + 
+  #coord_cartesian(ylim=c(-50, 80))
+  
+  
+}
