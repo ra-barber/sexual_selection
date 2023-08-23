@@ -21,6 +21,7 @@ library(ggplot2)
 library(ggpubr)
 library(phytools)
 library(brms)
+library(readxl)
 
 # Read in the functions. 
 source("Code/functions.R")
@@ -31,98 +32,39 @@ source("Code/functions.R")
 ###############################################################################
                   #### Read in data ####
 
+# Read in the sex metric data.
+metric_data <- read_excel("Data/sexual_selection_dataset_23_08.xlsx", sheet = 4, na = "NA") %>% clean_names()
+birdtree_data <-  read_excel("Data/sexual_selection_dataset_23_08.xlsx", sheet = 2, na = "NA") %>% clean_names()
+model_data <- left_join(metric_data, birdtree_data)
+model_data$tree_tip <- gsub(" ", "_", model_data$scientific_name_bird_tree)
 
-# Read in some data.
-avian_data <- read.csv("Data/bateman_gradients/tim_avian_data.csv") %>% clean_names()
-avian_data$tree_tip <- gsub(" ", "_", avian_data$birdtree_name)
+# Select testes mass.
+testes_data <- model_data %>% 
+  dplyr::select(scientific_name_bird_tree, tree_tip, sexual_selection, data_certainty, 
+                sex_role_reversal, residual_testes_mass) %>% na.omit()
+testes_data %<>% filter(data_certainty > 2)
 
-oss_data <- read.csv("Data/bateman_gradients/Tim_OSS_database.csv") %>% clean_names()
-oss_data$tree_tip <- gsub(" ", "_", oss_data$birdtree_name)
-oss_data %<>% filter(exclude != "YES")
-
-# Select batemman graident metrics.
-bateman_data <- avian_data %>% 
-  dplyr::select(birdtree_name, tree_tip, sexual_selection, data_certainty, 
-                n_m, r_m) %>% na.omit()
-#bateman_data[bateman_data$beta_f > bateman_data$beta_m, "birdtree_name"]
+# Select Bateman gradient metrics.
+bateman_data <- model_data %>% 
+  dplyr::select(scientific_name_bird_tree, tree_tip, sexual_selection, data_certainty, 
+                bateman_gradient, bateman_individuals) %>% na.omit()
 
 # Select OSS metrics.
-oss_data <- oss_data %>% 
-  dplyr::select(birdtree_name, tree_tip, sexual_selection, data_certainty, sex_role_reversal,
-                n_f, is_f, n_m, is_m)
-
-
-###############################################################################
-                  ##### Prepare single OSS metric #####
-
-
-# Create a single column of OSS, swapping over Jacana jacana as a role reversed species.
-oss_data$n_oss <- oss_data$n_m
-oss_data$oss <- oss_data$is_m
-
-# Species to take female OSS from.
-oss_data[oss_data$is_f > oss_data$is_m,]
-female_species <- c("Clamator glandarius",  "Jacana jacana", "Zonotrichia albicollis", "Zonotrichia leucophrys")
-
-# Get data from females for these species.
-oss_data$oss[oss_data$birdtree_name %in% female_species] <- oss_data$is_f[oss_data$birdtree_name %in% female_species]
-oss_data$n_oss[oss_data$birdtree_name %in% female_species] <- oss_data$n_f[oss_data$birdtree_name %in% female_species]
-
-# Try removing Malurus for now (looks like OSS was estimated incorrectly (altho could be correct))
-oss_data %<>% filter(birdtree_name != "Malurus cyaneus")
-
-# Remove extra columns and NA species.
-oss_data %<>% 
-  dplyr::select(birdtree_name, tree_tip, sexual_selection, data_certainty, sex_role_reversal, n_oss, oss) %>% na.omit()
- 
-
-###############################################################################
-                  ##### Add zero bateman species #####
-
-# Filter for species with 0 oss, and therefore 0 bateman (in theory).
-zero_mating_variance <- oss_data %>% filter(oss == 0)
-
-# # Select columns and merge.
-# extra_bateman_data <- zero_mating_variance %>% select(birdtree_name, tree_tip, sexual_selection, data_certainty, n_oss, oss)
-# colnames(extra_bateman_data)[5:6] <- colnames(bateman_data)[5:6]
-# bateman_data <- rbind(bateman_data, extra_bateman_data)
-
-###############################################################################
-                   ##### Average studies  #####
-
-# Weight metrics by sample size for combining studies.
-bateman_data$weighted_corr_m <- bateman_data$r_m * bateman_data$n_m
-oss_data$weighted_oss <- oss_data$oss * oss_data$n_oss  
-
-# Combine multiple studies.
-bateman_data %<>% group_by(birdtree_name) %>% 
-  summarise(tree_tip = first(tree_tip),
-            sexual_selection = first(sexual_selection),
-            data_certainty = first(data_certainty),
-            
-            corr_m = mean(r_m),
-            weight_corr_m = sum(weighted_corr_m)/ sum(n_m),
-            n_m = sum(n_m))
-
-oss_data %<>% group_by(birdtree_name) %>% 
-  summarise(tree_tip = first(tree_tip),
-            sexual_selection = first(sexual_selection),
-            data_certainty = first(data_certainty),
-            
-            oss = mean(oss),
-            weight_oss = sum(weighted_oss)/ sum(n_oss),
-            oss_log = log(weight_oss + 1),
-            n_oss = sum(n_oss))
-
+oss_data <- model_data %>% 
+  dplyr::select(scientific_name_bird_tree, tree_tip, sexual_selection, data_certainty, 
+                sex_role_reversal, opportunity_for_sexual_selection, 
+                oss_individuals, oss_estimated)  %>% na.omit()
 
 # Read in the tree.
 model_tree <- read.tree("Data/Trees/prum_trees.tre")[[1]]
 
 # Drop tips on the tree.
+testes_tree <- drop.tip(model_tree, setdiff(model_tree$tip.label, testes_data$tree_tip))
 bateman_tree <- drop.tip(model_tree, setdiff(model_tree$tip.label, bateman_data$tree_tip))
 oss_tree <- drop.tip(model_tree, setdiff(model_tree$tip.label, oss_data$tree_tip))
 
 # Make a covariance matrix, and order data the same.
+testes_covar <- ape::vcv.phylo(testes_tree)
 bateman_covar <- ape::vcv.phylo(bateman_tree)
 oss_covar <- ape::vcv.phylo(oss_tree)
 
@@ -132,40 +74,62 @@ oss_covar <- ape::vcv.phylo(oss_tree)
 
 
 # Scale continuous predictors to two SD.
+testes_data %<>% mutate(
+  testes_z = standardize(residual_testes_mass, two_sd = TRUE)
+)
+
 bateman_data %<>% mutate(
-  corr_m_z = standardize(weight_corr_m, two_sd = TRUE)
+  bateman_z = standardize(bateman_gradient, two_sd = TRUE)
 )
 
 oss_data %<>% mutate(
-  oss_z = standardize(weight_oss, two_sd = TRUE),
-  oss_log_z = standardize(oss_log, two_sd = TRUE),
+  oss_z = standardize(opportunity_for_sexual_selection, two_sd = TRUE),
+  oss_log = log(opportunity_for_sexual_selection + 1),
+  oss_log_z = standardize(oss_log, two_sd = TRUE)
 )
 
-
-# Make sexual selection a factor for plotting colours.
+# Make a sexual selection factor variable for plotting colours.
+testes_data$sexual_selection_plot <- testes_data$sexual_selection %>% as.factor()
 bateman_data$sexual_selection_plot <- bateman_data$sexual_selection %>% as.factor()
 oss_data$sexual_selection_plot <- oss_data$sexual_selection %>% as.factor()
 
-# Prepare response variables.
+# Add 1 to sexual selection score so it can be used with ordinal models.
+testes_data$sexual_selection <- testes_data$sexual_selection + 1
 bateman_data$sexual_selection <- bateman_data$sexual_selection + 1
 oss_data$sexual_selection <- oss_data$sexual_selection + 1
+
+
+
+###############################################################################
+                    #### Run linear models #####
+
+# Brms formula.
+teste_formula <- brmsformula("sexual_selection ~ residual_testes_mass", family = cumulative())
+bateman_male_formula <- brmsformula("sexual_selection ~ bateman_gradient", family = cumulative())
+oss_formula <- brmsformula("sexual_selection ~ oss_log", family = cumulative())
+
+# Run models.
+teste_model <- brm(
+  teste_formula, data = testes_data, 
+  iter = 10000, warmup = 5000, chains = 8, thin = 20, cores = 8, init = 0, control = list(adapt_delta = 0.99),
+  normalize = FALSE, backend = "cmdstanr")
+
+bateman_male_model <- brm(
+  bateman_male_formula, data = bateman_data, 
+  iter = 10000, warmup = 5000, chains = 8, thin = 20, cores = 8, init = 0, control = list(adapt_delta = 0.99),
+  normalize = FALSE, backend = "cmdstanr")
+
+oss_model <- brm(
+  oss_formula, data = oss_data,
+  iter = 10000, warmup = 5000, chains = 8, thin = 20, cores = 8, init = 0, control = list(adapt_delta = 0.99),
+  normalize = FALSE, backend = "cmdstanr")
+
 
 
 ################################################################################
                   ##### And in teste data #####
 
-# Read in some data.
-teste_data <- read.csv("Data/teste_mass/both_testes_datasets_01_08.csv") %>% clean_names()
-teste_data %<>% filter(data_certainty > 2)
 
-# Scale continuous predictors to two SD.
-teste_data %<>% mutate(
-  teste_z = standardize(residual_testes_mass, two_sd = TRUE)
-)
-
-# Prepare response variables.
-teste_data$sexual_selection_plot <- teste_data$sexual_selection %>% as.factor()
-teste_data$sexual_selection <- teste_data$sexual_selection + 1
 
 # Read in phy model.
 phy_teste_model <- readRDS("Z:/home/sexual_selection/Results/Models/Testes/teste_model_1.rds")
@@ -179,16 +143,16 @@ teste_formula_2 <- brmsformula("sexual_selection ~ residual_testes_mass + I(resi
 
 # Run models.
 teste_model <- brm(
-  teste_formula, data = teste_data, 
+  teste_formula, data = testes_data, 
   iter = 10000, warmup = 5000, chains = 8, thin = 20, cores = 8, init = 0, control = list(adapt_delta = 0.99),
   normalize = FALSE, backend = "cmdstanr")
 
 teste_model_2 <- brm(
-  teste_formula_2, data = teste_data, 
+  teste_formula_2, data = testes_data, 
   iter = 1000, warmup = 500, chains = 8, thin = 20, cores = 8, init = 0, control = list(adapt_delta = 0.99),
   normalize = FALSE, backend = "cmdstanr")
 
-conditional_effects(teste_model_2)
+
 
 ###############################################################################
                     #### Run brms models ######
@@ -339,11 +303,11 @@ write.csv(all_estimates, "Results/Tables/sex_metric_comparison.csv", row.names =
                        ##### Raw correlations #####
 
 
-cor(teste_data$sexual_selection, teste_data$residual_testes_mass, method = "spearman")
+cor(testes_data$sexual_selection, testes_data$residual_testes_mass, method = "spearman")
 cor(oss_data$sexual_selection, oss_data$oss_log, method = "spearman")
 cor(bateman_data$sexual_selection, bateman_data$weight_corr_m, method = "spearman")
 
-cor(teste_data$sexual_selection, teste_data$residual_testes_mass, method = "pearson")
+cor(testes_data$sexual_selection, testes_data$residual_testes_mass, method = "pearson")
 cor(oss_data$sexual_selection, oss_data$oss_log, method = "pearson")
 cor(bateman_data$sexual_selection, bateman_data$weight_corr_m, method = "pearson")
 
@@ -366,7 +330,7 @@ get_x_pos <- function(response){
 
 bateman_m_x <- get_x_pos(bateman_data$corr_m)
 oss_x <- get_x_pos(oss_data$oss_log)
-teste_x <- get_x_pos(teste_data$residual_testes_mass)
+teste_x <- get_x_pos(testes_data$residual_testes_mass)
 
 # Create a function to plot the data.
 prediction_plot <- function(response = "beta_f", dataset = bateman_data, 
@@ -415,9 +379,9 @@ oss_plot <- prediction_plot("oss_log", oss_data, plot_label = phy_oss_label,
   theme(axis.title.y = element_blank(), axis.text.y = element_blank()) 
 
 # Testes mass plot.
-teste_data$teste_n <- 1
+testes_data$teste_n <- 1
 teste_preds <- conditional_effects(teste_model)[[1]]
-teste_plot <- prediction_plot("residual_testes_mass", teste_data, plot_label = phy_teste_label, 
+teste_plot <- prediction_plot("residual_testes_mass", testes_data, plot_label = phy_teste_label, 
                 x_label = "Residual testes mass", point_size = "teste_n",
                 predict_data = teste_preds, x_lab_pos = teste_x)
 
@@ -438,7 +402,7 @@ get_x_pos <- function(response){
 
 bateman_sample_x <- get_x_pos(bateman_data$corr_m)
 oss_sample_x <- get_x_pos(oss_data$oss_log)
-teste_sample_x <- get_x_pos(teste_data$residual_testes_mass)
+teste_sample_x <- get_x_pos(testes_data$residual_testes_mass)
 
 # Create the labels with italic "n"
 bateman_sample_n <-  expression(~italic(n)~'= 14 species')
@@ -507,7 +471,7 @@ smooth_pred_plot_teste <- function(response = "beta_f", dataset = bateman_data,
 
 
 # Testes mass plot.
-teste_plot_4 <- smooth_pred_plot_teste("residual_testes_mass", teste_data, plot_label = phy_teste_label, 
+teste_plot_4 <- smooth_pred_plot_teste("residual_testes_mass", testes_data, plot_label = phy_teste_label, 
                                        x_label = "Residual testes mass", point_size = "teste_n",
                                        predict_data = teste_preds, x_lab_pos = teste_x)
 
@@ -583,7 +547,7 @@ smooth_pred_plot <- function(response = "beta_f", dataset = bateman_data,
 
 
 # Testes mass plot.
-teste_plot_2 <- smooth_pred_plot("residual_testes_mass", teste_data, plot_label = phy_teste_label, 
+teste_plot_2 <- smooth_pred_plot("residual_testes_mass", testes_data, plot_label = phy_teste_label, 
                               x_label = "Residual testes mass", point_size = "teste_n",
                               predict_data = teste_preds, x_lab_pos = teste_x)
 
@@ -612,7 +576,7 @@ ggsave("Plots/Diagnostics/ss_metric_analysis_smoothed_all.png", width = 12, heig
 
 
 # Testes mass plot.
-teste_plot_2 <- smooth_pred_plot("residual_testes_mass", teste_data, plot_label = phy_teste_label, 
+teste_plot_2 <- smooth_pred_plot("residual_testes_mass", testes_data, plot_label = phy_teste_label, 
                                  x_label = "Residual testes mass\nn = 977", point_size = "teste_n",
                                  predict_data = teste_preds, x_lab_pos = teste_x)
 
@@ -668,7 +632,7 @@ smooth_pred_plot_teste <- function(response = "beta_f", dataset = bateman_data,
 
 
 # Testes mass plot.
-teste_plot_3 <- smooth_pred_plot_teste("residual_testes_mass", teste_data, plot_label = phy_teste_label, 
+teste_plot_3 <- smooth_pred_plot_teste("residual_testes_mass", testes_data, plot_label = phy_teste_label, 
                  x_label = "Residual testes mass\nn = 977", point_size = "teste_n",
                  predict_data = teste_preds, x_lab_pos = teste_x)
 
@@ -694,11 +658,11 @@ get_x_pos <- function(response){
 
 bateman_sample_x <- get_x_pos(bateman_data$corr_m)
 oss_sample_x <- get_x_pos(oss_data$oss_log)
-teste_sample_x <- get_x_pos(teste_data$residual_testes_mass)
+teste_sample_x <- get_x_pos(testes_data$residual_testes_mass)
 
 # bateman_sample_n <- paste0("*n* = ", nrow(bateman_data))
 # oss_sample_n <- paste0("n = ", nrow(oss_data))
-# teste_sample_n <- paste0("n = ", nrow(teste_data))
+# teste_sample_n <- paste0("n = ", nrow(testes_data))
 
 bateman_sample_n <-  expression(~italic(n)~'= 65 species')
 oss_sample_n <-  expression(~italic(n)~'= 79 species')
@@ -783,7 +747,7 @@ smooth_pred_plot_teste <- function(response = "beta_f", dataset = bateman_data,
 
 
 # Testes mass plot.
-teste_plot_4 <- smooth_pred_plot_teste("residual_testes_mass", teste_data, plot_label = phy_teste_label, 
+teste_plot_4 <- smooth_pred_plot_teste("residual_testes_mass", testes_data, plot_label = phy_teste_label, 
                                        x_label = "Residual testes mass", point_size = "teste_n",
                                        predict_data = teste_preds, x_lab_pos = teste_x)
 
@@ -844,7 +808,7 @@ oss_plot_3 <- smooth_pred_plot("oss_log", oss_data, plot_label = phy_oss_label,
   theme(axis.title.y = element_blank(), axis.text.y = element_blank()) 
 
 # Testes mass plot.
-teste_plot_4 <- smooth_pred_plot_teste("residual_testes_mass", teste_data, plot_label = phy_teste_label, 
+teste_plot_4 <- smooth_pred_plot_teste("residual_testes_mass", testes_data, plot_label = phy_teste_label, 
                                        x_label = "Residual testes mass\nn = 977", point_size = "teste_n",
                                        predict_data = teste_preds, x_lab_pos = teste_x)
 
@@ -858,11 +822,11 @@ ggarrange(teste_plot_4,  male_bateman_plot_3, oss_plot_3,
 ################################################################################
                     ###### Try all three #####
 
-multivariate_data <- bateman_data %>% left_join(oss_data) %>% left_join(teste_data) %>% na.omit()
+multivariate_data <- bateman_data %>% left_join(oss_data) %>% left_join(testes_data) %>% na.omit()
 
 
 # Brms formula.
-multivariate_formula <- brmsformula("sexual_selection ~ corr_m_z + oss_log_z*teste_z + (1|gr(tree_tip, cov=A))", family = cumulative(), decomp = "QR")
+multivariate_formula <- brmsformula("sexual_selection ~ corr_m_z + oss_log_z*testes_z + (1|gr(tree_tip, cov=A))", family = cumulative(), decomp = "QR")
 
 # Phy models.
 phy_multivariate_model <- brm(
@@ -935,11 +899,11 @@ Bayes_R2_MZ(phy_oss_model)
 
 
 ssd_data <- read.csv("../Size_dimorphism/Data/trait_averages.csv") %>% clean_names()
-colnames(ssd_data)[1] <- "birdtree_name"
+colnames(ssd_data)[1] <- "scientific_name_bird_tree"
 
-ssd_data %<>% select(birdtree_name, hand_wing_index)
+ssd_data %<>% select(scientific_name_bird_tree, hand_wing_index)
 
-teste_wing_data <- teste_data %>% left_join(ssd_data)
+teste_wing_data <- testes_data %>% left_join(ssd_data)
 
 wing_teste_model <- lm(residual_testes_mass ~ hand_wing_index, data =teste_wing_data)
 
@@ -1037,7 +1001,7 @@ label_repel_plot <- function(response = "beta_f", dataset = bateman_data,
     theme(legend.position = "none",
           line = element_line(linewidth = 0.5)) + 
     xlab("Sexual selection") + ylab(y_label) +
-    geom_label_repel(aes(label = birdtree_name), colour = "black") +
+    geom_label_repel(aes(label = scientific_name_bird_tree), colour = "black") +
     annotate("text", x = 1, y = y_lab_pos, label = plot_label, size = 7)
 }
 
@@ -1167,7 +1131,7 @@ point_label_plot <- function(response = "beta_f", dataset = bateman_data,
     theme(legend.position = "none",
           line = element_line(linewidth = 0.5)) + 
     xlab("Sexual selection") + ylab(y_label) +
-    geom_text_repel(aes(label = birdtree_name), colour = "black",
+    geom_text_repel(aes(label = scientific_name_bird_tree), colour = "black",
                     force = 10, max.time = 10, max.iter = 50000, 
                     min.segment.length = 0, seed = 1993,
                     segment.linetype = 5,
