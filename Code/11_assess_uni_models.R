@@ -73,7 +73,7 @@ tro_uncen_all_data <- readRDS(paste0(first_half, "tro_uncentered_all_data.rds"))
 terr_cen_all_data <- readRDS(paste0(first_half, "terr_centered_all_data.rds"))
 terr_uncen_all_data <- readRDS(paste0(first_half, "terr_uncentered_all_data.rds"))
 
-
+temp_uncen_all_data[[1]]
 temp_cen_all_data[[3]]
 mig_cen_all_data[[3]]
 tro_cen_all_data[[3]]
@@ -94,6 +94,12 @@ terr_cen_high_data <- readRDS(paste0(first_half, "terr_centered_high_data.rds"))
 # 
 
 
+# Condtional plot tests:
+
+library(brms)
+normal_cond_plot <- conditional_effects(tro_uncen_high_data[[1]])
+normal_cond_plot_na <- conditional_effects(tro_uncen_high_data[[1]], conditions = NA)
+normal_cond_plot_null <- conditional_effects(tro_uncen_high_data[[1]], conditions = NULL)
 
 ################################################################################
                     #### Export summary tables ####

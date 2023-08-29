@@ -35,8 +35,8 @@ source("Code/functions.R")
 array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
 array_number
 
-# Set the data types.
-data_type <- c("phylo", "linear")
+# Create types for hpc jobs.
+tree_number <- 1:50
 
 # Model (In order of size and therefore speed)
 model_type <- c("testes", "bateman", "oss")
@@ -44,24 +44,39 @@ model_type <- c("testes", "bateman", "oss")
 # Centered or uncentered.
 center <- c("centered", "uncentered")
 
-# Create types for hpc jobs.
-tree_number <- 1:50
+# Set the data types.
+data_type <- c("phylo", "linear")
 
 # Expand the grid.
-all_combos <- expand.grid(data_type, center, model_type, tree_number)
+all_combos <- expand.grid(tree_number, center, model_type, data_type)
 
-# Data type.
-data_type <- all_combos[array_number, 1] %>% as.character()
+# Tree type.
+tree_number <- all_combos[array_number, 1] %>% as.numeric()
 
 # Center type.
 center <- all_combos[array_number, 2] %>% as.character()
 
 # Model type.
-model_type <- all_combos[array_number, 4] %>% as.character()
+model_type <- all_combos[array_number, 3] %>% as.character()
 
-# Tree type.
-tree_number <- all_combos[array_number, 4] %>% as.numeric()
+# Data type.
+data_type <- all_combos[array_number, 4] %>% as.character()
 
+
+## Array job spec info ##
+
+# Array num: 1 - 100 = 16 cores for 2 hours
+# Array num: 101 - 300 = 16 cores for 30 minutes
+# Array number 301 - 600 8 cores for 30 minutes
+
+if (array_number %in% 1:300){
+  core_number <- 16
+  thread_number <- 8
+}
+if (array_number %in% 301:600){
+  core_number <- 8
+  thread_number <- 4
+}
 
 ###############################################################################
                         #### Read in data ####
@@ -171,22 +186,22 @@ model_pathway <- paste0("Results/Models/Sex_metrics/", model_type, "_", center, 
 if (model_type == "testes"){
   teste_model <- brm(
     teste_formula, data = testes_data, data2 = list(A=testes_covar),
-    iter = 10000, warmup = 5000, chains = 2, thin = 20, cores = 32, init = 0, 
-    control = list(adapt_delta = 0.99), file = model_pathway, threads = 16,
+    iter = 10000, warmup = 5000, chains = 2, thin = 20, cores = core_number, init = 0, 
+    control = list(adapt_delta = 0.99), file = model_pathway, threads = thread_number,
     normalize = FALSE, backend = "cmdstanr")
 }
 if (model_type == "bateman"){
 bateman_male_model <- brm(
   bateman_male_formula, data = bateman_data, data2 = list(A=bateman_covar),
-  iter = 10000, warmup = 5000, chains = 2, thin = 20, cores = 32, init = 0, 
-  control = list(adapt_delta = 0.99), file = model_pathway, threads = 16,
+  iter = 10000, warmup = 5000, chains = 2, thin = 20, cores = core_number, init = 0, 
+  control = list(adapt_delta = 0.99), file = model_pathway, threads = thread_number,
   normalize = FALSE, backend = "cmdstanr")
 }
 if (model_type == "oss"){
 oss_model <- brm(
   oss_formula, data = oss_data, data2 = list(A=oss_covar),
-  iter = 10000, warmup = 5000, chains = 2, thin = 20, cores = 32, init = 0, 
-  control = list(adapt_delta = 0.99), file = model_pathway, threads = 16,
+  iter = 10000, warmup = 5000, chains = 2, thin = 20, cores = core_number, init = 0, 
+  control = list(adapt_delta = 0.99), file = model_pathway, threads = thread_number,
   normalize = FALSE, backend = "cmdstanr")
 }
 
