@@ -28,7 +28,7 @@ source("Code/functions.R")
                              #### Data ####
 
 # Read in the life history traits.
-sexual_selection <- read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 2, na = "NA") %>% 
+full_data <- read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 2, na = "NA") %>% 
   clean_names()
 high_data <- full_data %>% filter(data_certainty > 2)
 

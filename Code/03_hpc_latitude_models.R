@@ -14,6 +14,8 @@ library(ggpubr)
 library(phytools)
 library(brms)
 library(graph4lg)
+library(readxl)
+library(janitor)
 
 # Set the seed.
 set.seed(1993)
@@ -54,7 +56,6 @@ data_type <- all_combos[array_number, 2] %>% as.character()
 model_type <- all_combos[array_number, 3] %>% as.character()
 
 
-
 ###############################################################################
                        #### Read in the data #####
 
@@ -62,13 +63,15 @@ model_type <- all_combos[array_number, 3] %>% as.character()
 source("Code/functions.R")
 
 # Read in the life history traits.
-model_data <- read.csv("Data/sexual_traits.csv")
-model_data$tree_tip <- gsub(" ", "_", model_data$birdtree_name)
-model_data$abs_lat <- abs(model_data$complete_latitude)
+model_data <- read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 2, na = "NA") %>% 
+  clean_names()
+
+model_data$tree_tip <- gsub(" ", "_", model_data$scientific_name_bird_tree)
+model_data$abs_lat <- abs(model_data$latitude)
 
 # Filter for high cert.
 if (data_type == "high"){
-  model_data %<>% filter(sexual_certainty < 3)
+  model_data %<>% filter(data_certainty > 2)
 }
 
 
@@ -76,22 +79,22 @@ if (data_type == "high"){
               #### Prepare predictor variables / data ######
 
 # Prepare response variables.
-model_data$sexual_score <- model_data$sexual_score + 1
+model_data$sexual_selection <- model_data$sexual_selection + 1
 
 # Trophic niche model data.
-primary_data <- model_data %>% filter(trophic_binary == "Primary")
-secondary_data <- model_data %>% filter(trophic_binary == "Secondary")
+primary_data <- model_data %>% filter(trophic_level_binary == "Primary")
+secondary_data <- model_data %>% filter(trophic_level_binary == "Secondary")
 fruit_data <- model_data %>% filter(trophic_niche == "Frugivore")
 invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
 
 # Filter for eco roles.
 mig_data <- model_data %>% filter(migration_binary == "Strong")
 no_mig_data <- model_data %>% filter(migration_binary == "Weak")
-terr_data <- model_data %>% filter(territory_binary == "Territory")
-no_terr_data <- model_data %>% filter(territory_binary == "No territory")
+terr_data <- model_data %>% filter(territoriality_binary == "Territory")
+no_terr_data <- model_data %>% filter(territoriality_binary == "No territory")
 
 # Highest certainty data.
-hi_cert_data <- model_data %>% filter(cert_reverse > 3)
+hi_cert_data <- model_data %>% filter(data_certainty > 3)
 
 # Create a list of datasets for easy reference.
 all_datasets <- list(model_data, primary_data, fruit_data, secondary_data, invert_data,
@@ -102,12 +105,12 @@ names(all_datasets) <- c("allbirds", "primary", "fruit", "secondary", "invert",
 ###############################################################################
                 #### Define brms model function. ######
 
-lat_brms_model <- function(data_set = model_data, response = "sexual_score",  
+lat_brms_model <- function(data_set = model_data, response = "sexual_selection",  
                            predictor = "abs_lat", family = "cumulative"){
   
   # Scale continuous predictors to two SD.
   data_set %<>% mutate(
-    centroid_z = standardize(centroid_sqrt, two_sd = TRUE))
+    centroid_z = standardize(sqrt(abs_lat), two_sd = TRUE))
   
   # Create model formula.
   model_formula <- formula(paste0(response, " ~ ", predictor))
@@ -150,8 +153,17 @@ if (model_type %in% names(all_datasets)){
 
 # Run the global data certainty analysis, with certainty as the response variable.
 if (model_type == "certainty"){
-  latitude_model <- lat_brms_model(response = "cert_reverse")
+  latitude_model <- lat_brms_model(response = "data_certainty")
 }
+
+# Make dummy territoriality metrics.
+model_data$terr_dummy <- "0"
+model_data$year_terr_dummy <- "0"
+model_data %>% mutate(
+  terr_dummy = replace(terr_dummy, territoriality_binary == "Non-Territorial", "1"),
+  year_terr_dummy = replace(year_terr_dummy, territoriality == "Strong", "1"))
+model_data$terr_dummy %<>% as.numeric()
+model_data$year_terr_dummy %<>% as.numeric()
 
 # Run territoriality models.
 if (model_type == "prim_allterr"){

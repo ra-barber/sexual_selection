@@ -1,5 +1,5 @@
 ###############################################################################
-                     # Simple brms models on cluster  #
+               # Running univariate phylogenetic models  #
 ###############################################################################
 
 # Packages to load.
@@ -43,7 +43,7 @@ response <- c("temp", "mig", "tro", "terr")
 center <- c("centered", "uncentered")
 
 # Expand the grid.
-all_combos <- expand.grid(response, center, data_type, tree_number)
+all_combos <- expand.grid(response, center, tree_number, data_type)
 
 # Reponse.
 response <- all_combos[array_number, 1] %>% as.character()
@@ -56,6 +56,14 @@ data_type <- all_combos[array_number, 3] %>% as.character()
 
 # Tree type.
 tree_number <- all_combos[array_number, 4] %>% as.numeric()
+
+# Time for array 1 - 160
+# 72 hours
+
+# Time for array 161 - 320
+# 48 Hours
+
+
 
 
 ###############################################################################
@@ -153,7 +161,7 @@ model_formula <- paste0("sexual_score ~ ", model_response, " + (1|gr(tree_tip, c
 brms_formula <- brmsformula(model_formula, family = cumulative())
 
 # Simple models.
-model_pathway <- paste0("Results/Models/Univariate_short/", response, "_", center, "_", data_type, "_", tree_number, ".rds") 
+model_pathway <- paste0("Results/Models/Univariate/", response, "_", center, "_", data_type, "_", tree_number, ".rds") 
 
 #library(standist) ~ for visualising priors.
 # # Add un-informative priors.
@@ -167,13 +175,13 @@ normal_priors <- c(prior(normal(0,1), class="Intercept"),
     data = model_data,
     data2 = list(A=model_covar),
     prior = normal_priors,
-    iter = 2500,
-    warmup = 500,
+    iter = 10000,
+    warmup = 5000,
     chains = 2,
-    thin = 5,    # Need to change.
-    cores = 32,
+    thin = 20,
+    cores = 16,
     init = 0,
     file = model_pathway,
     normalize = FALSE,
     backend = "cmdstanr",
-    threads = threading(16))
+    threads = threading(8))
