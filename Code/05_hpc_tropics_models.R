@@ -8,6 +8,11 @@
 # for evolutionary regression.
 
 
+
+### NEED TO UPDATE FUNCTIONS SCRIPT ON HPC ~~~
+
+
+
 # Packages to load.
 library(magrittr)
 #library(tictoc)
@@ -61,9 +66,7 @@ model_type <- all_combos[array_number, 3] %>% as.character()
 source("Code/functions.R")
 
 # Read in the life history traits.
-model_data <- read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 2, na = "NA") %>% 
-  clean_names()
-model_data$tree_tip <- gsub(" ", "_", model_data$scientific_name_bird_tree)
+model_data <- read_ss_data("Data/sexual_selection_dataset_04_09.xlsx")
 
 ###############################################################################
               #### Prepare predictor variables ######
