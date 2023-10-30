@@ -31,7 +31,7 @@ array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
 array_number
 
 # Create types for hpc jobs.
-tree_number <- 1:20
+tree_number <- 1:50
 
 # Set the data types.
 data_type <- c("all", "high")
@@ -57,10 +57,10 @@ data_type <- all_combos[array_number, 3] %>% as.character()
 # Tree type.
 tree_number <- all_combos[array_number, 4] %>% as.numeric()
 
-# Time for array 1 - 160
+# Time for array 1 - 400
 # 72 hours
 
-# Time for array 161 - 320
+# Time for array 401 - 800
 # 48 Hours
 
 
@@ -77,12 +77,11 @@ source("Code/functions.R")
 model_tree <- read.tree("Data/Trees/prum_trees.tre")[[tree_number]]
 
 # Read in the life history traits.
-model_data <- read.csv("Data/sexual_traits.csv")
-model_data$tree_tip <- gsub(" ", "_", model_data$birdtree_name)
+model_data <- read_ss_data()
 
 # Filter for high cert.
 if (data_type == "high"){
-  model_data %<>% filter(sexual_certainty < 3)
+  model_data %<>% filter(data_certainty > 2)
 }
 
 # Drop tips on the tree.
@@ -103,41 +102,23 @@ model_data <- model_data[row.names(model_covar),]
 
 # Set as factor, then re-level for appropriate reference group.
 model_data %<>% mutate(
-  territory_binary = relevel(as.factor(territory_binary), ref = "No territory"),
+  territoriality_binary = relevel(as.factor(territoriality_binary), ref = "Non-territorial"),
   migration_binary = relevel(as.factor(migration_binary), ref = "Weak"),
-  trophic_binary = relevel(as.factor(trophic_binary), ref = "Secondary"),
-  devo_binary = relevel(as.factor(devo_mode_wang), ref = "altricial"),
-  devo_mode = relevel(as.factor(devo_mode), ref = "altrical"),
-  wang_edited = relevel(as.factor(wang_edited), ref = "altricial"),
-  diet_binary = relevel(as.factor(diet_binary), ref = "Non-frug-nect")
-)
+  trophic_level_binary = relevel(as.factor(trophic_level_binary), ref = "Secondary"))
 
 # Center categorical predictors.
 model_data %<>% mutate(
-  terr_bi_c = center_categorical(territory_binary),
+  terr_bi_c = center_categorical(territoriality_binary),
   migration_bi_c = center_categorical(migration_binary),
-  trophic_level_c = center_categorical(trophic_binary),
-  devo_bi_c = center_categorical(devo_binary),
-  devo_ed_c = center_categorical(wang_edited),
-  devo_mode_c = center_categorical(devo_mode),
-  diet_c = center_categorical(diet_binary)
-)
+  trophic_level_c = center_categorical(trophic_level_binary))
 
 # Scale continuous predictors to two SD.
 model_data %<>% mutate(
-  body_mass_log_z = standardize(body_mass_log, two_sd = TRUE),
-  centroid_z = standardize(centroid_sqrt, two_sd = TRUE),
-  temp_seasonality_z = standardize(temp_log, two_sd = TRUE),
-  npp_z = standardize(npp_sqrt, two_sd = TRUE),
-  gen_z = standardize(gen_log, two_sd = TRUE),
-  dens_z = standardize(dens_sqrt, two_sd = TRUE),
-  fed_z = standardize(fed_sqrt, two_sd = TRUE),
-  chick_z = standardize(chick_pc1, two_sd = TRUE),
-  chick_sqrt_z = standardize(chick_sqrt, two_sd = TRUE)
-)
+  temp_log = log(seasonality),
+  temp_seasonality_z = standardize(temp_log, two_sd = TRUE))
 
 # Prepare response variables.
-model_data$sexual_score <- model_data$sexual_score + 1
+model_data$sexual_selection <- model_data$sexual_selection + 1
 
 
 ###############################################################################
@@ -149,13 +130,13 @@ if (center == "centered"){
   names(centered_responses) <- c("temp", "mig", "tro", "terr")
   model_response <- centered_responses[[response]]
 } else {
-  centered_responses <- c("temp_log", "migration_binary", "trophic_binary", "territory_binary")
+  centered_responses <- c("temp_log", "migration_binary", "trophic_level_binary", "territoriality_binary")
   names(centered_responses) <- c("temp", "mig", "tro", "terr")
   model_response <- centered_responses[[response]]
 }
 
 # Model formula.
-model_formula <- paste0("sexual_score ~ ", model_response, " + (1|gr(tree_tip, cov=A))")
+model_formula <- paste0("sexual_selection ~ ", model_response, " + (1|gr(tree_tip, cov=A))")
  
 # brms formula.
 brms_formula <- brmsformula(model_formula, family = cumulative())

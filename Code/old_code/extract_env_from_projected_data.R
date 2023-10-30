@@ -41,15 +41,19 @@ raster_name <- c("bio1_", "bio2", "bio4","bio5", "bio6", "bio7", "bio12", "bio13
 
 # Read in the phylo data.
 phylo_data <- read.csv("../Data/sexual_traits.csv")
+phylo_data <- read.csv("Data/Old Data/sexual_traits.csv")
+
 
 # Load in the range maps.
-#load("../../../Phd_data/Spatial/clean_jetz_ranges.RData")
+load("../../../Phd_data/Spatial/clean_jetz_ranges.RData")
 load("../Data/clean_jetz_ranges.RData")
-
+load("../../Phd_data/Spatial/clean_jetz_ranges.RData")
 # Join up the data.
-sex_ranges <- left_join(phylo_data, new_jetz_ranges,  by = c("bird_tree_name" = "SCINAME"))
+sex_ranges <- left_join(phylo_data, new_jetz_ranges,  by = c("birdtree_name" = "SCINAME"))
 sex_ranges <- st_as_sf(sex_ranges)
 rm(new_jetz_ranges)
+
+plot(phylo_data$bio4, abs(phylo_data$complete_latitude))
 
 
 ################################################################################

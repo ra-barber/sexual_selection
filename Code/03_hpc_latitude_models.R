@@ -21,6 +21,9 @@ library(janitor)
 set.seed(1993)
 
 
+## Make sure HPC functions script is updated before running.
+
+
 ################################################################################
                  #### Set up array iteration ####
 
@@ -63,10 +66,7 @@ model_type <- all_combos[array_number, 3] %>% as.character()
 source("Code/functions.R")
 
 # Read in the life history traits.
-model_data <- read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 2, na = "NA") %>% 
-  clean_names()
-
-model_data$tree_tip <- gsub(" ", "_", model_data$scientific_name_bird_tree)
+model_data <- read_ss_data()
 model_data$abs_lat <- abs(model_data$latitude)
 
 # Filter for high cert.
@@ -90,8 +90,8 @@ invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
 # Filter for eco roles.
 mig_data <- model_data %>% filter(migration_binary == "Strong")
 no_mig_data <- model_data %>% filter(migration_binary == "Weak")
-terr_data <- model_data %>% filter(territoriality_binary == "Territory")
-no_terr_data <- model_data %>% filter(territoriality_binary == "No territory")
+terr_data <- model_data %>% filter(territoriality_binary == "Territorial")
+no_terr_data <- model_data %>% filter(territoriality_binary == "Non-territorial")
 
 # Highest certainty data.
 hi_cert_data <- model_data %>% filter(data_certainty > 3)
@@ -155,15 +155,6 @@ if (model_type %in% names(all_datasets)){
 if (model_type == "certainty"){
   latitude_model <- lat_brms_model(response = "data_certainty")
 }
-
-# Make dummy territoriality metrics.
-model_data$terr_dummy <- "0"
-model_data$year_terr_dummy <- "0"
-model_data %>% mutate(
-  terr_dummy = replace(terr_dummy, territoriality_binary == "Non-Territorial", "1"),
-  year_terr_dummy = replace(year_terr_dummy, territoriality == "Strong", "1"))
-model_data$terr_dummy %<>% as.numeric()
-model_data$year_terr_dummy %<>% as.numeric()
 
 # Run territoriality models.
 if (model_type == "prim_allterr"){

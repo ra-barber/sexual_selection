@@ -23,12 +23,21 @@ read_ss_data <- function(pathway = "Data/sexual_selection_dataset_04_09.xlsx"){
     terr_dummy = 0,
     year_terr_dummy = 0,
     terr_dummy = replace(terr_dummy, territoriality_binary == "Territorial", 1),
-    year_terr_dummy = replace(year_terr_dummy, territoriality == "Strong", 1))
+    year_terr_dummy = replace(year_terr_dummy, territoriality == "Strong", 1),
+    # Add in binary sexual selection for sensitivity analysis.
+    sexual_binary = sexual_selection,
+    sexual_binary = replace(sexual_binary, sexual_binary  <3, 0),
+    sexual_binary = replace(sexual_binary, sexual_binary  >0, 1))
   # Export model data.
   return(model_data)
 }
 
 
+model_data$sexual_selection
+model_data$sexual_binary <- model_data$sexual_selection
+
+model_data$sexual_binary <- replace(model_data$sexual_binary , model_data$sexual_binary  <3, 0)
+model_data$sexual_binary <- replace(model_data$sexual_binary , model_data$sexual_binary  >0, 1)
 # Quick function for centering factors.
 center_categorical <- function(predictor){
   as.numeric(predictor) %>% scale(scale = FALSE)
@@ -62,7 +71,8 @@ average_raster <- function(ranges = sex_ranges, var_name = "sexual_selection"){
 }
 
 
-# Make a function to plot a raster using geom_raster.
+
+# Make a function with the legend as bins.
 ggplot_raster <- function(raster, nbins = 6, variable = ""){
   
   # Get the limits for breaks, using quantiles so each bin has an equal number of cells.
@@ -104,8 +114,7 @@ ggplot_raster <- function(raster, nbins = 6, variable = ""){
     theme_classic(base_size = 18) + theme(axis.text = element_blank(),
                                           axis.ticks = element_blank(),
                                           axis.line = element_blank(),
-                                          #legend.position = c(0.13, 0.2),
-                                          legend.position = "none",  # For the hist plot.
+                                          legend.position = c(0.13, 0.2),
                                           legend.key.height = unit(0.2, 'cm'),
                                           legend.spacing.y = unit(0.3, 'cm'),
                                           legend.title = element_blank(),
@@ -121,9 +130,10 @@ ggplot_raster <- function(raster, nbins = 6, variable = ""){
 
 # This function takes the ggplot and adds labels so it can be incorporated as a multi panel figure.
 panel_ggplot_raster <- function(raster_map, plot_title, plot_label){
-  ggplot_raster(raster_map, 6, "Sexual selection") +
+  panel_raster <- ggplot_raster(raster_map, 6, "Sexual selection") +
     annotate("text", x = 20, y = -48, label  = plot_title, size = 8, fontface = 2) +
     annotate("text", x = -170, y = 80, label  = plot_label, size = 12, fontface = 2)
+  return(panel_raster)
 }
 
 

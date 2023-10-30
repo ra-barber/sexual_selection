@@ -44,7 +44,9 @@ colnames(eco_traits)[1] <- "scientific_name_bird_tree"
 # # # This section you can change for different traits # # #
 
 # Select the traits you want, plus species name.
-trait_to_merge <- eco_traits %>% select(scientific_name_bird_tree, head_dichro, upper_dichro, under_dichro, tail_dichro, wing_dichro, dichro_total)
+trait_to_merge <- eco_traits %>% select(scientific_name_bird_tree, head_dichro, 
+                                        upper_dichro, under_dichro, tail_dichro, 
+                                        wing_dichro, dichro_total)
 
 # Merge together.
 crosswalk_traits <- clements_crosswalk %>% left_join(trait_to_merge)
@@ -55,10 +57,9 @@ crosswalk_traits <- clements_crosswalk %>% left_join(trait_to_merge)
 
 
 # Filter for lumps.
-one_to_one_clean <- crosswalk_traits %>% filter(match_type == "1BT to 1eBird")
+one_to_one_clean <- crosswalk_traits %>% filter(match_type == "1BT to 1CL")
 
-
-new_clean <- crosswalk_traits %>% filter(match_type == "New tree species")
+new_clean <- crosswalk_traits %>% filter(match_type == "New")
 
 ################################################################################
                        #### Do splits ####
@@ -67,29 +68,28 @@ new_clean <- crosswalk_traits %>% filter(match_type == "New tree species")
 unique(crosswalk_traits$match_type)
 
 # Filter for lumps.
-one_to_many <- crosswalk_traits %>% filter(match_type == "1BT to many eBird")
+one_to_many <- crosswalk_traits %>% filter(match_type == "1BT to many CL")
 
-one_to_many[one_to_many$nominate == "No", "notes"] <- "Inferred from nominate species in clements split"
-one_to_many[one_to_many$nominate == "No", "source"] <- "Clements split (2023)"
+
 
 ## Write a loop to lower certainty scores for high cert species.
 
-
-# Loop through all ebird species, print out conflicts and save problem species.
-for(birdtree_spec in unique(one_to_many$bird_tree_species)){
-  
-  # Filter for ebird species.
-  loop_spec <- one_to_many %>% filter(bird_tree_species == birdtree_spec)
-  
-  # Nominate cert score.
-  nom_cert <- loop_spec$data_certainty[loop_spec$nominate == "Yes"]
-  
-  # If the nominate sexual certainty score is 1, change it 2 for now due to inferrence.
-  if (nom_cert == 1){
-    one_to_many$data_certainty[one_to_many$bird_tree_species == birdtree_spec & one_to_many$nominate == "No"] <- 2
-  }
-  
-}
+# 
+# # Loop through all ebird species, print out conflicts and save problem species.
+# for(birdtree_spec in unique(one_to_many$bird_tree_species)){
+#   
+#   # Filter for ebird species.
+#   loop_spec <- one_to_many %>% filter(bird_tree_species == birdtree_spec)
+#   
+#   # Nominate cert score.
+#   nom_cert <- loop_spec$data_certainty[loop_spec$nominate == "Yes"]
+#   
+#   # If the nominate sexual certainty score is 1, change it 2 for now due to inferrence.
+#   if (nom_cert == 1){
+#     one_to_many$data_certainty[one_to_many$bird_tree_species == birdtree_spec & one_to_many$nominate == "No"] <- 2
+#   }
+#   
+# }
 
 # Clean dataset.
 one_to_many_clean <- one_to_many
@@ -103,19 +103,19 @@ one_to_many_clean <- one_to_many
 unique(crosswalk_traits$match_type)
 
 # Filter for lumps.
-many_to_one <- crosswalk_traits %>% filter(match_type == "Many BT to 1eBird")
+many_to_one <- crosswalk_traits %>% filter(match_type == "Many BT to 1CL")
 
 # Function for finding conflicts when lumping jetz species.
-get_lump_conflicts <- function(dataset = many_to_one, predictor = "sexual_selection"){
+get_lump_conflicts <- function(dataset = many_to_one, predictor = "dichro_total"){
   
   # Empty vector to save problem species.
   problem_lumps <- c()
   
   # Loop through all ebird species, print out conflicts and save problem species.
-  for(ebird_spec in unique(dataset$ebird_species)){
+  for(ebird_spec in unique(dataset$scientific_name_clements)){
     
     # Filter for ebird species.
-    loop_spec <- dataset %>% filter(ebird_species == ebird_spec)
+    loop_spec <- dataset %>% filter(scientific_name_clements == ebird_spec)
     
     # Pull out trait column.
     trait_column <- loop_spec %>% pull(predictor)
@@ -134,7 +134,7 @@ get_lump_conflicts <- function(dataset = many_to_one, predictor = "sexual_select
             #### Check sexual selection lumps ####
 
 # Default values are for sexual selection scores.
-score_conflict_species <- get_lump_conflicts()
+conflict_species <- get_lump_conflicts()
 
 # Check certainty scores (undoubtedly will be many more conflicts.)
 cert_conflict_species <- get_lump_conflicts(predictor = "data_certainty")
@@ -143,7 +143,7 @@ cert_conflict_species <- get_lump_conflicts(predictor = "data_certainty")
 conflict_species <- c(score_conflict_species, cert_conflict_species)
 
 # Filter traits for conflict species.
-conflict_data <- crosswalk_traits %>% filter(ebird_species %in% conflict_species)
+conflict_data <- crosswalk_traits %>% filter(scientific_name_clements %in% conflict_species)
 
 
 ### Green pheasant should be scored as 3 for SS due to conflict.
@@ -184,29 +184,29 @@ manual_changes <- c("Ramphocelus passerinii", "Stercorarius antarcticus")
 many_to_one_clean <- many_to_one %>% filter(!ebird_species %in% manual_changes)
 
 # Just pull out nominate species.
-many_to_one_clean %<>% filter(nominate == "Yes")
+many_to_one_clean <- many_to_one %>% filter(daughter == 0)
 
 ###############################################################################
-               ### Combine problem lumps ####
-
-
-# Remove manual changes.
-many_to_one_manual <- many_to_one %>% filter(ebird_species %in% manual_changes)
-
-# Pick this species because it had EPP data.
-manual_1 <- many_to_one_manual %>% filter(ebird_species == "Ramphocelus passerinii" & nominate == "No")
-
-# Pick this species because it had correct sources, but update sex score to match nominate.
-manual_2 <- many_to_one_manual %>% filter(ebird_species == "Stercorarius antarcticus" & nominate == "No")
-manual_2$sexual_score <- 2
-manual_2$data_certainty <- 1
+#                ### Combine problem lumps ####
+# 
+# 
+# # Remove manual changes.
+# many_to_one_manual <- many_to_one %>% filter(ebird_species %in% manual_changes)
+# 
+# # Pick this species because it had EPP data.
+# manual_1 <- many_to_one_manual %>% filter(ebird_species == "Ramphocelus passerinii" & nominate == "No")
+# 
+# # Pick this species because it had correct sources, but update sex score to match nominate.
+# manual_2 <- many_to_one_manual %>% filter(ebird_species == "Stercorarius antarcticus" & nominate == "No")
+# manual_2$sexual_score <- 2
+# manual_2$data_certainty <- 1
 
 
 ###############################################################################
        #### Many to many matches (probably will be manual) ####
 
 # Filter for lumps.
-many_to_many <- crosswalk_traits %>% filter(match_type == "Many BT to many eBird")
+many_to_many <- crosswalk_traits %>% filter(match_type == "Many BT to many CL")
 
 # Removing these rows makes the many to many dataset clean.
 bird_tree_species_to_remove <- c("Epinecrophylla fjeldsaai", "Copsychus stricklandii", 
@@ -214,11 +214,11 @@ bird_tree_species_to_remove <- c("Epinecrophylla fjeldsaai", "Copsychus strickla
                                  "Zosterops salvadorii")
 
 # Many to many clean.
-many_to_many_clean <- many_to_many %>% filter(!bird_tree_species %in% bird_tree_species_to_remove)
+many_to_many_clean <- many_to_many %>% filter(!scientific_name_bird_tree %in% bird_tree_species_to_remove)
 
 # Check that we haven't lost any ebird species.
-n_distinct(many_to_many$ebird_species)
-n_distinct(many_to_many_clean$ebird_species)
+n_distinct(many_to_many$scientific_name_clements)
+n_distinct(many_to_many_clean$scientific_name_clements)
 
 
 
@@ -226,12 +226,11 @@ n_distinct(many_to_many_clean$ebird_species)
 ###############################################################################
                            #### Combine scores. ####
 
-all_ebird_clean <- rbind(new_clean, one_to_one_clean, one_to_many_clean, many_to_one_clean, 
-      manual_1, manual_2, many_to_many_clean)
+all_ebird_clean <- rbind(new_clean, one_to_one_clean, one_to_many_clean, many_to_one_clean, many_to_many_clean)
 
 
 
-write.csv(all_ebird_clean, "Data/Clements_conversion/clements_ss_scores_09_06.csv", row.names = FALSE)
+write.csv(all_ebird_clean, "Data/Clements_conversion/clements_dichro_scores.csv", row.names = FALSE)
 
 ###############################################################################
                            #### Section 7 ####

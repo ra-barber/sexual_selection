@@ -19,9 +19,6 @@ library(phytools)
 library(brms)
 library(graph4lg)
 
-# Set the seed.
-#set.seed(1993)
-
 ###############################################################################
                        #### Read in the data #####
 
@@ -29,68 +26,70 @@ library(graph4lg)
 source("Code/functions.R")
 
 # Read in the life history traits.
-model_data <- read.csv("Data/sexual_traits.csv")
+model_data <- read_ss_data()
 
 # Add the tropical non-tropical models.
 model_data$trop_non_trop <- NA
-model_data$trop_non_trop[abs(model_data$complete_latitude) < 23.43624] <- "trop"
+model_data$trop_non_trop[abs(model_data$latitude) < 23.43624] <- "trop"
 model_data$trop_non_trop[is.na(model_data$trop_non_trop)] <- "non_trop"
 
 # Filter for dietary data.
-primary_data <- model_data %>% filter(trophic_binary == "Primary")
-secondary_data <- model_data %>% filter(trophic_binary == "Secondary")
+primary_data <- model_data %>% filter(trophic_level_binary == "Primary")
+secondary_data <- model_data %>% filter(trophic_level_binary == "Secondary")
 fruit_data <- model_data %>% filter(trophic_niche == "Frugivore")
 invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
 
 # Filter for eco roles.
 mig_data <- model_data %>% filter(migration_binary == "Strong")
 non_mig_data <- model_data %>% filter(migration_binary == "Weak")
-terr_data <- model_data %>% filter(territory_binary == "Territory")
-non_terr_data <- model_data %>% filter(territory_binary == "No territory")
+terr_data <- model_data %>% filter(territoriality_binary == "Territory")
+non_terr_data <- model_data %>% filter(territoriality_binary == "No territory")
 
 
 ###############################################################################
                     #### Read in  brms models ####
 
-# Read in models using raw data.
-primary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/primary_model.rds")
-secondary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/secondary_model.rds")
-fruit_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/fruit_model.rds")
-invert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/invert_model.rds")
+first_half <- "Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/"
 
-mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/mig_model.rds")
-non_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/non_mig_model.rds")
-terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/terr_model.rds")
-non_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/non_terr_model.rds")
+# Read in models using raw data.
+primary_model <- readRDS(paste0(first_half, "primary_model.rds"))
+secondary_model <- readRDS(paste0(first_half, "secondary_model.rds"))
+fruit_model <- readRDS(paste0(first_half, "fruit_model.rds"))
+invert_model <- readRDS(paste0(first_half, "invert_model.rds"))
+
+mig_model <- readRDS(paste0(first_half, "mig_model.rds"))
+non_mig_model <- readRDS(paste0(first_half, "non_mig_model.rds"))
+terr_model <- readRDS(paste0(first_half, "terr_model.rds"))
+non_terr_model <- readRDS(paste0(first_half, "non_terr_model.rds"))
 
 # Read in centered models.
-centered_primary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_primary_model.rds")
-centered_secondary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_secondary_model.rds")
-centered_fruit_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_fruit_model.rds")
-centered_invert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_invert_model.rds")
+centered_primary_model <- readRDS(paste0(first_half, "centered_primary_model.rds"))
+centered_secondary_model <- readRDS(paste0(first_half, "centered_secondary_model.rds"))
+centered_fruit_model <- readRDS(paste0(first_half, "centered_fruit_model.rds"))
+centered_invert_model <- readRDS(paste0(first_half, "centered_invert_model.rds"))
 
-centered_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_mig_model.rds")
-centered_non_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_non_mig_model.rds")
-centered_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_terr_model.rds")
-centered_non_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/centered_non_terr_model.rds")
+centered_mig_model <- readRDS(paste0(first_half, "centered_mig_model.rds"))
+centered_non_mig_model <- readRDS(paste0(first_half, "centered_non_mig_model.rds"))
+centered_terr_model <- readRDS(paste0(first_half, "centered_terr_model.rds"))
+centered_non_terr_model <- readRDS(paste0(first_half, "centered_non_terr_model.rds"))
 
 # Read in models using raw data.
-high_primary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_primary_model.rds")
-high_secondary_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_secondary_model.rds")
-high_fruit_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_fruit_model.rds")
-high_invert_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_invert_model.rds")
+high_primary_model <- readRDS(paste0(first_half, "high_primary_model.rds"))
+high_secondary_model <- readRDS(paste0(first_half, "high_secondary_model.rds"))
+high_fruit_model <- readRDS(paste0(first_half, "high_fruit_model.rds"))
+high_invert_model <- readRDS(paste0(first_half, "high_invert_model.rds"))
 
-high_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_mig_model.rds")
-high_non_mig_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_non_mig_model.rds")
-high_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_terr_model.rds")
-high_non_terr_model <- readRDS("Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/high_non_terr_model.rds")
+high_mig_model <- readRDS(paste0(first_half, "high_mig_model.rds"))
+high_non_mig_model <- readRDS(paste0(first_half, "high_non_mig_model.rds"))
+high_terr_model <- readRDS(paste0(first_half, "high_terr_model.rds"))
+high_non_terr_model <- readRDS(paste0(first_half, "high_non_terr_model.rds"))
 
 
 ################################################################################
                     #### Export summary tables ####
 
-# 
-# # Extract relevant coefficient information.
+
+# Extract relevant coefficient information.
 primary_all_estimates <- summary(primary_model)$fixed[5,c(1,3,4)]
 fruit_all_estimates <- summary(fruit_model)$fixed[5,c(1,3,4)]
 secondary_all_estimates <- summary(secondary_model)$fixed[5,c(1,3,4)]
@@ -148,19 +147,12 @@ write.csv(high_estimates, "Results/Tables/high_tropical_regression.csv", row.nam
 
 
 
-
-
-
-
-
-
-
-
-
-
 ###############################################################################
                     #### side plot function  ######
+
 options(scipen = 999)
+
+# Removed stats (centered) model from this function.
 
 # Function that recreates side plots using both pseudo p-values and credible intervals from centered models.
 brms_tropics_side_plot <- function(data_set = primary_data, ylabel = "Sexual selection", 
@@ -274,7 +266,6 @@ invert_plot <- brms_tropics_side_plot(
   stats_model = centered_invert_model, x_label = "Invertivores") + 
   theme(axis.text.y = element_blank())
 
-
 # Life history partitions.
 mig_plot <- brms_tropics_side_plot(
   data_set = mig_data, plot_label = "e", plot_model = mig_model,
@@ -299,8 +290,9 @@ non_terr_plot <- brms_tropics_side_plot(
 ggarrange(primary_plot, fruit_plot, secondary_plot, invert_plot, 
           mig_plot, non_mig_plot, terr_plot, non_terr_plot,
           nrow = 2, ncol = 4, widths = c(1.2,1,1,1))
-ggsave("Plots/Tropics/tropical_comparisons.pdf", height = 10, width = 15, dpi = 600)
-ggsave("Plots/Tropics/tropical_comparisons.png", height = 10, width = 15, dpi = 600)
+
+ggsave("Figures/figure_ed_6.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Figures/figure_ed_6.png", height = 10, width = 15, dpi = 600)
 
 
 

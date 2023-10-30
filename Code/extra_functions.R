@@ -86,61 +86,6 @@ bin_raster <- function(raster, nbins = 10){
 
 
 
-# Make a function with the legend as bins.
-ggplot_raster <- function(raster, nbins = 6, variable = ""){
-  
-  # Get the limits for breaks, using quantiles so each bin has an equal number of cells.
-  breaks <- quantile(values(raster), seq(0,1,length.out=nbins+1), na.rm=TRUE)
-  
-  # Cut the cell values into bins using the breaks.
-  cuts <- cut(values(raster), breaks = breaks, include.lowest = TRUE)
-  
-  # Replace cell values with bins.
-  raster@data@values <- as.numeric(cuts)
-  
-  # Create raster data.
-  raster_data <- as.data.frame(raster, xy=TRUE)
-  colnames(raster_data) <- c("long", "lat", "values")
-  raster_data$values %<>% as.factor()
-  
-  # Get rid of areas without land.
-  raster_data$land <- land_data$layer
-  raster_data %<>% drop_na(land)
-  
-  # Create a label of the bins for plotting. Unicode is for en-dash.
-  labels <- as.character(format(round(breaks, 2), nsmall = 2))
-  labels <- paste0(labels[1:nbins], " \u2013 ", labels[2:(nbins+1)])
-  
-  # Plot with ggplot.
-  ggplot() +
-    
-    # Add the raster data.
-    geom_tile(aes(x=long, y=lat, fill= values), colour = NA, data=raster_data) +
-    
-    # Specify colours, legend labels and legend title.
-    scale_fill_manual(values = rev(colorRampPalette(pal)(nbins)), breaks = rev(1:nbins), labels = rev(labels), na.value = "lightgrey") +     #na.value = "grey"
-    guides(fill = guide_legend(title = NULL, byrow = TRUE)) +
-    
-    # Make map closer to the edge.
-    scale_y_continuous(limits = c(-57, 85), expand = expansion(), ) +
-    scale_x_continuous(limits = c(-180, 180), expand = expansion()) +
-    # Theme stuff.
-    theme_classic(base_size = 18) + theme(axis.text = element_blank(),
-                                          axis.ticks = element_blank(),
-                                          axis.line = element_blank(),
-                                          legend.position = c(0.13, 0.2),
-                                          legend.key.height = unit(0.2, 'cm'),
-                                          legend.spacing.y = unit(0.3, 'cm'),
-                                          legend.title = element_blank(),
-                                          legend.background = element_rect(fill = NA, colour = "lightgrey"),
-                                          legend.margin = margin(t = 0, r = 0.4, b = 0.3, l = 0.4, unit = "cm"),
-                                          plot.margin = margin(t = 0, l = 0, b = 0, r = 0)
-                                          #  plot.margin = margin(t =0, l = -10, b = 0, r = 0.5, unit = "cm")#unit(c(0,0,0,0), "null")
-    ) +
-    ylab("") + 
-    xlab("") 
-}
-
 
 
 # Make a function with the legend as bins.

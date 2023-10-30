@@ -1,0 +1,39 @@
+---
+title: "Birds: Sexual Size Dimorphism Diagram"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+# Conceptual Diagram of Sexual Size Dimorphism in Birds
+
+```{r setup, include=FALSE}
+library(tikzDevice)
+
+# TikZ code for the diagram
+tikz::tikz(
+  'figure.tex',
+  width = 6, height = 4,
+  packages = "\\usepackage{tikz}",
+  standalone = TRUE,
+  sanitize = FALSE,
+  expr = {
+    # Start the TikZ environment
+    tikzpicture(width="6cm", height="4cm") %>%
+    
+    # Draw a circle representing a bird
+    draw(circle("1.5cm")) %>%
+    
+    # Label the bird as "Male"
+    node("Male", xshift = "0cm", yshift = "-2cm") %>%
+    
+    # Draw arrows and labels for the hypotheses
+    draw("->", ("2cm","0") -- ("4cm","0"), halfway(above), "Sexual Selection") %>%
+    draw("->", ("2cm","-0.5cm") -- ("4cm","-0.5cm"), halfway(above), "Social Selection") %>%
+    draw("->", ("2cm","-1cm") -- ("4cm","-1cm"), halfway(above), "Niche Divergence") %>%
+    draw("->", ("2cm","-1.5cm") -- ("4cm","-1.5cm"), halfway(above), "Cost of Flight");
+    
+    # End the TikZ environment
+    tikzpicture()
+  }
+)

@@ -28,11 +28,11 @@ array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
 array_number
 
 # Create types for hpc jobs.
-tree_number <- 1:25
+tree_number <- 1:10
 
 # Model (In order of size and therefore speed)
-model_type <- c("frugivore", "primary", "invertivore", "secondary",
-                "mig", "no_mig", "terr", "no_terr")
+model_type <- c("fruit", "primary", "mig", "invert", "secondary", "terr",
+                 "no_mig",  "no_terr")
 
 # Set the data types.
 data_type <- c("all", "high")
@@ -58,53 +58,43 @@ model_type <- all_combos[array_number, 3] %>% as.character()
 source("Code/functions.R")
 
 # Read in the life history traits.
-model_data <- read.csv("Data/sexual_traits.csv")
-model_data$tree_tip <- gsub(" ", "_", model_data$birdtree_name)
+model_data <- read_ss_data()
+model_data$abs_lat <- abs(model_data$latitude)
+
+# Filter for high cert.
+if (data_type == "high"){
+  model_data %<>% filter(data_certainty > 2)
+}
 
 
 ###############################################################################
                 #### Prepare predictor variables ######
 
 # Prepare response variables.
-model_data$sexual_score <- model_data$sexual_score + 1
+model_data$sexual_selection <- model_data$sexual_selection + 1
 
 # Add the tropical non-tropical models.
 model_data$trop_non_trop <- NA
-model_data$trop_non_trop[abs(model_data$complete_latitude) < 23.43624] <- "trop"
+model_data$trop_non_trop[abs(model_data$latitude) < 23.43624] <- "trop"
 model_data$trop_non_trop[is.na(model_data$trop_non_trop)] <- "non_trop"
 
-# Filter for high cert.
-if (data_type == "high"){
-  model_data %<>% filter(sexual_certainty < 3)
-}
+# Trophic niche model data.
+primary_data <- model_data %>% filter(trophic_level_binary == "Primary")
+secondary_data <- model_data %>% filter(trophic_level_binary == "Secondary")
+fruit_data <- model_data %>% filter(trophic_niche == "Frugivore")
+invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
 
-# Filter for trophic level.
-if (model_type == "primary"){
-  model_data %<>% filter(trophic_binary == "Primary")
-}
-if (model_type == "secondary"){
-  model_data %<>% filter(trophic_binary == "Secondary")
-}
-if (model_type == "frugivore"){
-  model_data %<>% filter(trophic_niche == "Frugivore")
-}
-if (model_type == "invertivore"){
-  model_data %<>% filter(trophic_niche == "Invertivore")
-}
+# Filter for eco roles.
+mig_data <- model_data %>% filter(migration_binary == "Strong")
+no_mig_data <- model_data %>% filter(migration_binary == "Weak")
+terr_data <- model_data %>% filter(territoriality_binary == "Territorial")
+no_terr_data <- model_data %>% filter(territoriality_binary == "Non-territorial")
 
-# Filter for ecological partition.
-if (model_type == "mig"){
-  model_data %<>% filter(migration_binary == "Strong")
-}
-if (model_type == "no_mig"){
-  model_data %<>% filter(migration_binary == "Weak")
-}
-if (model_type == "terr"){
-  model_data %<>% filter(territory_binary == "Territory")
-}
-if (model_type == "no_terr"){
-  model_data %<>% filter(territory_binary == "No territory")
-}
+# Create a list of datasets for easy reference.
+all_datasets <- list(model_data, primary_data, fruit_data, secondary_data, invert_data,
+                     mig_data, no_mig_data, terr_data, no_terr_data)
+names(all_datasets) <- c("allbirds", "primary", "fruit", "secondary", "invert", 
+                         "mig", "no_mig", "terr", "no_terr")
 
 # Read in the tree.
 model_tree <- read.tree("Data/Trees/prum_trees.tre")[[tree_number]]
@@ -127,7 +117,7 @@ model_data <- model_data[row.names(model_covar),]
                     #### Run brms models ######
 
 # Tropical brms function.
-trop_brms_model <- function(data_set = model_data, response = "sexual_score",  
+trop_brms_model <- function(data_set = model_data, response = "sexual_selection",  
                             predictor = "trop_non_trop", family = "cumulative"){
   
   # Center categorical predictors.

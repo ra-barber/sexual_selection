@@ -66,7 +66,7 @@ model_type <- all_combos[array_number, 3] %>% as.character()
 source("Code/functions.R")
 
 # Read in the life history traits.
-model_data <- read_ss_data("Data/sexual_selection_dataset_04_09.xlsx")
+model_data <- read_ss_data()
 
 ###############################################################################
               #### Prepare predictor variables ######
@@ -181,7 +181,7 @@ if (center =="uncentered"){
 # tropical_model <- trop_brms_model(predictor = model_predictor)
 
 # Create model formula.
-model_formula <- formula(paste0(model_predictor, " ~ ", predictor))
+model_formula <- formula(paste0("sexual_selection", " ~ ", model_predictor))
 
 # Add the model family.
 brms_formula <- brmsformula(model_formula, family = cumulative())
