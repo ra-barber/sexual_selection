@@ -27,17 +27,23 @@ read_ss_data <- function(pathway = "Data/sexual_selection_dataset_04_09.xlsx"){
     # Add in binary sexual selection for sensitivity analysis.
     sexual_binary = sexual_selection,
     sexual_binary = replace(sexual_binary, sexual_binary  <3, 0),
-    sexual_binary = replace(sexual_binary, sexual_binary  >0, 1))
+    sexual_binary = replace(sexual_binary, sexual_binary  >0, 1),
+    # Try tertiary.
+    sexual_tertiary = sexual_selection,
+    sexual_tertiary = replace(sexual_tertiary, sexual_tertiary <3, 0),
+    sexual_tertiary = replace(sexual_tertiary, sexual_tertiary ==3, 1),
+    sexual_tertiary = replace(sexual_tertiary, sexual_tertiary ==4, 2),
+    # Try tertiary.
+    sexual_sens = sexual_selection,
+    sexual_sens = replace(sexual_sens, sexual_sens ==0, 1),
+    
+    # Absolute latitude.
+    abs_lat = abs(latitude))
   # Export model data.
   return(model_data)
 }
 
 
-model_data$sexual_selection
-model_data$sexual_binary <- model_data$sexual_selection
-
-model_data$sexual_binary <- replace(model_data$sexual_binary , model_data$sexual_binary  <3, 0)
-model_data$sexual_binary <- replace(model_data$sexual_binary , model_data$sexual_binary  >0, 1)
 # Quick function for centering factors.
 center_categorical <- function(predictor){
   as.numeric(predictor) %>% scale(scale = FALSE)

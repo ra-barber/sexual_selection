@@ -67,7 +67,6 @@ source("Code/functions.R")
 
 # Read in the life history traits.
 model_data <- read_ss_data()
-model_data$abs_lat <- abs(model_data$latitude)
 
 # Filter for high cert.
 if (data_type == "high"){
@@ -80,6 +79,7 @@ if (data_type == "high"){
 
 # Prepare response variables.
 model_data$sexual_selection <- model_data$sexual_selection + 1
+model_data$sexual_tertiary <- model_data$sexual_tertiary + 1
 
 # Trophic niche model data.
 primary_data <- model_data %>% filter(trophic_level_binary == "Primary")
@@ -132,9 +132,9 @@ lat_brms_model <- function(data_set = model_data, response = "sexual_selection",
     prior = linear_priors,
     iter = 10000,
     warmup = 5000,
-    chains = 100,
+    chains = 8,
     thin = 20,
-    cores = 32,
+    cores = 8,
     init = 0,
     #file = model_pathway,
     normalize = FALSE,
@@ -144,6 +144,30 @@ lat_brms_model <- function(data_set = model_data, response = "sexual_selection",
 
 ###############################################################################
               #### Run main publication models ######
+
+test_log_lat <- lat_brms_model(model_data, response = "sexual_binary", 
+                               predictor = "centroid_z", family = "bernoulli")
+
+
+
+conditional_effects(test_log_lat, method = "posterior_linpred")
+conditional_effects(test_tert_model, method = "posterior_linpred")
+
+test_tert_model <- lat_brms_model(model_data, response = "sexual_tertiary", 
+                               predictor = "centroid_z")
+test_tert_model <- lat_brms_model(model_data, response = "sexual_sens", 
+                                  predictor = "centroid_z")
+
+fruit_log_lat <- lat_brms_model(fruit_data, response = "sexual_binary", 
+                               predictor = "centroid_z", family = "bernoulli")
+
+prim_log_model <- lat_brms_model(primary_data, response = "sexual_binary", 
+                                predictor = "centroid_z", family = "bernoulli")
+
+sec_log_model <- lat_brms_model(secondary_data, response = "sexual_binary", 
+                                 predictor = "centroid_z", family = "bernoulli")
+
+
 
 
 # Run the straightforward sexual selection models first.
