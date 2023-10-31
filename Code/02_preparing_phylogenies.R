@@ -45,6 +45,17 @@ write.tree(diagnostic_trees, "Data/Trees/diagnostic_trees.tre")
 write.tree(plot_trees, "Data/Trees/plot_trees.tre")
 
 
+# Read in 50 random trees and then make a consensus.
+model_trees <- read.tree("Data/Trees/model_trees.tre")
+library(phytools)
+model_consensus_tree <- consensus.edges(model_trees, method="least.squares")
+model_consensus_tree <- consensus.edges(model_trees)
+
+
+# Consensus tree.
+model_consensus_tree <- consensus.edges(model_trees, p = 0.5)
+
+
 ################################################################################
                 ##### Read the prum trees #####
 
