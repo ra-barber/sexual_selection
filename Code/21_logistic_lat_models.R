@@ -1,5 +1,5 @@
 ###############################################################################
-                     # Latitudinal brms models on cluster  #
+                  # Logistic Latitudinal brms models on cluster  #
 ###############################################################################
 
 # Packages to load.
@@ -20,28 +20,34 @@ rm(list=ls())
 
 
 ################################################################################
-                  #### Set up array iteration ####
+                   #### Set up array iteration ####
 
 
 # Get the array number from the job script.
 array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
 array_number
+core_number <- as.numeric(Sys.getenv("NUM_CORES"))
+core_number
 
 # Create types for hpc jobs.
-tree_number <- 1:10
+tree_number <- 1
 
 # Model (In order of size and therefore speed)
 model_type <- c("fruit", "primary","mig", "no_terr", "invert", "secondary", 
                 "no_mig", "terr", "allbirds", "certainty")
 
 # Centered or uncentered.
+center <- c("uncentered", "centered")
 center <- c("uncentered")
 
 # Set the data types.
 data_type <- c("all", "high")
 
+# Response type.
+response_type <- c("ordinal", "logistic")
+
 # Expand the grid.
-all_combos <- expand.grid(tree_number, center, data_type, model_type)
+all_combos <- expand.grid(tree_number, center, data_type, response_type, model_type)
 
 # Tree type.
 tree_number <- all_combos[array_number, 1] %>% as.numeric()
@@ -52,30 +58,25 @@ center <- all_combos[array_number, 2] %>% as.character()
 # Data type.
 data_type <- all_combos[array_number, 3] %>% as.character()
 
+# Response type.
+response_type <- all_combos[array_number, 4] %>% as.character()
+
 # Model type.
-model_type <- all_combos[array_number, 4] %>% as.character()
+model_type <- all_combos[array_number, 5] %>% as.character()
 
-# Put working directory as correct one.
-#setwd("..")
-
-
-data_type <- "high"
 
 ###############################################################################
-                       #### Read in the data #####
+                     #### Read in the data #####
 
 
 # Functions.
 source("Code/functions.R")
 
 # Read in the tree.
-#model_tree <- read.tree("Data/Trees/prum_trees.tre")[[tree_number]]
-
 model_tree <- read.tree("Data/Trees/prum_consensus_tree.tre")
 
 # Read in the life history traits.
 model_data <- read_ss_data()
-#model_data$abs_lat <- abs(model_data$latitude)
 
 # Filter for high cert.
 if (data_type == "high"){
@@ -100,40 +101,10 @@ all_datasets <- list(model_data, primary_data, fruit_data, secondary_data, inver
 names(all_datasets) <- c("allbirds", "primary", "fruit", "secondary", "invert", 
                          "mig", "no_mig", "terr", "no_terr")
 
-# Pull out model_data
+# Pull out the correct dataset for the model, and overwrite model data.
 if (model_type != "certainty"){
-model_data <-  all_datasets[[model_type]]
+  model_data <-  all_datasets[[model_type]]
 }
-
-# 
-# # Filter for trophic level.
-# if (model_type == "primary"){
-#   model_data %<>% filter(trophic_binary == "Primary")
-# }
-# if (model_type == "secondary"){
-#   model_data %<>% filter(trophic_binary == "Secondary")
-# }
-# if (model_type == "frugivore"){
-#   model_data %<>% filter(trophic_niche == "Frugivore")
-# }
-# if (model_type == "invertivore"){
-#   model_data %<>% filter(trophic_niche == "Invertivore")
-# }
-# 
-# # Filter for ecological partition.
-# if (model_type == "mig"){
-#   model_data %<>% filter(migration_binary == "Strong")
-# }
-# if (model_type == "no_mig"){
-#   model_data %<>% filter(migration_binary == "Weak")
-# }
-# if (model_type == "terr"){
-#   model_data %<>% filter(territory_binary == "Territory")
-# }
-# if (model_type == "no_terr"){
-#   model_data %<>% filter(territory_binary == "No territory")
-# }
-
 
 # Drop tips on the tree.
 model_tree <- drop.tip(model_tree, setdiff(model_tree$tip.label, model_data$tree_tip))
@@ -149,56 +120,85 @@ model_data <- model_data[row.names(model_covar),]
 
 
 ###############################################################################
-              #### Prepare predictor variables ######
+             #### Prepare predictor variables ######
 
 # Scale continuous predictors to two SD.
 model_data %<>% mutate(
-  centroid_z = standardize(abs_lat, two_sd = TRUE)
-)
+  centroid_z = standardize(abs_lat, two_sd = TRUE))
 
 # Prepare response variables.
 model_data$sexual_selection <- model_data$sexual_selection + 1
 
 
 ###############################################################################
-                #### Set model formula ######
+                   #### Set model formula ######
 
-# Centered model formula.
+# Predictor variable.
 if (center == "centered"){
-  model_formula <- "sexual_selection ~ centroid_z + (1|gr(tree_tip, cov=A))"
+  predictor <- "centroid_z"
 } else {
-  model_formula <- "sexual_selection ~ abs_lat + (1|gr(tree_tip, cov=A))"
+  predictor <- "abs_lat"
 }
 
-# For sexual certainty.
+# Response variable.
+if (response_type == "ordinal"){
+  response <- "sexual_selection"
+} else {
+  response <- "sexual_binary"
+}
 if (model_type == "certainty"){
-  if (center == "centered"){
-    model_formula <- "data_certainty ~ centroid_z + (1|gr(tree_tip, cov=A))"
-  } else {
-    model_formula <- "data_certainty ~ abs_lat + (1|gr(tree_tip, cov=A))"
-  }
+  response <- "data_certainty"
 }
 
-model_formula <- "sexual_binary ~ centroid_z + (1|gr(tree_tip, cov=A))"
+# # Centered model formula.
+# if (center == "centered"){
+#   model_formula <- "sexual_selection ~ centroid_z + (1|gr(tree_tip, cov=A))"
+# } else {
+#   model_formula <- "sexual_selection ~ abs_lat + (1|gr(tree_tip, cov=A))"
+# }
+# 
+# # For sexual certainty.
+# if (model_type == "certainty"){
+#   if (center == "centered"){
+#     model_formula <- "data_certainty ~ centroid_z + (1|gr(tree_tip, cov=A))"
+#   } else {
+#     model_formula <- "data_certainty ~ abs_lat + (1|gr(tree_tip, cov=A))"
+#   }
+# }
 
+# Paste it all together.
+model_formula <- paste0(response, " ~ ", predictor, " + (1|gr(tree_tip, cov=A))")
 
-# brms formula.
-brms_formula <- brmsformula(model_formula, family = cumulative())
-brms_formula <- brmsformula(model_formula, family = bernoulli())
+# Response variable.
+if (response_type == "ordinal"){
+  brms_formula <- brmsformula(model_formula, family = cumulative())
+} else {
+  brms_formula <- brmsformula(model_formula, family = bernoulli())
+}
+if (model_type == "certainty"){
+  brms_formula <- brmsformula(model_formula, family = cumulative())
+}
+
+# # brms formula.
+# brms_formula <- brmsformula(model_formula, family = cumulative())
+# brms_formula <- brmsformula(model_formula, family = bernoulli())
 
 
 # Simple models.
-model_pathway <- paste0("Results/Models/Latitude/", model_type, "_", center, "_", data_type, "_", tree_number, ".rds") 
+#model_pathway <- paste0("Results/Models/Latitude/", model_type, "_", center, "_", data_type, "_", tree_number, ".rds") 
 
-#library(standist) ~ for visualising priors.
-# # Add un-informative priors.
-normal_priors <- c(prior(normal(0,1), class="Intercept"),
-                   prior(normal(0,1), class="b"),
-                   prior(gamma(2,1), "sd")) # Gamma 2,1 probs seems to work well given all previous models end up with values around 1
+model_pathway <- paste0("Results/Models/Consensus/Latitude/", response_type, "_", model_type, "_", center, "_", data_type, "_", tree_number, ".rds") 
 
-normal_priors <- c(prior(normal(0,10), class="Intercept"),
-                   prior(normal(0,10), class="b")) 
 
+# #library(standist) ~ for visualising priors.
+# # # Add un-informative priors.
+# normal_priors <- c(prior(normal(0,1), class="Intercept"),
+#                    prior(normal(0,1), class="b"),
+#                    prior(gamma(2,1), "sd")) # Gamma 2,1 probs seems to work well given all previous models end up with values around 1
+# 
+# normal_priors <- c(prior(normal(0,10), class="Intercept"),
+#                    prior(normal(0,10), class="b")) 
+# 
 
 # Report time before starting.
 Sys.time()
@@ -208,27 +208,17 @@ brms_model <- brm(
   brms_formula,
   data = model_data,
   data2 = list(A=model_covar),
-  prior = normal_priors,
+  #prior = normal_priors,
   iter = 10000,
-  warmup = 5000,
-  chains = 2,
+  warmup = 8000,
+  chains = 4,
   #thin = 2,
-  cores = 32,
+  cores = core_number,
   #init = 0,
-  #file = model_pathway,
+  file = model_pathway,
   control = list(adapt_delta = 0.95),
   normalize = FALSE,
   backend = "cmdstanr",
-  threads = threading(16)
+  threads = threading(core_number/4)
 )
 
-plot(brms_model)
-
-fruit_data
-skimr::skim(fruit_data)
-# Took 70 seconds before.
-# Took 146 seconds with normal priors and 2000 iterations.
-# Took 173 seconds without normal priors and 2000 iterations.
-
-# Took 871 seconds without normal priors and 10000 iterations. It had a divergent transition that was 
-# pretty massive, so trying it without init at zero to see if it makes a difference.
