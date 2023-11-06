@@ -151,11 +151,11 @@ brms_model <- brm(
   #prior = normal_priors,
   iter = 10000,
   warmup = 8000,
-  chains = 4,
+  chains = 2,
   cores = 32,
-  #init = 0,
+  init = 0,
   file = model_pathway,
-  control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.90),
   normalize = FALSE,
   backend = "cmdstanr",
-  threads = threading(8))
+  threads = threading(16))

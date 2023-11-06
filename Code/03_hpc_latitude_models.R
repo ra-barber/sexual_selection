@@ -33,28 +33,36 @@ array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
 array_number
 
 # Models that need both high cert and full data.
-model_type <- c("allbirds", "certainty", "primary", "fruit", "secondary", "invert", 
-                "mig", "no_mig", "terr", "no_terr")
+model_type <- c("allbirds",  "primary", "fruit", "secondary", "invert", 
+                "mig", "nomig", "terr", "noterr")
 
-# Centered or uncentered.
-center <- c("uncentered")
+# Response type.
+response_type <- c("ordinal", "logistic")
 
 # Set the data types.
 data_type <- c("all", "high")
 
 # Expand the grid.
-all_combos <- expand.grid(center, data_type, model_type)
+all_combos <- expand.grid(response_type, data_type, model_type)
 
-# Models that don't need 2nd high cert sensitivity model.
-model_type <- c("highcert", "prim_allterr", "prim_yearterr", "sec_allterr", "sec_yearterr")
+# Add the extra sensitivity analysis on highest certainty. 
+model_type <- c("highcert")
 data_type <- c("all")
+cert_combos <- expand.grid(response_type, data_type, model_type)
 
-# Add extra models.
-extra_combos <- expand.grid(center, data_type, model_type)
-all_combos <- rbind(all_combos, extra_combos)
+# And the specific analysis on certainty. 
+cert_combos <- rbind(cert_combos, data.frame(Var1 = "ordinal", Var2 = "all", Var3 = "certainty"))
+
+# Models that only use logistsic, unrelated to sexual selection certainty.
+model_type <- c("primterr", "primyearterr", "secterr", "secyearterr")
+response_type <- c("logistic")
+extra_combos <- expand.grid(response_type, data_type, model_type)
+
+# Combine all possible combinations.
+all_combos <- rbind(all_combos, cert_combos, extra_combos)
 
 # Extra array specific info.
-center <- all_combos[array_number, 1] %>% as.character()
+response_type <- all_combos[array_number, 1] %>% as.character()
 data_type <- all_combos[array_number, 2] %>% as.character()
 model_type <- all_combos[array_number, 3] %>% as.character()
 
@@ -89,18 +97,18 @@ invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
 
 # Filter for eco roles.
 mig_data <- model_data %>% filter(migration_binary == "Strong")
-no_mig_data <- model_data %>% filter(migration_binary == "Weak")
+nomig_data <- model_data %>% filter(migration_binary == "Weak")
 terr_data <- model_data %>% filter(territoriality_binary == "Territorial")
-no_terr_data <- model_data %>% filter(territoriality_binary == "Non-territorial")
+noterr_data <- model_data %>% filter(territoriality_binary == "Non-territorial")
 
 # Highest certainty data.
 hi_cert_data <- model_data %>% filter(data_certainty > 3)
 
 # Create a list of datasets for easy reference.
 all_datasets <- list(model_data, primary_data, fruit_data, secondary_data, invert_data,
-                     mig_data, no_mig_data, terr_data, no_terr_data, hi_cert_data)
+                     mig_data, nomig_data, terr_data, noterr_data, hi_cert_data)
 names(all_datasets) <- c("allbirds", "primary", "fruit", "secondary", "invert", 
-                         "mig", "no_mig", "terr", "no_terr", "highcert")
+                         "mig", "nomig", "terr", "noterr", "highcert")
 
 ###############################################################################
                 #### Define brms model function. ######
@@ -129,74 +137,58 @@ lat_brms_model <- function(data_set = model_data, response = "sexual_selection",
   brm(
     brms_formula,
     data = data_set,
-    prior = linear_priors,
+    #prior = linear_priors,
     iter = 10000,
-    warmup = 5000,
-    chains = 8,
-    thin = 20,
+    warmup = 8000,
+    chains = 4,
+    #thin = 20,
     cores = 8,
-    init = 0,
-    #file = model_pathway,
+    #init = 0,
+    file = model_pathway,
     normalize = FALSE,
+    control = list(adapt_delta = 0.95),
+    threads = threading(2),
     backend = "cmdstanr"
   )
 }
 
 ###############################################################################
-              #### Run main publication models ######
+              #### Run latitudinal models ######
 
-test_log_lat <- lat_brms_model(model_data, response = "sexual_binary", 
-                               predictor = "centroid_z", family = "bernoulli")
-
-
-
-conditional_effects(test_log_lat, method = "posterior_linpred")
-conditional_effects(test_tert_model, method = "posterior_linpred")
-
-test_tert_model <- lat_brms_model(model_data, response = "sexual_tertiary", 
-                               predictor = "centroid_z")
-test_tert_model <- lat_brms_model(model_data, response = "sexual_sens", 
-                                  predictor = "centroid_z")
-
-fruit_log_lat <- lat_brms_model(fruit_data, response = "sexual_binary", 
-                               predictor = "centroid_z", family = "bernoulli")
-
-prim_log_model <- lat_brms_model(primary_data, response = "sexual_binary", 
-                                predictor = "centroid_z", family = "bernoulli")
-
-sec_log_model <- lat_brms_model(secondary_data, response = "sexual_binary", 
-                                 predictor = "centroid_z", family = "bernoulli")
-
-
+# Model pathway.
+first_half <- "Results/Models/Latitudinal/Latitude/"
+model_pathway <- paste0(first_half, response_type, "_", model_type, "_", data_type, ".rds")
 
 
 # Run the straightforward sexual selection models first.
 if (model_type %in% names(all_datasets)){
-  latitude_model <- lat_brms_model(data_set = all_datasets[[model_type]])
+  model_data <- all_datasets[[model_type]]
+  if (response_type == "ordinal"){
+    lat_brms_model(model_data)
+  } else {
+    lat_brms_model(model_data, response = "sexual_binary",  family = "bernoulli")
+  }
 }
 
 # Run the global data certainty analysis, with certainty as the response variable.
 if (model_type == "certainty"){
-  latitude_model <- lat_brms_model(response = "data_certainty")
+  lat_brms_model(response = "data_certainty")
 }
 
 # Run territoriality models.
-if (model_type == "prim_allterr"){
-  latitude_model <- lat_brms_model(response = "terr_dummy", data_set = primary_data, family = "bernoulli")
+if (model_type == "primterr"){
+  lat_brms_model(response = "terr_dummy", data_set = primary_data, family = "bernoulli")
 }
-if (model_type == "prim_yearterr"){
-  latitude_model <- lat_brms_model(response = "year_terr_dummy", data_set = primary_data, family = "bernoulli")
+if (model_type == "primyearterr"){
+  lat_brms_model(response = "year_terr_dummy", data_set = primary_data, family = "bernoulli")
 }
-if (model_type == "sec_allterr"){
-  latitude_model <- lat_brms_model(response = "terr_dummy", data_set = secondary_data, family = "bernoulli")
+if (model_type == "secterr"){
+  lat_brms_model(response = "terr_dummy", data_set = secondary_data, family = "bernoulli")
 }
-if (model_type == "sec_yearterr"){
-  latitude_model <- lat_brms_model(response = "year_terr_dummy", data_set = secondary_data, family = "bernoulli")
+if (model_type == "secyearterr"){
+  lat_brms_model(response = "year_terr_dummy", data_set = secondary_data, family = "bernoulli")
 }
 
-# Model pathway.
-first_half <- "Results/Models/Nonphy_models/Latitude/"
-model_pathway <- paste0(first_half, model_type, "_", data_type, "_model.rds")
 
-# Export the model.
-saveRDS(latitude_model, model_pathway)
+# # Export the model.
+# saveRDS(latitude_model, model_pathway)

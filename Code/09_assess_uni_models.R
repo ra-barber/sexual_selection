@@ -61,6 +61,8 @@ rm(all_temp_models, all_mig_models, all_tro_models, all_terr_models)
 
 # First half of the pathway.
 first_half <- "Z:/home/sexual_selection/Results/Models/Combined_models/Univariate/"
+first_half <- "Z:/home/sexual_selection/Results/Models/Old_models/Combined_models/Univariate/"
+
 list.files(first_half, pattern = "data")
 
 # Read in the models using all data certainties.
