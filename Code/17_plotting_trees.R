@@ -21,35 +21,23 @@ library(janitor)
 # Clear the workspace.
 rm(list=ls())
 
-getwd()
-
 
 ################################################################################
                             #### Data ####
 
-
 # Read in modelling data.
-model_data <- read.csv("Data/sexual_traits.csv")
-model_data$tree_tip <- model_data$birdtree_name %>% str_replace(" ", "_")
+model_data <- read_ss_data()
 row.names(model_data) <- model_data$tree_tip
 
-# Read in all the data, including the species we don't model.
-#bird_traits <- read.csv("Data/birdtree_ecotraits_24_01_2023.csv") %>% clean_names()
-bird_traits <- read.csv("Data/birdtree_ecotraits_09_05_2023.csv") %>% clean_names()
-
 # Select the traits we want to model.
-full_data <- bird_traits %>% dplyr::select(
+full_data <- model_data %>% dplyr::select(
   # Taxonomy.
-  birdtree_name, order, family,
+  scientific_name_bird_tree, tree_tip, order_bird_tree, family_bird_tree,
   # Sexual selection.                                   
-  sexual_score, sexual_certainty,
-  # Social Selection.
-  territory)
+  sexual_selection, data_certainty)
 
 # Check the data.
 skimr::skim(full_data)
-
-full_data$tree_tip <- full_data$birdtree_name %>% str_replace(replacement = "_", pattern = " ")
 row.names(full_data) <- full_data$tree_tip
 
 # Read in the tree. Pick the same one for now.
@@ -60,36 +48,20 @@ plot_tree
 plot_tree <- drop.tip(plot_tree, setdiff(plot_tree$tip.label, full_data$tree_tip))
 
 # Add node ID to dataframes.
-model_data$node <-  nodeid(plot_tree, model_data$tree_tip)
 full_data$node <-  nodeid(plot_tree, full_data$tree_tip)
 
 # Read in clade function and assign.
 source("Code/clade_function.R")
-model_data %<>% assign_clades()
-full_data %<>% assign_clades()
-
 full_data %<>% assign_prum_clades()
 
 # Create padded tip labels so they're all the same length.
-full_data$tip_label <- str_pad(full_data$family, max(nchar(full_data$family)), side="right", pad=" ")
+full_data$tip_label <- str_pad(full_data$family_bird_tree, 
+                               max(nchar(full_data$family_bird_tree)), 
+                               side="right", pad=" ")
 
 
 ################################################################################
                       #### Summarise data ####
-
-# Create a function to group by different traits.
-group_clade <- function(data, clade, tree = plot_tree){
-  # Group by and summarise.
-  data %<>% group_by(!!! syms(clade)) %>% 
-    summarise(tree_tip = first(tree_tip),
-              higher_clade = first(higher_clade),
-              mean_score = mean(sexual_score))
-  # Drop tips to create trees.
-  tree <- drop.tip(tree, setdiff(tree$tip.label, data$tree_tip))
-  # Add node ID to dataframes.
-  data$node <-  nodeid(tree, data$tree_tip)
-  return(data)
-}
 
 # Create a function to group by different traits.
 full_group_clade <- function(data, clade, tree = plot_tree){
@@ -97,7 +69,7 @@ full_group_clade <- function(data, clade, tree = plot_tree){
   data %<>% group_by(!!! syms(clade)) %>% 
     summarise(tree_tip = first(tree_tip),
               higher_clade = first(higher_clade),
-              mean_score = mean(sexual_score))
+              mean_score = mean(sexual_selection))
   # Drop tips to create trees.
   tree <- drop.tip(tree, setdiff(tree$tip.label, data$tree_tip))
   # Add node ID to dataframes.
@@ -106,12 +78,7 @@ full_group_clade <- function(data, clade, tree = plot_tree){
 }
 
 # Family.
-family_data <- group_clade(model_data, "family")
-full_family_data <- full_group_clade(full_data, "family")
-
-
-################################################################################
-                #### Create trees with data ####
+full_family_data <- full_group_clade(full_data, "family_bird_tree")
 
 # function to join tree and data.
 data_tree <- function(tree = plot_tree, data){
@@ -122,41 +89,14 @@ data_tree <- function(tree = plot_tree, data){
 }
 
 # Create the trees with data.
-species_tree <- data_tree(plot_tree, model_data)
-family_tree <- data_tree(plot_tree, family_data)
 full_family_tree <- data_tree(plot_tree, full_family_data)
 
 
-
 ################################################################################
-                       #### Make Palettes ####
+                       #### Plot settings ####
 
 # Zissou palette. 
 wes_pal <- wes_palette("Zissou1", 100, type = "continuous")
-
-# Reorder colours for plotting.
-clade_colours <- c(#NA,   #"#FFFFFF" , # Blank space for legend title.
-                   "#7494EA", # Palaeognathae
-                   "#8D0801", # Galloanseres
-                   "#77AD78", # Strisores
-                   "#5941A9", # Columbimorphae
-                   "#988F2A",# Otidimorphae
-                   "#AA4465", # Gruiformes
-                   "#05299E", # Mirandornithes
-                   "#C8B8DB", # Charadriifromes
-                   "#DBA159", # Eurpygimorphae
-                   "#136F63", # Aequornithes
-                   "#A89B8C", # Opisthocomiformes
-                   "#EB6424", # Afroaves
-                   "#E0CA3C") # Australaves
-
-# Add the names so it plots in order.
-names(clade_colours) <- c(#"", 
-                          "Palaeognathae", "Galloanseres", "Strisores", 
-                          "Columbimorphae", "Otidimorphae", "Gruiformes",
-                           "Mirandornithes", "Charadriiformes", "Eurpygimorphae",
-                           "Aequornithes", "Opisthocomiformes",
-                          "Afroaves", "Australaves")
 
 # Reorder colours for plotting.
 prum_clade_colours <- c("#7494EA", # Palaeognathae
@@ -175,9 +115,6 @@ names(prum_clade_colours) <- c("Palaeognathae", "Galloanserae", "Strisores",
                           "Columbaves", "Gruiformes", "Aequorlitornithes", 
                           "Opisthocomiformes", "Accipitriformes", "Strigiformes",
                           "Coraciimorphae", "Australaves")
-
-
-
 
 # # Extra colours:
 # #"#136F63", # 1. Dark green
@@ -198,6 +135,12 @@ names(prum_clade_colours) <- c("Palaeognathae", "Galloanserae", "Strisores",
 # #"#8D0801" # 11/ Dark Red
 #"#EB6424" # Brighter orange colour.
 
+# Change legend order.
+full_family_tree@data$higher_clade %<>% 
+  factor(levels = c("Palaeognathae", "Opisthocomiformes", "Galloanserae", 
+                    "Accipitriformes", "Strisores", "Strigiformes",
+                    "Columbaves", "Coraciimorphae", "Gruiformes", 
+                    "Australaves", "Aequorlitornithes"))
 
 # Make a function to add images to the tips of a tree.
 tree_image <- function(node_num, pathway, image_size = i_size, nudge_right = 0, nudge_up = 1){
@@ -208,104 +151,9 @@ tree_image <- function(node_num, pathway, image_size = i_size, nudge_right = 0, 
 }
 
 
-###############################################################################
-                    #### Create the family tree ####
-
-
-# Plot a circular tree with highlighted clades and navy bars.
-family_plot <- ggtree(full_family_tree, layout="fan", #open.angle = 5, 
-         size = 0.5, colour = "grey", alpha = 0.5) +
-  # Add the sexual selection bars.
-  geom_fruit(geom=geom_bar, mapping=aes(y=node, x=mean_score), pwidth=0.25,
-             orientation="y", offset = 0.01, stat="identity", 
-             fill="navy", colour="navy", width=0.4) + 
-  # Add the highlighting for clades.
-  geom_fruit(geom=geom_bar, mapping=aes(y=node, x=1, fill = higher_clade),
-             pwidth=0.35, colour = NA, orientation="y", offset = -0.605,
-             stat="identity", width=1, alpha = 0.5) + 
-  # Colours.
-  scale_fill_manual(values = prum_clade_colours, name = "Clade", na.value = NA,
-                   limits = names(prum_clade_colours)) +
-  scale_colour_manual(values = prum_clade_colours) +
-  guides(fill = guide_legend(byrow = TRUE, nrow = 7, title.position = "top")) + 
-  # Add black tip labels for family, offset inside the tree.
-  geom_tiplab(size = 1.5, colour = "black", offset = -0.05,
-              aes(label = family), fontface = 2, hjust =1) + 
-  
-  # Makes the tree the right size/zoom.
-  xlim(0,92) +
-  theme(text = element_text(size = 12, face = "bold"), 
-        #legend.title=element_text(vjust = -5.5, hjust = 0.11), 
-        legend.position = c(0.55,0.42), 
-        legend.direction = "horizontal", 
-        
-        #legend.title.align = 2,
-        legend.key.width = unit(0.5, "cm"), 
-        legend.key.height = unit(0.1, "cm"), 
-        legend.text = element_text(size = 10, face = "bold"), 
-        legend.background = element_rect(colour = NA, fill = NA, linetype='solid'),
-        legend.spacing.y = unit(0.2, "cm"),
-        panel.border = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        #legend.margin = margin(-9, 6, 6, 6),
-        plot.margin = margin(l = -100, b = -185, t = -175, r = -100))
-  
-
-
-# Saved variables for adding images to the tree.
-outer <- -5
-inner <- -20
-i_size <- 0.03 
-
-# Plot with tree with bird images.
-figure_tree <- family_plot +
-  ## Add the clade images.
-  tree_image(193, "Data/phylopic/ostrich.png", i_size*1.15, inner+1, 1) +
-  tree_image(186, "Data/phylopic/duck.png", i_size*1.15, inner+1, 4) +
-  tree_image(173, "Data/phylopic/hummingbird.png", i_size*1.05, inner+2.5, 0) +
-  tree_image(164, "Data/phylopic/Grus canadensis 2.png", i_size*1.1, inner+3, 1) +
-  tree_image(131, "Data/phylopic/jacana.png", i_size*1.1, inner+3.5, -2) + #public
-  tree_image(129, "Data/phylopic/buttonquail.png", i_size*1.1, inner+4, 4) +
-  tree_image(156, "Data/phylopic/albatross.png", i_size*1.3, inner+3, 0) +
-  tree_image(143, "Data/phylopic/nycticorax.png", i_size, inner+3, 0) +
-  tree_image(121, "Data/phylopic/accipiter.png", i_size*1.6, inner+1, 0) + #public
-  tree_image(115, "Data/phylopic/hoopoe.png", i_size, inner+2, -1) + #public
-  tree_image(103, "Data/phylopic/toucan.png", i_size*1.3, inner+1, 5) +
-  tree_image(98, "Data/phylopic/amazona.png", i_size*1, inner+1, 3) +
-  tree_image(87, "Data/phylopic/huet.png", i_size*1.1, inner+1, 3) +
-  tree_image(83, "Data/phylopic/menura.png", i_size*2, inner-1, 11) +
-  tree_image(50, "Data/phylopic/corvus.png", i_size*1.5, inner+3, 3) + #public
-  tree_image(47, "Data/phylopic/paradisaeidae.png", i_size*1.4, inner+5, 12) + #public
-  tree_image(57, "Data/phylopic/euryceros.png", i_size*1.05, inner+4, 7) + #public
-  tree_image(39, "Data/phylopic/swallow.png", i_size*1.8, inner-1, 7) + #public
-  tree_image(24, "Data/phylopic/sturnus.png", i_size*1.2, inner+2, 4) + #public
-  tree_image(7, "Data/phylopic/bullfinch.png", i_size*1.25, inner-1, 0) #public
-  
-# Save the tree.
-ggsave("Plots/Trees/figure_prum_tree.png", dpi = 900, width = 10, height = 10)
-
-
-###############################################################################
-       #### Put it all together with script to make side plots ####
-
-
-# Group together side plots and tree.
-both_plots <- ggarrange(figure_tree, side_plots, widths = c(3,2), nrow = 1,
-                        labels = c("a", ""), 
-                        font.label = list(size = 28))
-
-# Export.
-ggsave("Plots/Trees/tree_and_plots.png", dpi = 900, width = 17, height = 10)
-ggsave("Plots/Trees/tree_and_plots.pdf", width = 17, height = 10)
-
-
 ################################################################################ 
-                   #### Make a non-bold version #####
+                   #### Plot the tree #####
 
-# Change legend order.
-full_family_tree@data$higher_clade %<>% factor(levels = c("Palaeognathae", "Opisthocomiformes", "Galloanserae", "Accipitriformes", "Strisores", "Strigiformes",
-                               "Columbaves", "Coraciimorphae", "Gruiformes", "Australaves", "Aequorlitornithes"))
 
 # Plot a circular tree with highlighted clades and navy bars.
 family_plot <- ggtree(full_family_tree, layout="fan", #open.angle = 5, 
@@ -321,20 +169,15 @@ family_plot <- ggtree(full_family_tree, layout="fan", #open.angle = 5,
   # Colours.
   scale_fill_manual(values = prum_clade_colours, name = NULL, na.value = NA) +
   scale_colour_manual(values = prum_clade_colours) +
-  guides(fill = guide_legend(byrow = TRUE, direction = "vertical", ncol = 2)) + #nrow = 6)) + #, title.position = "none")) + 
+  guides(fill = guide_legend(byrow = TRUE, direction = "vertical", ncol = 2)) + 
   # Add black tip labels for family, offset inside the tree.
   geom_tiplab(size = 1.5, colour = "black", offset = -0.05,
-              aes(label = family), fontface = 2, hjust =1) + 
+              aes(label = family_bird_tree), fontface = 2, hjust =1) + 
   
   # Makes the tree the right size/zoom.
   xlim(0,92) +
   theme(text = element_text(size = 12), 
-        #legend.title=element_text(vjust = -5.5, hjust = 0.11), 
-        legend.position = c(0.555, 0.42),     # original
-        #legend.position = c(0.57,0.43), 
-        #legend.direction = "vertical", 
-        
-        #legend.title.align = 2,
+        legend.position = c(0.555, 0.42),
         legend.key.width = unit(0.5, "cm"), 
         legend.key.height = unit(0.1, "cm"), 
         legend.text = element_text(size = 11.5), 
@@ -344,19 +187,19 @@ family_plot <- ggtree(full_family_tree, layout="fan", #open.angle = 5,
         panel.border = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        #legend.margin = margin(-9, 6, 6, 6),
         plot.margin = margin(l = -100, b = -185, t = -175, r = -100))
+
+# Add the clade images.
 figure_tree <- family_plot +
-  ## Add the clade images.
   tree_image(193, "Data/phylopic/ostrich.png", i_size*1.15, inner+1, 1) +
   tree_image(186, "Data/phylopic/duck.png", i_size*1.15, inner+1, 4) +
-  tree_image(173, "Data/phylopic/hummingbird.png", i_size*1.05, inner+2.5, 0) +
-  tree_image(164, "Data/phylopic/Grus canadensis 2.png", i_size*1.1, inner+3, 1) +
+  tree_image(173, "Data/phylopic/hummingbird.png", i_size*1.05, inner+2.5, 1) +
+  tree_image(164, "Data/phylopic/Grus canadensis 2.png", i_size*1.1, inner+3, 0.5) +
   tree_image(131, "Data/phylopic/jacana.png", i_size*1.1, inner+3.5, -2) + #public
   tree_image(129, "Data/phylopic/buttonquail.png", i_size*1.1, inner+4, 4) +
-  tree_image(156, "Data/phylopic/albatross.png", i_size*1.3, inner+3, 0) +
-  tree_image(143, "Data/phylopic/nycticorax.png", i_size, inner+3, 0) +
-  tree_image(121, "Data/phylopic/accipiter.png", i_size*1.6, inner+1, 0) + #public
+  tree_image(156, "Data/phylopic/albatross.png", i_size*1.3, inner+3, -1) +
+  tree_image(143, "Data/phylopic/nycticorax.png", i_size, inner+3, -1) +
+  tree_image(121, "Data/phylopic/accipiter.png", i_size*1.6, inner+2, -1) + 
   tree_image(115, "Data/phylopic/hoopoe.png", i_size, inner+2, -1) + #public
   tree_image(103, "Data/phylopic/toucan.png", i_size*1.3, inner+1, 5) +
   tree_image(98, "Data/phylopic/amazona.png", i_size*1, inner+1, 3) +
@@ -369,15 +212,32 @@ figure_tree <- family_plot +
   tree_image(24, "Data/phylopic/sturnus.png", i_size*1.2, inner+2, 4) + #public
   tree_image(7, "Data/phylopic/bullfinch.png", i_size*1.25, inner-1, 0) #public
 
+# Save the tree.
+ggsave("Plots/Trees/figure_prum_tree.png", dpi = 900, width = 10, height = 10)
 
 # Group together side plots and tree.
-both_plots <- ggarrange(figure_tree, side_plots, widths = c(3,2), nrow = 1,
+both_plots <- ggarrange(figure_tree, side_plots_preds, widths = c(3,2), nrow = 1,
                         labels = c("a", ""), 
                         font.label = list(size = 30))
 
 # Export.
-ggsave("Plots/Trees/nobold_tree_and_plots.png", dpi = 900, width = 17, height = 10)
-ggsave("Plots/Trees/nobold_tree_and_plots.pdf", width = 17, height = 10)
+ggsave("Plots/Trees/figure_4.png", dpi = 900, width = 17, height = 10)
+ggsave("Plots/Trees/figure_4.pdf", width = 17, height = 10)
+
+
+################################################################################
+                           ###### End ########
+################################################################################
+
+
+
+
+
+
+
+
+
+
 
 
 
