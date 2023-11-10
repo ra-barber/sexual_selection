@@ -16,6 +16,7 @@ read_ss_data <- function(pathway = "Data/sexual_selection_dataset_04_09.xlsx"){
   model_data <- readxl::read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 2, na = "NA")
   # Remove upper-case column names.
   model_data <- janitor::clean_names(model_data)
+  model_data %<>% dplyr::select(-notes, -recorder, -source)
   # Add in tree tips used in phylo models.
   model_data$tree_tip <- gsub(" ", "_", model_data$scientific_name_bird_tree)
   # Add in dummy territoriality variables used in EDF 8.
@@ -49,6 +50,10 @@ center_categorical <- function(predictor){
   as.numeric(predictor) %>% scale(scale = FALSE)
 }
 
+# Calculate Standard error.
+stanard_error <- function(vector){
+  sd(vector)/sqrt(length(vector))
+}
 
 ################################################################################
                   ##### Making maps ######
