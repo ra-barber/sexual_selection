@@ -42,36 +42,38 @@ invert_data <- model_data %>% filter(trophic_niche == "Invertivore")
 # Filter for eco roles.
 mig_data <- model_data %>% filter(migration_binary == "Strong")
 non_mig_data <- model_data %>% filter(migration_binary == "Weak")
-terr_data <- model_data %>% filter(territoriality_binary == "Territory")
-non_terr_data <- model_data %>% filter(territoriality_binary == "No territory")
+terr_data <- model_data %>% filter(territoriality_binary == "Territorial")
+non_terr_data <- model_data %>% filter(territoriality_binary == "Non-territorial")
 
 
 ###############################################################################
                     #### Read in  brms models ####
 
 first_half <- "Z:/home/sexual_selection/Results/Models/Nonphy_models/Tropics/"
+#first_half <- "Z:/home/sexual_selection/Results/Models/Old_models/Nonphy_models/Tropics/"
+first_half <- "Z:/home/sexual_selection/Results/Models/Latitudinal/Tropics/ordinal_"
 
 # Read in models using raw data.
-primary_model <- readRDS(paste0(first_half, "primary_model.rds"))
-secondary_model <- readRDS(paste0(first_half, "secondary_model.rds"))
-fruit_model <- readRDS(paste0(first_half, "fruit_model.rds"))
-invert_model <- readRDS(paste0(first_half, "invert_model.rds"))
+primary_model <- readRDS(paste0(first_half, "primary_all.rds"))
+secondary_model <- readRDS(paste0(first_half, "secondary_all.rds"))
+fruit_model <- readRDS(paste0(first_half, "fruit_all.rds"))
+invert_model <- readRDS(paste0(first_half, "invert_all.rds"))
 
-mig_model <- readRDS(paste0(first_half, "mig_model.rds"))
-non_mig_model <- readRDS(paste0(first_half, "non_mig_model.rds"))
-terr_model <- readRDS(paste0(first_half, "terr_model.rds"))
-non_terr_model <- readRDS(paste0(first_half, "non_terr_model.rds"))
+mig_model <- readRDS(paste0(first_half, "mig_all.rds"))
+non_mig_model <- readRDS(paste0(first_half, "no_mig_all.rds"))
+terr_model <- readRDS(paste0(first_half, "terr_all.rds"))
+non_terr_model <- readRDS(paste0(first_half, "no_terr_all.rds"))
 
 # Read in centered models.
-centered_primary_model <- readRDS(paste0(first_half, "centered_primary_model.rds"))
-centered_secondary_model <- readRDS(paste0(first_half, "centered_secondary_model.rds"))
-centered_fruit_model <- readRDS(paste0(first_half, "centered_fruit_model.rds"))
-centered_invert_model <- readRDS(paste0(first_half, "centered_invert_model.rds"))
-
-centered_mig_model <- readRDS(paste0(first_half, "centered_mig_model.rds"))
-centered_non_mig_model <- readRDS(paste0(first_half, "centered_non_mig_model.rds"))
-centered_terr_model <- readRDS(paste0(first_half, "centered_terr_model.rds"))
-centered_non_terr_model <- readRDS(paste0(first_half, "centered_non_terr_model.rds"))
+# centered_primary_model <- readRDS(paste0(first_half, "centered_primary_model.rds"))
+# centered_secondary_model <- readRDS(paste0(first_half, "centered_secondary_model.rds"))
+# centered_fruit_model <- readRDS(paste0(first_half, "centered_fruit_model.rds"))
+# centered_invert_model <- readRDS(paste0(first_half, "centered_invert_model.rds"))
+# 
+# centered_mig_model <- readRDS(paste0(first_half, "centered_mig_model.rds"))
+# centered_non_mig_model <- readRDS(paste0(first_half, "centered_non_mig_model.rds"))
+# centered_terr_model <- readRDS(paste0(first_half, "centered_terr_model.rds"))
+# centered_non_terr_model <- readRDS(paste0(first_half, "centered_non_terr_model.rds"))
 
 # Read in models using raw data.
 high_primary_model <- readRDS(paste0(first_half, "high_primary_model.rds"))
@@ -156,9 +158,9 @@ options(scipen = 999)
 
 # Function that recreates side plots using both pseudo p-values and credible intervals from centered models.
 brms_tropics_side_plot <- function(data_set = primary_data, ylabel = "Sexual selection", 
-                                   ylimits = c(0,1.15), ybreaks = c(0,0.5,1.0), 
-                                   lab_x_pos = 2, lab_ypos = 1.15, plot_label = "a", 
-                                   plot_model = primary_model, stats_model = centered_primary_model,
+                                   ylimits = c(0,1.3), ybreaks = c(0,0.5,1.0), 
+                                   lab_x_pos = 2, lab_ypos = 1.3, plot_label = "a", 
+                                   plot_model = primary_model, #stats_model = centered_primary_model,
                                    sex_score = TRUE, r_include = FALSE, x_label = "", 
                                    p_include = TRUE){
   
@@ -237,8 +239,8 @@ brms_tropics_side_plot <- function(data_set = primary_data, ylabel = "Sexual sel
           plot.margin = margin(t = 1, l = 0.2, b = 0.2, r =0.3, unit = "cm")) + 
     annotate("text", x = lab_x_pos, y =lab_ypos, label = stats_label, size = 7) +
     annotate("text", x = 0.65, y = ylimits[2], label = plot_label, size = 12, fontface = 2) +
-    annotate("text", x = 1, y = predictions$upper__[1] + 0.05, label = sample_sizes[2,2], size = 5) +
-    annotate("text", x = 2, y = predictions$upper__[2] + 0.05, label = sample_sizes[1,2], size = 5)
+    annotate("text", x = 1, y = predictions$upper__[1] + 0.07, label = sample_sizes[2,2], size = 7) +
+    annotate("text", x = 2, y = predictions$upper__[2] + 0.07, label = sample_sizes[1,2], size = 7)
 }
 
 
@@ -246,44 +248,46 @@ brms_tropics_side_plot <- function(data_set = primary_data, ylabel = "Sexual sel
 ################################################################################
               #### Make with centered models for stats ####
 
+library(bayestestR)
+
 # Trophic niche plots.
 primary_plot <- brms_tropics_side_plot(
   data_set = primary_data, plot_label = "a", plot_model = primary_model,
-  stats_model = centered_primary_model, x_label = expression("1"^ry*" consumers")) 
+  x_label = expression("1"^ry*" consumers")) 
 
 fruit_plot <- brms_tropics_side_plot(
-  data_set = fruit_data, ylabel = NULL, plot_label = "b", plot_model = fruit_model, 
-  stats_model = centered_fruit_model, x_label = "Frugivores") + 
+  data_set = fruit_data, ylabel = NULL, plot_label = "b", plot_model = fruit_model,
+  x_label = "Frugivores") + 
   theme(axis.text.y = element_blank())
 
 secondary_plot <- brms_tropics_side_plot(
   data_set = secondary_data, ylabel = NULL, plot_label = "c", plot_model = secondary_model, 
-  stats_model = centered_secondary_model, x_label = expression("2"^ry*" consumers")) + 
+  x_label = expression("2"^ry*" consumers")) + 
   theme(axis.text.y = element_blank())
 
 invert_plot <- brms_tropics_side_plot(
   data_set = invert_data, ylabel = NULL, plot_label = "d", plot_model = invert_model, 
-  stats_model = centered_invert_model, x_label = "Invertivores") + 
+  x_label = "Invertivores") + 
   theme(axis.text.y = element_blank())
 
 # Life history partitions.
 mig_plot <- brms_tropics_side_plot(
   data_set = mig_data, plot_label = "e", plot_model = mig_model,
-  stats_model = centered_mig_model, x_label = "Migrants") 
+  x_label = "Migrants") 
 
 non_mig_plot <- brms_tropics_side_plot(
   data_set = non_mig_data, ylabel = NULL, plot_label = "f", plot_model = non_mig_model, 
-  stats_model = centered_non_mig_model, x_label = "Non-migrants") + 
+  x_label = "Non-migrants") + 
   theme(axis.text.y = element_blank())
 
 terr_plot <- brms_tropics_side_plot(
   data_set = terr_data, ylabel = NULL, plot_label = "g", plot_model = terr_model, 
-  stats_model = centered_terr_model, x_label = "Territorial") + 
+  x_label = "Territorial") + 
   theme(axis.text.y = element_blank())
 
 non_terr_plot <- brms_tropics_side_plot(
   data_set = non_terr_data, ylabel = NULL, plot_label = "h", plot_model = non_terr_model, 
-  stats_model = centered_non_terr_model, x_label = "Non-territorial") + 
+  x_label = "Non-territorial") + 
   theme(axis.text.y = element_blank())
 
 # Arrange the plots together.

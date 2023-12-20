@@ -20,12 +20,11 @@ rm(list=ls())
 
 
 ################################################################################
-#### Set up array iteration ####
-?hcl.colors
+                 #### Set up array iteration ####
 
 # Get the array number from the job script.
 array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
-array_number
+array_number <- 9
 
 # Model (In order of size and therefore speed).
 model_type <- c("allbirds", "fruit", "primary", "mig", "invert", "secondary", "terr",
@@ -47,7 +46,7 @@ model_type <- all_combos[array_number, 3] %>% as.character()
 
 
 ###############################################################################
-#### Read in the data #####
+                   #### Read in the data #####
 
 
 # Functions.
@@ -83,7 +82,7 @@ model_data <-  all_datasets[[model_type]]
 
 
 ###############################################################################
-#### Prepare predictor variables ######
+              #### Prepare predictor variables ######
 
 # Prepare response variables.
 model_data$sexual_selection <- model_data$sexual_selection + 1
