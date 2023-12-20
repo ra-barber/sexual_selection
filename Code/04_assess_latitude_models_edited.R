@@ -53,14 +53,14 @@ grouped_lat_data <- model_data %>% filter(binned_lat != 75) %>% group_by(binned_
 
 # Function for grouping sexual selection by trait.
 average_lat_bins <- function(grouped_data, predictor = "sexual_selection"){
-  grouped_data %>% 
+  grouped_data %<>% 
     summarise(trait_mean = mean(!!! syms(predictor)),
               trait_sd = sd(!!! syms(predictor)),
               trait_se = sd(!!! syms(predictor))/sqrt(length(!!! syms(predictor))),
-              trait_max = trait_mean + trait_se,
-              trait_min = trait_mean - trait_se,
+              trait_max = trait_mean + (trait_se*1.96),
+              trait_min = trait_mean - (trait_se*1.96),
               trait_n = length(!!! syms(predictor))) %>% na.omit()
- # grouped_data %>% filter(trait_n > 10)
+  grouped_data %>% filter(trait_n > 10)
 }
 
 # Group sex scores and certainty by lat bins.
@@ -75,9 +75,9 @@ niche_lat_data <- model_data %>% filter(binned_lat != 75) %>%
 
 # Add in the three monogamous frugivore species that each occupy a single lat bin alone.
 fruit_lat_data <- niche_lat_data %>% filter(trophic_niche == "Frugivore")
-fruit_lat_data[9,] <- list(40, "Frugivore", 0, 0, 0, 0, 0, 1) 
-fruit_lat_data[10,] <- list(45, "Frugivore", 0, 0, 0, 0, 0, 1)
-fruit_lat_data[11,] <- list(50, "Frugivore", 0, 0, 0, 0, 0, 1)
+#fruit_lat_data[9,] <- list(40, "Frugivore", 0, 0, 0, 0, 0, 1) 
+#fruit_lat_data[10,] <- list(45, "Frugivore", 0, 0, 0, 0, 0, 1)
+#fruit_lat_data[11,] <- list(50, "Frugivore", 0, 0, 0, 0, 0, 1)
 
 # Do migration and territoriality for plots.
 mig_lat_data <- model_data %>% filter(binned_lat != 75) %>% 
@@ -94,7 +94,7 @@ med_lat_data <- model_data %>% filter(binned_lat != 75 & data_certainty > 2) %>%
 # Group the data by trophic level territory and latitude.
 terr_diet_lat_data <- model_data %>% filter(binned_lat != 75) %>% 
   group_by(binned_lat, trophic_level_binary) %>% average_lat_bins("terr_dummy")
-terr_diet_lat_data$trait_min[terr_diet_lat_data$trait_min < 0] <- 0   # Get rid of negative error bars.
+#terr_diet_lat_data$trait_min[terr_diet_lat_data$trait_min < 0] <- 0   # Get rid of negative error bars.
 year_terr_diet_lat_data <- model_data %>% filter(binned_lat != 75) %>% 
   group_by(binned_lat, trophic_level_binary) %>% average_lat_bins("year_terr_dummy")
 
@@ -103,8 +103,9 @@ year_terr_diet_lat_data <- model_data %>% filter(binned_lat != 75) %>%
 ###############################################################################
                     #### Read in brms models ####
 
-first_half <- "Z:/home/sexual_selection/Results/Models/Old_models/Nonphy_models/Latitude/"
 
+# Directory where models are saved.
+first_half <- "Z:/home/sexual_selection/Results/Models/Old_models/Nonphy_models/Latitude/"
 list.files(first_half)
 
 # Function to read in models.
@@ -138,7 +139,12 @@ no_mig_high_model <- read_lat_model("no_mig_high")
 terr_high_model <- read_lat_model("terr_high")
 no_terr_high_model <- read_lat_model("no_terr_high")
 
-
+# Read in extra models.
+hi_cert_model <- read_lat_model("highcert_all")
+prim_allterr_all_model <- read_lat_model("prim_allterr_all")
+prim_yearterr_all_model <- read_lat_model("prim_yearterr_all")
+sec_allterr_all_model <- read_lat_model("sec_allterr_all")
+sec_yearterr_all_model <- read_lat_model("sec_yearterr_all")
 
 ################################################################################
                     #### Export summary tables ####
@@ -292,12 +298,12 @@ brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreak
   ggplot(data_set, aes(x = binned_lat, y = trait_mean)) +
   geom_errorbar(aes(ymin = trait_min, ymax = trait_max),
                 position = position_dodge(width = 1), show.legend = FALSE, col = "darkgrey") + #    col =  "darkgrey") +
-    geom_point(position = position_dodge(width = 1), col = "#442B48") + 
-   # geom_point(aes(size = trait_n), position = position_dodge(width = 1), alpha = 0.8, col = "#442B48") + 
+    #geom_point(position = position_dodge(width = 1), col = "#442B48") + 
+    geom_point(aes(size = trait_n), position = position_dodge(width = 1), alpha = 0.9, col = "#442B48") + 
       scale_x_continuous(breaks = seq(from = 0, to = 70, by = 35)) +
     scale_y_continuous(breaks = ybreaks, labels = scales::number_format(accuracy = 0.1)) +
     coord_cartesian(ylim = ylimits, xlim = c(NA, 75), clip = 'off') +
-    scale_size_continuous(range = c(2,8))+
+    scale_size_continuous(range = c(1,6))+
     #scale_alpha_continuous(range = c(0.1,1)) +
     ylab(ylabel) +
     xlab("Latitude") + theme_classic(base_size = 25) + 
@@ -318,33 +324,33 @@ brms_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreak
 # Main sexual selection plot.
 sex_lat_plot <- lat_data %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b")
+                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.12, plot_label = "b")
 
 # Data certainty.
 cert_lat_plot <- cert_lat_data %>% 
   brms_lat_side_plot(ylabel = "Data certainty", ylimits = c(1,4), 
-                     ybreaks =  c(1,2,3,4), lab_ypos = 1.5, plot_label = "d",
+                     ybreaks =  c(1,2,3,4), lab_ypos = 1.3, plot_label = "d",
                      plot_model = certainty_all_model,
                      sex_score = FALSE)
 
 # Primary and secondary consumers.
 pri_lat_plot <- diet_lat_data %>% filter(trophic_level_binary == "Primary") %>% 
-  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(-0.1,2), 
                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
                      plot_label = "b", plot_model = primary_all_model) 
 
 sec_lat_plot <- diet_lat_data %>% filter(trophic_level_binary == "Secondary") %>% 
-  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(-0.1,2), 
                      ybreaks =  c(0,1.0,2.0), lab_x_pos = 20, lab_ypos = 1.5,
                      plot_label = "f", plot_model = secondary_all_model) 
 
 # Trophic niche models.
 fruit_lat_plot <- fruit_lat_data %>% 
-  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(-0.1,2), 
                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
                      plot_label = "d", plot_model = fruit_all_model) 
 invert_lat_plot <- niche_lat_data %>% filter(trophic_niche == "Invertivore") %>% 
-  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,2), 
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(-0.1,2), 
                      ybreaks =  c(0,1.0, 2.0), lab_x_pos = 20, lab_ypos = 1.5, 
                      plot_label = "h", plot_model = invert_all_model) 
 
@@ -353,24 +359,19 @@ invert_lat_plot <- niche_lat_data %>% filter(trophic_niche == "Invertivore") %>%
         #### Add side plots used in supplementary figures ####
 
 
-# Read in extra models.
-hi_cert_model <- read_lat_model("highcert_all")
-prim_allterr_all_model <- read_lat_model("prim_allterr_all")
-prim_yearterr_all_model <- read_lat_model("prim_yearterr_all")
-sec_allterr_all_model <- read_lat_model("sec_allterr_all")
-sec_yearterr_all_model <- read_lat_model("sec_yearterr_all")
+
 
 
 # Sexual lat gradient for high data certainty.
 med_sex_lat_plot <- med_lat_data %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.2, plot_label = "b",
+                       ybreaks =  c(0,0.5,1.0), lab_ypos = 1.11, lab_x_pos = 35, plot_label = "b",
                        plot_model = allbirds_high_model,
                        sex_score = TRUE)
 
 hi_sex_lat_plot <- hi_lat_data %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.8), 
-                       ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 0.3, plot_label = "d",
+                       ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.67, lab_x_pos = 35, plot_label = "d",
                        plot_model = hi_cert_model,
                        sex_score = TRUE)
 
@@ -378,27 +379,27 @@ hi_sex_lat_plot <- hi_lat_data %>%
 # Primary terr.
 pri_terr_lat_plot <- terr_diet_lat_data %>% filter(trophic_level_binary == "Primary") %>% 
   brms_lat_side_plot(ylabel = "Proportion of species", ylimits = c(0,1), 
-                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "b",
+                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.93, plot_label = "b",
                        plot_model = prim_allterr_all_model,
                        sex_score = FALSE)
 # Primary year terr.
 pri_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_level_binary == "Primary") %>% 
   brms_lat_side_plot(ylabel = "Proportion of species", ylimits = c(0,1), 
-                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "d",
+                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.93, plot_label = "d",
                        plot_model = prim_yearterr_all_model,
                        sex_score = FALSE)
 
 # Secondary terr.
 sec_terr_lat_plot <- terr_diet_lat_data %>% filter(trophic_level_binary == "Secondary") %>% 
   brms_lat_side_plot(ylabel = "Proportion of species", ylimits = c(0,1), 
-                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "f",
+                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.93, plot_label = "f",
                        plot_model = sec_allterr_all_model,
                        sex_score = FALSE)
 
 # Secondary year terr.
 sec_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_level_binary == "Secondary") %>% 
   brms_lat_side_plot(ylabel = "Proportion of species", ylimits = c(0,1), 
-                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.9, plot_label = "h",
+                       ybreaks =  c(0,0.5,1.0), lab_ypos = 0.93, plot_label = "h",
                        plot_model = sec_yearterr_all_model,
                        sex_score = FALSE)
 
@@ -412,37 +413,37 @@ sec_yearterr_lat_plot <- year_terr_diet_lat_data %>% filter(trophic_level_binary
 # no_mig_all_model <- read_lat_model("no_mig_all")
 # terr_all_model <- read_lat_model("terr_all")
 # no_terr_all_model <- read_lat_model("no_terr_all")
-
+(1.3/1.4)*1
 
 # Make the side plots.
 mig_lat_plot <- mig_lat_data %>% filter(migration_binary == "Strong") %>% 
-  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.1, lab_x_pos = 35, plot_label = "b",
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.5), 
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.39, lab_x_pos = 35, plot_label = "b",
                      plot_model = mig_all_model, 
                      sex_score = TRUE)
 
 no_mig_lat_plot <- mig_lat_data %>% filter(migration_binary == "Weak") %>% 
-  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.2), 
-                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.1, lab_x_pos = 35, plot_label = "d",
+  brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.5), 
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.39, lab_x_pos = 35, plot_label = "d",
                      plot_model = no_mig_all_model, 
                      sex_score = TRUE)
 
 
-terr_lat_plot <- terr_lat_data %>% filter(territoriality_binary == "Territory") %>% 
+terr_lat_plot <- terr_lat_data %>% filter(territoriality_binary == "Territorial") %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.5), 
-                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.3, lab_x_pos = 35, plot_label = "b",
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.39, lab_x_pos = 35, plot_label = "b",
                      plot_model = terr_all_model,
                      sex_score = TRUE)
 
-no_terr_lat_plot <- terr_lat_data %>% filter(territoriality_binary == "No territory") %>% 
+no_terr_lat_plot <- terr_lat_data %>% filter(territoriality_binary == "Non-territorial") %>% 
   brms_lat_side_plot(ylabel = "Sexual selection", ylimits = c(0,1.5), 
-                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.3, lab_x_pos = 35, plot_label = "d",
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.39, lab_x_pos = 35, plot_label = "d",
                      plot_model = no_terr_all_model, 
                      sex_score = TRUE)
 
 
 # Export the plots.
-save(list = ls(pattern =  "lat_plot"), file = "Plots/Maps/relative_size_latitudinal_sideplots.Rdata")
+save(list = ls(pattern =  "lat_plot"), file = "Plots/Maps/purple_relative_remove_10_latitudinal_sideplots.Rdata")
 gc()
 
 

@@ -1,5 +1,5 @@
 ###############################################################################
-# Simple brms models on cluster  #
+                     # Simple brms models on cluster  #
 ###############################################################################
 
 # Packages to load.
@@ -20,7 +20,7 @@ rm(list=ls())
 
 
 ################################################################################
-#### Set up array iteration ####
+                    #### Set up array iteration ####
 
 
 # Get the array number from the job script.
@@ -37,14 +37,14 @@ response_type <- c("ordinal", "logistic")
 all_combos <- expand.grid(response_type, data_type)
 
 # Tree type.
-response_type <- all_combos[array_number, 1] %>% as.numeric()
+response_type <- all_combos[array_number, 1] %>% as.character()
 
 # Data type.
 data_type <- all_combos[array_number, 2] %>% as.character()
 
 
 ###############################################################################
-#### Read in the data #####
+                        #### Read in the data #####
 
 # Functions.
 source("Code/functions.R")
@@ -72,7 +72,7 @@ model_data <- model_data[row.names(model_covar),]
 
 
 ###############################################################################
-#### Prepare predictor variables ######
+             #### Prepare predictor variables ######
 
 # Set as factor, then re-level for appropriate reference group.
 model_data %<>% mutate(
@@ -115,24 +115,24 @@ model_pathway <- paste0("Results/Models/Consensus/Multivariate/", response_type,
 
 #library(standist) ~ for visualising priors.
 # # # Add un-informative priors.
-# normal_priors <- c(prior(normal(0,1), class="Intercept"),
-#                    prior(normal(0,1), class="b"),
-#                    prior(gamma(2,1), "sd")) # Gamma 2,1 probs seems to work well given all previous models end up with values around 1
-# 
+normal_priors <- c(prior(normal(0,1), class="Intercept"),
+                   prior(normal(0,1), class="b"),
+                   prior(gamma(2,1), "sd")) # Gamma 2,1 probs seems to work well given all previous models end up with values around 1
+
 
 # Run brms models.
 brms_model <- brm(
   brms_formula,
   data = model_data,
   data2 = list(A=model_covar),
-  #prior = normal_priors,
+  prior = normal_priors,
   iter = 10000,
   warmup = 8000,
   chains = 2,
   cores = 32,
   init = 0,
   file = model_pathway,
-  control = list(adapt_delta = 0.9),
+  #control = list(adapt_delta = 0.9),
   normalize = FALSE,
   backend = "cmdstanr",
   threads = threading(16))

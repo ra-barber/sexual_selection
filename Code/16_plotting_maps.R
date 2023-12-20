@@ -100,7 +100,10 @@ gc()
 
 
 # Load in the side plots.
-load("Plots/Maps/latitudinal_sideplots.Rdata")
+#load("Plots/Maps/latitudinal_sideplots.Rdata")
+#load("Plots/Maps/relative_size_latitudinal_sideplots.Rdata")
+load("Plots/Maps/purple_relative_remove_10_latitudinal_sideplots.Rdata")
+
 
 # Create data frame of land to use to crop ggplot maps.
 land_data <- as.data.frame(land, xy=TRUE)
@@ -128,13 +131,13 @@ sex_both_plots <- ggarrange(sex_maps, sex_side_plots, ncol = 2, widths = c(3,1.5
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures/figure_2.png", height = 10, width = 15, dpi = 600)
-ggsave("Figures/figure_2.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Figures_relative_error/figure_2.png", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_relative_error/figure_2.pdf", height = 10, width = 15, dpi = 600, bg="white")
 gc()
 
 # Try removing excess objects to free up space.
 rm(sex_plot, cert_plot, sex_maps, sex_side_plots, sex_both_plots)
-rm(sex_raster, cert_raster)
+#rm(sex_raster, cert_raster)
 
 
 ###############################################################################
@@ -160,8 +163,8 @@ niche_both_plots <- ggarrange(niche_maps, niche_side_plots, ncol = 2, widths = c
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export.
-ggsave("Figures/figure_3.png", height = 20, width = 15, dpi = 900)
-ggsave("Figures/figure_3.pdf", height = 20, width = 15, dpi = 900)
+ggsave("Figures_relative_error/figure_3.png", height = 20, width = 15, dpi = 900, bg="white")
+ggsave("Figures_relative_error/figure_3.pdf", height = 20, width = 15, dpi = 900, bg="white")
 
 
 ###############################################################################
@@ -181,8 +184,8 @@ cert_both_plots <- ggarrange(cert_maps, cert_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures/figure_ED_3.png", height = 10, width = 15, dpi = 600)   
-ggsave("Figures/figure_ED_3.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Figures_relative_error/figure_ED_3.png", height = 10, width = 15, dpi = 600, bg="white")   
+ggsave("Figures_relative_error/figure_ED_3.pdf", height = 10, width = 15, dpi = 600, bg="white")
 
 
 ###############################################################################
@@ -202,8 +205,8 @@ mig_both_plots <- ggarrange(mig_maps, mig_side_plots, ncol = 2, widths = c(3,1.5
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures/figure_ED_4.png", height = 10, width = 15, dpi = 600)
-ggsave("Figures/figure_ED_4.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Figures_relative_error/figure_ED_4.png", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_relative_error/figure_ED_4.pdf", height = 10, width = 15, dpi = 600, bg="white")
 
 # Show high certainty sexual selection maps.
 terr_sex_plot <- panel_ggplot_raster(terr_sex_raster, plot_title = "Territorial (n = 7261)", plot_label = "a")
@@ -218,20 +221,20 @@ terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures/figure_ED_5.png", height = 10, width = 15, dpi = 600)
-ggsave("Figures/figure_ED_5.pdf", height = 10, width = 15, dpi = 600)
+ggsave("Figures_relative_error/figure_ED_5.png", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_relative_error/figure_ED_5.pdf", height = 10, width = 15, dpi = 600, bg="white")
 
 
 ###############################################################################
                   #### Extended data figure 8 ####
 
 # Territoriality maps.
-p_terr_plot <- panel_ggplot_raster(p_terr_raster, plot_title = expression(bold("1"^ry*" consumers")), plot_label = "a")
+p_terr_plot <- panel_ggplot_raster(p_terr_raster, plot_title = expression(bold("1"^ry*" consumers (n = 1379)")), plot_label = "a")
 p_year_terr_plot <- ggplot_terr_raster(p_year_terr_raster, 6, "") +   # Has a custom function due to lack of variation meaning it needs custom breaks.
-  annotate("text", x = 20, y = -48, label  = expression(bold("1"^ry*" consumers")), size = 8, fontface = 2)+
+  annotate("text", x = 20, y = -48, label  = expression(bold("1"^ry*" consumers (n = 333)")), size = 8, fontface = 2)+
   annotate("text", x =  -170, y = 80, label  = "c", size = 12, fontface = 2)
-s_terr_plot <- panel_ggplot_raster(s_terr_raster, plot_title = expression(bold("2"^ry*" consumers")), plot_label = "e")
-s_year_terr_plot <- panel_ggplot_raster(s_year_terr_raster, plot_title = expression(bold("2"^ry*" consumers")), plot_label = "g")
+s_terr_plot <- panel_ggplot_raster(s_terr_raster, plot_title = expression(bold("2"^ry*" consumers (n = 5882)")), plot_label = "e")
+s_year_terr_plot <- panel_ggplot_raster(s_year_terr_raster, plot_title = expression(bold("2"^ry*" consumers (n = 2640)")), plot_label = "g")
 
 # Arrange side plots and maps.
 terr_side_plots <- ggarrange(pri_terr_lat_plot + rremove("xlab") + rremove("x.text"), 
@@ -246,8 +249,12 @@ terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export.
-ggsave("Figures/figure_ED_8.png", height = 20, width = 15, dpi = 900)
-ggsave("Figures/figure_ED_8.pdf", height = 20, width = 15, dpi = 900)
+#ggsave("Figures_relative_error/figure_ED_8.png", height = 20, width = 15, dpi = 900, bg="white")
+#ggsave("Figures_relative_error/figure_ED_8.pdf", height = 20, width = 15, dpi = 900, bg="white")
+
+ggsave("Figures_relative_error/test_figure_ED_8.png", height = 20, width = 15, dpi = 600, bg="white")
+ggsave("Figures_relative_error/test_figure_ED_8.pdf", height = 20, width = 15, dpi = 600, bg="white")
+
 
 
 ###############################################################################
@@ -260,7 +267,7 @@ h_spec_plot <- panel_ggplot_raster(h_spec_raster, plot_title = "Certainty 4 (n =
   theme(plot.margin = margin(l = -0.3, r =0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures/figure_S2.png", height = 5, width = 10, dpi = 600)
+ggsave("Figures_relative_error/figure_S2.png", height = 5, width = 10, dpi = 600)
 
 
 ################################################################################
