@@ -107,10 +107,8 @@ gc()
 # Load in the side plots.
 #load("Plots/Maps/latitudinal_sideplots.Rdata")
 #load("Plots/Maps/relative_size_latitudinal_sideplots.Rdata")
-#load("Plots/Maps/purple_relative_remove_10_latitudinal_sideplots.Rdata")
-load("Plots/Maps/behr_200_latitudinal_sideplots.Rdata")
+load("Plots/Maps/purple_relative_remove_10_latitudinal_sideplots.Rdata")
 
-load("Plots/Maps/behr_500_and_100_latitudinal_sideplots.Rdata")
 
 # Create data frame of land to use to crop ggplot maps.
 land_data <- as.data.frame(land, xy=TRUE)
@@ -138,8 +136,8 @@ sex_both_plots <- ggarrange(sex_maps, sex_side_plots, ncol = 2, widths = c(3,1.5
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_500_and_100/figure_2.png", height = 10, width = 15, dpi = 600, bg="white")
-ggsave("Figures_500_and_100/figure_2.pdf", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/figure_2.png", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/figure_2.pdf", height = 10, width = 15, dpi = 600, bg="white")
 gc()
 
 # Try removing excess objects to free up space.
@@ -153,7 +151,13 @@ rm(sex_plot, cert_plot, sex_maps, sex_side_plots, sex_both_plots)
 
 # Create maps of the four niches.
 p_sex_plot <- panel_ggplot_raster(p_sex_raster, plot_title = expression(bold("1"^ry*" consumers (n = 2753)")), plot_label = "a")
-fruit_sex_plot <- panel_ggplot_raster(fruit_sex_raster, plot_title = "Frugivores (n = 1025)", plot_label = "c")
+
+fruit_sex_plot <- panel_ggplot_raster(fruit_sex_raster, plot_title = "Frugivores (n = 1025)", plot_label = "c") 
+
+# fruit_sex_plot <- ggplot_terr_raster(fruit_sex_raster) +
+#   annotate("text", x = 20, y = -48, label  = "Frugivores (n = 1025)", size = 8, fontface = 2)+
+#   annotate("text", x =  -170, y = 80, label  = "c", size = 12, fontface = 2)
+
 s_sex_plot <- panel_ggplot_raster(s_sex_raster, plot_title = expression(bold("2"^ry*" consumers (n = 7083)")), plot_label = "e")
 invert_sex_plot <- panel_ggplot_raster(invert_sex_raster, plot_title = "Invertivores (n = 4694)", plot_label = "g")
 
@@ -170,12 +174,8 @@ niche_both_plots <- ggarrange(niche_maps, niche_side_plots, ncol = 2, widths = c
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export.
-ggsave("Figures_500_and_100/figure_3.png", height = 20, width = 15, dpi = 900, bg="white")
-ggsave("Figures_500_and_100/figure_3.pdf", height = 20, width = 15, dpi = 900, bg="white")
-
-# Try removing excess objects to free up space.
-rm(p_sex_plot, fruit_sex_plot, s_sex_plot, invert_sex_plot,
-   niche_side_plots, niche_maps, niche_both_plots)
+ggsave("Figures_cell_models/figure_3.png", height = 20, width = 15, dpi = 900, bg="white")
+ggsave("Figures_cell_models/figure_3.pdf", height = 20, width = 15, dpi = 900, bg="white")
 
 
 ###############################################################################
@@ -195,8 +195,8 @@ cert_both_plots <- ggarrange(cert_maps, cert_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_500_and_100/figure_ED_3.png", height = 10, width = 15, dpi = 600, bg="white")   
-ggsave("Figures_500_and_100/figure_ED_3.pdf", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/figure_ED_3.png", height = 10, width = 15, dpi = 600, bg="white")   
+ggsave("Figures_cell_models/figure_ED_3.pdf", height = 10, width = 15, dpi = 600, bg="white")
 
 
 ###############################################################################
@@ -216,8 +216,8 @@ mig_both_plots <- ggarrange(mig_maps, mig_side_plots, ncol = 2, widths = c(3,1.5
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_500_and_100/figure_ED_4.png", height = 10, width = 15, dpi = 600, bg="white")
-ggsave("Figures_500_and_100/figure_ED_4.pdf", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/figure_ED_4.png", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/figure_ED_4.pdf", height = 10, width = 15, dpi = 600, bg="white")
 
 # Show high certainty sexual selection maps.
 terr_sex_plot <- panel_ggplot_raster(terr_sex_raster, plot_title = "Territorial (n = 7261)", plot_label = "a")
@@ -232,8 +232,8 @@ terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_500_and_100/figure_ED_5.png", height = 10, width = 15, dpi = 600, bg="white")
-ggsave("Figures_500_and_100/figure_ED_5.pdf", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/figure_ED_5.png", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/figure_ED_5.pdf", height = 10, width = 15, dpi = 600, bg="white")
 
 
 ###############################################################################
@@ -263,10 +263,10 @@ terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,
 #ggsave("Figures_relative_error/figure_ED_8.png", height = 20, width = 15, dpi = 900, bg="white")
 #ggsave("Figures_relative_error/figure_ED_8.pdf", height = 20, width = 15, dpi = 900, bg="white")
 
-ggsave("Figures_500_and_100/figure_ED_8.png", height = 20, width = 15, dpi = 600, bg="white")
-ggsave("Figures_500_and_100/figure_ED_8.pdf", height = 20, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/test_figure_ED_8.png", height = 20, width = 15, dpi = 600, bg="white")
+ggsave("Figures_cell_models/test_figure_ED_8.pdf", height = 20, width = 15, dpi = 600, bg="white")
 
-
+rm(sex_ranges)
 
 ###############################################################################
                    ##### Figure S2 ######

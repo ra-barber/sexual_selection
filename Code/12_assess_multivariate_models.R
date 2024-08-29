@@ -26,8 +26,14 @@ source("Code/functions.R")
 ###############################################################################
                   #### Read in the models #####
 
-all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/multivariate_all_models.rds")
-high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Combined_models/Multivariate/multivariate_high_models.rds")
+all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Old_models/Combined_models/Multivariate/multivariate_all_models.rds")
+high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Old_models/Combined_models/Multivariate/multivariate_high_models.rds")
+
+# Look at the summaries.
+summary(all_models)
+summary(high_models)
+
+gc()
 
 ###############################################################################
                     #### Model Diagnostics #####
@@ -45,15 +51,15 @@ summary(high_models)
 ###############################################################################
                        #### Forest Plots #####
 
+# 
+# # Quick function to avoid repeating lines.
+# brms_forest <- function(model){
+#   mcmc_areas(model, regex_pars = "^b_[a-z]", prob = 0.95, prob_outer = 0.95)
+# }
 
-# Quick function to avoid repeating lines.
-brms_forest <- function(model){
-  mcmc_areas(model, regex_pars = "^b_[a-z]", prob = 0.95, prob_outer = 0.95)
-}
-
-# Feb models.
-brms_forest(all_models)
-brms_forest(high_models)
+# # Feb models.
+# brms_forest(all_models)
+# brms_forest(high_models)
 
 # ###############################################################################
 #                           #### P mapping #####
@@ -179,13 +185,13 @@ high_plotdata %<>% add_legend_info()
 library(ggnewscale)
 
 # Dark and light colours (not all used anymore)
-light_colours <- c( "#77AD78","#7494EA", "#C98986", "#D8C77B")   #F7D460   #F6CE5F
-dark_colours <- c("#214F4B", "#05299E", "#8D0801","#A88A05")
-light_colours <- c("#7494EA",  "#77AD78", "#C98986", "#D8C77B")   #F7D460   #F6CE5F
+#light_colours <- c( "#77AD78","#7494EA", "#C98986", "#D8C77B")   #F7D460   #F6CE5F
+#dark_colours <- c("#214F4B", "#05299E", "#8D0801","#A88A05")
+#light_colours <- c("#7494EA",  "#77AD78", "#C98986", "#D8C77B")   #F7D460   #F6CE5F
 
-light_colours <- c( "#C98986",  "#77AD78", "#7494EA", "#D8C77B")   #F7D460   #F6CE5F
+#light_colours <- c( "#C98986",  "#77AD78", "#7494EA", "#D8C77B")   #F7D460   #F6CE5F
 light_colours <- c("#77AD78", "#C98986", "#7494EA", "#D8C77B") 
-dark_colours <- c( "#05299E","#214F4B", "#8D0801","#A88A05")
+#dark_colours <- c( "#05299E","#214F4B", "#8D0801","#A88A05")
 
 # Manual order for legend.
 legend_order <- c("Life history","Environment","Diet interaction", "Devlopment interaction")

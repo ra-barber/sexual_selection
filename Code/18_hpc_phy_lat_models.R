@@ -69,13 +69,10 @@ data_type <- "high"
 source("Code/functions.R")
 
 # Read in the tree.
-#model_tree <- read.tree("Data/Trees/prum_trees.tre")[[tree_number]]
-
 model_tree <- read.tree("Data/Trees/prum_consensus_tree.tre")
 
 # Read in the life history traits.
 model_data <- read_ss_data()
-#model_data$abs_lat <- abs(model_data$latitude)
 
 # Filter for high cert.
 if (data_type == "high"){
@@ -104,36 +101,6 @@ names(all_datasets) <- c("allbirds", "primary", "fruit", "secondary", "invert",
 if (model_type != "certainty"){
 model_data <-  all_datasets[[model_type]]
 }
-
-# 
-# # Filter for trophic level.
-# if (model_type == "primary"){
-#   model_data %<>% filter(trophic_binary == "Primary")
-# }
-# if (model_type == "secondary"){
-#   model_data %<>% filter(trophic_binary == "Secondary")
-# }
-# if (model_type == "frugivore"){
-#   model_data %<>% filter(trophic_niche == "Frugivore")
-# }
-# if (model_type == "invertivore"){
-#   model_data %<>% filter(trophic_niche == "Invertivore")
-# }
-# 
-# # Filter for ecological partition.
-# if (model_type == "mig"){
-#   model_data %<>% filter(migration_binary == "Strong")
-# }
-# if (model_type == "no_mig"){
-#   model_data %<>% filter(migration_binary == "Weak")
-# }
-# if (model_type == "terr"){
-#   model_data %<>% filter(territory_binary == "Territory")
-# }
-# if (model_type == "no_terr"){
-#   model_data %<>% filter(territory_binary == "No territory")
-# }
-
 
 # Drop tips on the tree.
 model_tree <- drop.tip(model_tree, setdiff(model_tree$tip.label, model_data$tree_tip))

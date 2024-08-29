@@ -27,7 +27,6 @@ source("Code/functions.R")
 
 
 # Read in the models.
-
 first_half <- "Z:/home/sexual_selection/Results/Models/Consensus/Univariate/ordinal_"
 
 # Read in models using raw data.
@@ -40,6 +39,14 @@ high_tro_model <- readRDS(paste0(first_half, "tro_high.rds"))
 high_mig_model <- readRDS(paste0(first_half, "mig_high.rds"))
 high_terr_model <- readRDS(paste0(first_half, "terr_high.rds"))
 high_temp_model <- readRDS(paste0(first_half, "temp_z_high.rds"))
+
+# Read in the multivariate models.
+multi_model <- readRDS("Z:/home/sexual_selection/Results/Models/Consensus/Multivariate/ordinal_all.rds")
+high_multi_model <- readRDS("Z:/home/sexual_selection/Results/Models/Consensus/Multivariate/ordinal_high.rds")
+
+
+
+
 
 library(tictoc)
 tic()
@@ -63,6 +70,10 @@ toc()
 
 high_terr_marg_r2 <- marginal_R2_MZ(high_terr_model)
 high_temp_marg_r2 <- marginal_R2_MZ(high_temp_model)
+
+# Multivariate marginal.
+multi_marg_r2 <- marginal_R2_MZ(multi_model)
+high_multi_marg_r2 <- marginal_R2_MZ(high_multi_model)
 
 
 
@@ -164,7 +175,13 @@ Bayes_R2_MZ     0.94    0.0087     0.92     0.96
 Bayes_R2_MZ     0.95    0.0073     0.93     0.96
 
 
-
+# Multivariate models.
+> multi_marg_r2 <- marginal_R2_MZ(multi_model)
+Estimate Est.Error l-95% CI u-95% CI
+Bayes_R2_MZ     0.45     0.032     0.38     0.51
+> high_multi_marg_r2 <- marginal_R2_MZ(high_multi_model)
+Estimate Est.Error l-95% CI u-95% CI
+Bayes_R2_MZ     0.54     0.036     0.47     0.61
 
 
 

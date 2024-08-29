@@ -28,7 +28,8 @@ source("Code/functions.R")
                              #### Data ####
 
 # Read in the life history traits.
-full_data <- read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 2, na = "NA") %>% 
+data_pathway <- "Data/sexual_selection_dataset_04_09.xlsx"
+full_data <- read_excel(data_pathway, sheet = 2, na = "NA") %>% 
   clean_names()
 high_data <- full_data %>% filter(data_certainty > 2)
 
@@ -36,7 +37,7 @@ high_data <- full_data %>% filter(data_certainty > 2)
 tree <- read.tree("Data/Trees/prum_trees.tre")[[1]]
 
 # Read in Clements data.
-clements_data <- read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 3, na = "NA") %>% 
+clements_data <- read_excel(data_pathway, sheet = 3, na = "NA") %>% 
   clean_names()
 clements_data$sexual_selection %<>% as.numeric()
 clements_data %<>% tidyr::drop_na(sexual_selection)
