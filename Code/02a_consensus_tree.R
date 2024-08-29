@@ -2,7 +2,6 @@
                      ##### Make a consensus tree #####
 ###############################################################################
 
-# This script does something new. Pretty sick eh.
 
 
 # Clean the environment.

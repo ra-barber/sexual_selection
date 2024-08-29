@@ -57,11 +57,6 @@ data_type <- all_combos[array_number, 3] %>% as.character()
 # Tree type.
 tree_number <- all_combos[array_number, 4] %>% as.numeric()
 
-# Time for array 1 - 400
-# 72 hours
-
-# Time for array 401 - 800
-# 48 Hours
 
 
 

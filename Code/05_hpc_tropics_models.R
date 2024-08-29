@@ -24,7 +24,7 @@ rm(list=ls())
 
 # Get the array number from the job script.
 array_number <- as.numeric(Sys.getenv("ARRAY_NUMBER"))
-array_number <- 9
+array_number
 
 # Model (In order of size and therefore speed).
 model_type <- c("allbirds", "fruit", "primary", "mig", "invert", "secondary", "terr",
@@ -119,7 +119,6 @@ trop_brms_model <- function(data_set = model_data, response = "sexual_selection"
   brm(
     brms_formula,
     data = data_set,
-    #data2 = list(A=model_covar),
     #prior = linear_priors,
     iter = 10000,
     warmup = 8000,

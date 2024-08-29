@@ -232,6 +232,8 @@ ggsave("Plots/Data/extended_data_figure_1.tiff", width = 8, height = 8)
 # Read in the most up to date version of the SS database.
 clean_data <- read.csv("Data/sexual_selection_cleaned_01_08.csv") %>% clean_names()  # We have since cleaned this data even more.
 
+clean_data <- full_data
+
 # Create a palette to match bin length.
 pal <- c('#3B9AB2', '#78B7C5', '#EBCC2A', '#E1AF00', '#F21A00')
 
@@ -286,7 +288,6 @@ prop_plot <- ggplot(merged_data, aes(x = data_certainty, y = sex_mean, col = sex
         line = element_line(linewidth = 0.5),
         legend.spacing.y = unit(1, "cm"),
         legend.key.height = unit(0.5, "cm"),
-        #legend.title = element_text(size = rel(0.8)),
         legend.title = element_blank(),
         axis.title.x = element_text(size = rel(0.9)))
 prop_plot
@@ -306,7 +307,6 @@ prop_plot <- ggplot(merged_data, aes(x = data_certainty, y = sex_mean, col = sex
         legend.spacing.y = unit(1, "cm"),
         legend.key.height = unit(0.5, "cm"),
         legend.title = element_text(size = rel(0.8), margin = margin(b = -15)),
-        #legend.title = element_blank(),
         axis.title.x = element_text(size = rel(0.9)))
 
 # Put the plots together.
@@ -321,84 +321,84 @@ ggsave("Plots/Data/figure_s1.png", width = 13, height = 6)
 
 
 
-###############################################################################
-              #### Check raw correlations & VIFs ####
+# ###############################################################################
+#               #### Check raw correlations & VIFs ####
+# 
+# library(GGally)
+# 
+# lat_variables <- sexual_selection %>% dplyr::select(centroid_z, temp_seasonality_z, 
+#                                               terr_bi_c, migration_bi_c, trophic_level_c)
+# 
+#  
+# ggcorr(lat_variables, label = TRUE, method =c("everything","spearman"), label_round = 3)
+# 
+# # Model formula for VIF values.
+# model_formula <- "sexual_selection ~ terr_bi_c + migration_bi_c + 
+#     trophic_level_c + trophic_level_c*temp_seasonality_z + 
+#     terr_bi_c*temp_seasonality_z"
+# 
+# 
+# library(car)
+# 
+# # Check full model VIF.
+# test_model <- lm(model_formula, data = sexual_selection)
+# vif(test_model) %>% round(digits = 2)
+# 
+# # High certainty VIF.
+# test_model <- lm(model_formula, data = high_data)
+# vif(test_model) %>% round(digits = 2)
+# 
+# # See all two-way interactions.
+# model_formula <- "sexual_selection ~ (terr_bi_c + migration_bi_c + 
+#     trophic_level_c + temp_seasonality_z)^2"
+# test_model <- lm(model_formula, data = sexual_selection)
+# vif(test_model) %>% round(digits = 2)
 
-library(GGally)
+# 
+# ###############################################################################
+#                 #### Spatial autocorrelation ####
+# 
+# library(spdep)
+# library(rgeos)
+# library(sp)
+# library(sf)
 
-lat_variables <- sexual_selection %>% dplyr::select(centroid_z, temp_seasonality_z, 
-                                              terr_bi_c, migration_bi_c, trophic_level_c)
-
- 
-ggcorr(lat_variables, label = TRUE, method =c("everything","spearman"), label_round = 3)
-
-# Model formula for VIF values.
-model_formula <- "sexual_selection ~ terr_bi_c + migration_bi_c + 
-    trophic_level_c + trophic_level_c*temp_seasonality_z + 
-    terr_bi_c*temp_seasonality_z"
-
-
-library(car)
-
-# Check full model VIF.
-test_model <- lm(model_formula, data = sexual_selection)
-vif(test_model) %>% round(digits = 2)
-
-# High certainty VIF.
-test_model <- lm(model_formula, data = high_data)
-vif(test_model) %>% round(digits = 2)
-
-# See all two-way interactions.
-model_formula <- "sexual_selection ~ (terr_bi_c + migration_bi_c + 
-    trophic_level_c + temp_seasonality_z)^2"
-test_model <- lm(model_formula, data = sexual_selection)
-vif(test_model) %>% round(digits = 2)
-
-
-###############################################################################
-                #### Spatial autocorrelation ####
-
-library(spdep)
-library(rgeos)
-library(sp)
-library(sf)
-
-# Select data.
-just_sex_long_lat <- full_data %>% select(sexual_selection, centroid_latitude, centroid_longitude)
-
-# Create binary trait.
-just_sex_long_lat$sexual_binary <- 0
-just_sex_long_lat$sexual_binary[just_sex_long_lat$sexual_selection > 0] <- 1
-just_sex_long_lat %<>% na.omit()
-
-# Create a SpatialPoints object
-long_lat <- data.frame(lat = just_sex_long_lat$centroid_latitude, long = just_sex_long_lat$centroid_longitude)
-data_sf <- st_as_sf(long_lat, coords = c("long", "lat"),
-                    # Change to your CRS
-                    crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
-coords <- st_coordinates(data_sf)
-sp_points <- SpatialPoints(coords)
-
-# Define the number of nearest neighbours
-k <- 5
-
-# Create a spatial weights object based on k nearest neighbors
-nb <- knn2nb(knearneigh(sp_points, k = k, longlat = TRUE))
-
-# Convert the spatial weights object to listw format
-w <- nb2listw(nb, style="B")
-
-# Generate random attribute values
-x <- just_sex_long_lat$sexual_binary %>% as.factor()
-x <- just_sex_long_lat$sexual_selection %>% as.factor()
-just_sex_long_lat
-# Perform Monte Carlo simulation
-join_count <- joincount.mc(listw = w, fx = x, nsim = 999, alternative = "two.sided")
-
-# Simulated join count statistics
-join_count
-
-joincount.test(x, w)
+# # Select data.
+# just_sex_long_lat <- full_data %>% select(sexual_selection, centroid_latitude, centroid_longitude)
+# 
+# # Create binary trait.
+# just_sex_long_lat$sexual_binary <- 0
+# just_sex_long_lat$sexual_binary[just_sex_long_lat$sexual_selection > 0] <- 1
+# just_sex_long_lat %<>% na.omit()
+# 
+# # Create a SpatialPoints object
+# long_lat <- data.frame(lat = just_sex_long_lat$centroid_latitude, long = just_sex_long_lat$centroid_longitude)
+# data_sf <- st_as_sf(long_lat, coords = c("long", "lat"),
+#                     # Change to your CRS
+#                     crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+# coords <- st_coordinates(data_sf)
+# sp_points <- SpatialPoints(coords)
+# 
+# # Define the number of nearest neighbours
+# k <- 5
+# 
+# # Create a spatial weights object based on k nearest neighbors
+# nb <- knn2nb(knearneigh(sp_points, k = k, longlat = TRUE))
+# 
+# # Convert the spatial weights object to listw format
+# w <- nb2listw(nb, style="B")
+# 
+# # Generate random attribute values
+# x <- just_sex_long_lat$sexual_binary %>% as.factor()
+# x <- just_sex_long_lat$sexual_selection %>% as.factor()
+# just_sex_long_lat
+# # Perform Monte Carlo simulation
+# join_count <- joincount.mc(listw = w, fx = x, nsim = 999, alternative = "two.sided")
+# 
+# # Simulated join count statistics
+# join_count
+# 
+# joincount.test(x, w)
 
 # Suggests significant autocorrelation.
 
@@ -411,44 +411,44 @@ joincount.test(x, w)
 
 
 
-################################################################################
-    #### Code to create a bar plot, filled by proportions of category ####
+# ################################################################################
+#     #### Code to create a bar plot, filled by proportions of category ####
+# 
+# 
+# # Basic bar plot.
+# grouped_data <- clean_data %>% 
+#   group_by(data_certainty) %>% 
+#   summarise(sex_mean = mean(sexual_selection),
+#             sex_sd = sd(sexual_selection),
+#             sex_se = sd(sexual_selection)/sqrt(length(sexual_selection)))
+# # test_plot <- grouped_data %>% ggplot(aes(x = data_certainty, y = sex_mean, alpha = data_certainty, fill = as.factor(sex_mean))) +
 
 
-# Basic bar plot.
-grouped_data <- clean_data %>% 
-  group_by(data_certainty) %>% 
-  summarise(sex_mean = mean(sexual_selection),
-            sex_sd = sd(sexual_selection),
-            sex_se = sd(sexual_selection)/sqrt(length(sexual_selection)))
-# test_plot <- grouped_data %>% ggplot(aes(x = data_certainty, y = sex_mean, alpha = data_certainty, fill = as.factor(sex_mean))) +
-
-
-# Try merging data.
-merged_data <- clean_data %>% left_join(grouped_data)
-
-merged_data$mean_y <- merged_data$sex_mean
-
-merged_data$mean_y[merged_data$data_certainty == 1] <- mean(merged_data$mean_y[merged_data$data_certainty == 1])/length(merged_data$mean_y[merged_data$data_certainty == 1])
-merged_data$mean_y[merged_data$data_certainty == 2] <- mean(merged_data$mean_y[merged_data$data_certainty == 2])/length(merged_data$mean_y[merged_data$data_certainty == 2])
-merged_data$mean_y[merged_data$data_certainty == 3] <- mean(merged_data$mean_y[merged_data$data_certainty == 3])/length(merged_data$mean_y[merged_data$data_certainty == 3])
-merged_data$mean_y[merged_data$data_certainty == 4] <- mean(merged_data$mean_y[merged_data$data_certainty == 4])/length(merged_data$mean_y[merged_data$data_certainty == 4])
-
-merged_data %>% filter(data_certainty == 4) %>% pull(sex_mean)
-
-merged_data$sex_fact <- factor(merged_data$sexual_selection, levels = 4:0)
-
-merged_data %>% ggplot(aes(x = data_certainty, y = mean_y, 
-                           fill = sex_fact, col = sex_fact)) + 
-  geom_col(position = "stack") + 
-  scale_fill_manual(values = pal, breaks = 0:4) +
-  scale_colour_manual(values = pal, breaks = 0:4) +
-  theme_classic(base_size = 20) + 
-  theme(legend.position = "none",
-        line = element_line(linewidth = 0.5)) + 
-  geom_errorbar(aes(ymin = sex_mean - sex_se, ymax = sex_mean + sex_se), colour = "black", width = 0.2, linewidth = 0.5) + 
-  geom_point(aes(y = sex_mean), size =3, colour = "black", show.legend = FALSE) + ylab("Sexual selection") + xlab("Data certainty")
-
-
-ggsave("Plots/Data/figure_s2_test.png", width = 8, height = 8)
-
+# # Try merging data.
+# merged_data <- clean_data %>% left_join(grouped_data)
+# 
+# merged_data$mean_y <- merged_data$sex_mean
+# 
+# merged_data$mean_y[merged_data$data_certainty == 1] <- mean(merged_data$mean_y[merged_data$data_certainty == 1])/length(merged_data$mean_y[merged_data$data_certainty == 1])
+# merged_data$mean_y[merged_data$data_certainty == 2] <- mean(merged_data$mean_y[merged_data$data_certainty == 2])/length(merged_data$mean_y[merged_data$data_certainty == 2])
+# merged_data$mean_y[merged_data$data_certainty == 3] <- mean(merged_data$mean_y[merged_data$data_certainty == 3])/length(merged_data$mean_y[merged_data$data_certainty == 3])
+# merged_data$mean_y[merged_data$data_certainty == 4] <- mean(merged_data$mean_y[merged_data$data_certainty == 4])/length(merged_data$mean_y[merged_data$data_certainty == 4])
+# 
+# merged_data %>% filter(data_certainty == 4) %>% pull(sex_mean)
+# 
+# merged_data$sex_fact <- factor(merged_data$sexual_selection, levels = 4:0)
+# 
+# merged_data %>% ggplot(aes(x = data_certainty, y = mean_y, 
+#                            fill = sex_fact, col = sex_fact)) + 
+#   geom_col(position = "stack") + 
+#   scale_fill_manual(values = pal, breaks = 0:4) +
+#   scale_colour_manual(values = pal, breaks = 0:4) +
+#   theme_classic(base_size = 20) + 
+#   theme(legend.position = "none",
+#         line = element_line(linewidth = 0.5)) + 
+#   geom_errorbar(aes(ymin = sex_mean - sex_se, ymax = sex_mean + sex_se), colour = "black", width = 0.2, linewidth = 0.5) + 
+#   geom_point(aes(y = sex_mean), size =3, colour = "black", show.legend = FALSE) + ylab("Sexual selection") + xlab("Data certainty")
+# 
+# 
+# ggsave("Plots/Data/figure_s2_test.png", width = 8, height = 8)
+# 

@@ -11,12 +11,12 @@
 
 
 # Read in the data without having to load extra packages.
-read_ss_data <- function(pathway = "Data/sexual_selection_dataset_04_09.xlsx"){
+read_ss_data <- function(pathway = "Data/sexual_selection_dataset_12_10.xlsx"){
   # Read in the data.
-  model_data <- readxl::read_excel("Data/sexual_selection_dataset_04_09.xlsx", sheet = 2, na = "NA")
+  model_data <- readxl::read_excel(pathway, sheet = 2, na = "NA")
   # Remove upper-case column names.
   model_data <- janitor::clean_names(model_data)
-  model_data %<>% dplyr::select(-notes, -recorder, -source)
+  model_data %<>% dplyr::select(-source)
   # Add in tree tips used in phylo models.
   model_data$tree_tip <- gsub(" ", "_", model_data$scientific_name_bird_tree)
   # Add in dummy territoriality variables used in EDF 8.
@@ -25,18 +25,18 @@ read_ss_data <- function(pathway = "Data/sexual_selection_dataset_04_09.xlsx"){
     year_terr_dummy = 0,
     terr_dummy = replace(terr_dummy, territoriality_binary == "Territorial", 1),
     year_terr_dummy = replace(year_terr_dummy, territoriality == "Strong", 1),
-    # Add in binary sexual selection for sensitivity analysis.
-    sexual_binary = sexual_selection,
-    sexual_binary = replace(sexual_binary, sexual_binary  <3, 0),
-    sexual_binary = replace(sexual_binary, sexual_binary  >0, 1),
-    # Try tertiary.
-    sexual_tertiary = sexual_selection,
-    sexual_tertiary = replace(sexual_tertiary, sexual_tertiary <3, 0),
-    sexual_tertiary = replace(sexual_tertiary, sexual_tertiary ==3, 1),
-    sexual_tertiary = replace(sexual_tertiary, sexual_tertiary ==4, 2),
-    # Try tertiary.
-    sexual_sens = sexual_selection,
-    sexual_sens = replace(sexual_sens, sexual_sens ==0, 1),
+    # # Add in binary sexual selection for sensitivity analysis.
+    # sexual_binary = sexual_selection,
+    # sexual_binary = replace(sexual_binary, sexual_binary  <3, 0),
+    # sexual_binary = replace(sexual_binary, sexual_binary  >0, 1),
+    # # Try tertiary.
+    # sexual_tertiary = sexual_selection,
+    # sexual_tertiary = replace(sexual_tertiary, sexual_tertiary <3, 0),
+    # sexual_tertiary = replace(sexual_tertiary, sexual_tertiary ==3, 1),
+    # sexual_tertiary = replace(sexual_tertiary, sexual_tertiary ==4, 2),
+    # # Try tertiary.
+    # sexual_sens = sexual_selection,
+    # sexual_sens = replace(sexual_sens, sexual_sens ==0, 1),
     
     # Absolute latitude.
     abs_lat = abs(latitude))

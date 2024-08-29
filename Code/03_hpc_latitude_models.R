@@ -21,8 +21,6 @@ library(janitor)
 set.seed(1993)
 
 
-## Make sure HPC functions script is updated before running.
-
 
 ################################################################################
                  #### Set up array iteration ####
@@ -137,7 +135,7 @@ lat_brms_model <- function(data_set = model_data, response = "sexual_selection",
   brm(
     brms_formula,
     data = data_set,
-    #prior = linear_priors,
+    prior = linear_priors,
     iter = 10000,
     warmup = 8000,
     chains = 4,
@@ -189,6 +187,3 @@ if (model_type == "secyearterr"){
   lat_brms_model(response = "year_terr_dummy", data_set = secondary_data, family = "bernoulli")
 }
 
-
-# # Export the model.
-# saveRDS(latitude_model, model_pathway)
