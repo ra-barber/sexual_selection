@@ -30,7 +30,7 @@ ebird_tree <- read.tree("Data/Trees/ebird_24may.tre")
 ebird_species <- ebird_tree$tip.label %>% str_replace("_", " ") %>% as.data.frame()
 
 # Most up to date version of the crosswalk.
-clements_crosswalk <- read_excel("Data/sexual_selection_dataset_12_10.xlsx", sheet = 5) %>% clean_names()
+clements_crosswalk <- read_excel("Data/supplementary_dataset_1.xlsx", sheet = 5) %>% clean_names()
 
 clements_crosswalk <- read_excel("Data/Clements_conversion/jetz_to_clements_crosswalk_07_06.xlsx") %>% clean_names()
 
@@ -232,23 +232,8 @@ all_ebird_clean <- rbind(new_clean, one_to_one_clean, one_to_many_clean, many_to
 
 write.csv(all_ebird_clean, "Data/Clements_conversion/clements_dichro_scores.csv", row.names = FALSE)
 
-###############################################################################
-                           #### Section 7 ####
-
-
-###############################################################################
-                           #### Section 8 ####
-
-# Look Rob, you've had your fun with the sectioning. 
-# They'll be no more sectioning today.
 
 
 ###############################################################################
                              #### END ####
 ###############################################################################
-
-
-###############################################################################
-              #### All the stuff I'm afraid to delete ####
-
-
