@@ -123,7 +123,7 @@ saveRDS(all_predictions, "Results/Models/Univariate/model_predictions.rds")
 
 # Extract temperature summaries.
 temp_est <- apply(temp_preds, 2, mean)
-temp_err <- apply(temp_preds, 2, stanard_error)
+temp_err <- apply(temp_preds, 2, standard_error)
 temp_summaries <- data.frame(temp_log = c(3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7),
                              estimate = temp_est,
                              error = temp_err,
@@ -135,8 +135,8 @@ extract_summaries <- function(matrix, levels =  c("Reference", "Main")){
   ref_mean <- mean(matrix[,1])
   main_mean <- mean(matrix[,2])
   
-  ref_se <- stanard_error(matrix[,1])
-  main_se <- stanard_error(matrix[,2])
+  ref_se <- standard_error(matrix[,1])
+  main_se <- standard_error(matrix[,2])
   
   main_lower <- main_mean - (1.96*main_se)
   main_upper <- main_mean + (1.96*main_se)

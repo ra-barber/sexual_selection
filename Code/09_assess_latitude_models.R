@@ -29,6 +29,7 @@ set.seed(1993)
 ###############################################################################
                              #### Data #####
 
+
 # Functions.
 source("Code/functions.R")
 
@@ -38,6 +39,7 @@ model_data <- read_ss_data()
 
 ###############################################################################
               #### Prepare predictor variables ######
+
 
 # Scale continuous predictors to two SD.
 model_data %<>% mutate(centroid_z = standardize(sqrt(abs_lat), two_sd = TRUE))
@@ -212,6 +214,7 @@ write.csv(high_estimates, "Results/Tables/high_continuous_lat_regression.csv", r
 
 ###############################################################################
                     #### side plot function  ######
+
 
 # Change scipen. (Probs not needed now)
 options(scipen = 999)

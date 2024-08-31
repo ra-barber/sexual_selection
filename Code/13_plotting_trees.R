@@ -14,9 +14,6 @@ library(phytools)
 library(stringr)
 library(ggtree)
 library(ggtreeExtra)
-library(wesanderson)
-library(shades)
-library(janitor)
 
 # Clear the workspace.
 rm(list=ls())
@@ -47,8 +44,6 @@ row.names(full_data) <- full_data$tree_tip
 # Read in the tree. Pick the same one for now.
 plot_tree <- read.tree("Data/Trees/prum_consensus_tree.tre")
 plot_tree
-
-#write.tree(plot_tree, "Data/Trees/prum_consensus_tree_3.tre")
 
 # Drop tips to create trees.
 plot_tree <- drop.tip(plot_tree, setdiff(plot_tree$tip.label, full_data$tree_tip))
@@ -102,9 +97,6 @@ full_family_tree <- data_tree(plot_tree, full_family_data)
 ################################################################################
                        #### Plot settings ####
 
-
-# Zissou palette. 
-wes_pal <- wes_palette("Zissou1", 100, type = "continuous")
 
 # Reorder colours for plotting.
 prum_clade_colours <- c("#7494EA", # Palaeognathae

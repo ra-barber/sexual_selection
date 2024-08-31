@@ -14,8 +14,6 @@ library(ggpubr)
 library(phytools)
 library(brms)
 library(graph4lg)
-# library(posterior)
-# library(bayesplot)
 
 
 # Clear the workspace.
@@ -115,6 +113,7 @@ model_data$sexual_selection <- model_data$sexual_selection + 1
 
 ###############################################################################
                 #### Set model formula ######
+
 
 # If response variable is centered.
 if (center == "centered"){

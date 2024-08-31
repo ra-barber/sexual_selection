@@ -86,6 +86,7 @@ if (data_type == "high"){
 ###############################################################################
               #### Prepare predictor variables / data ######
 
+
 # Prepare response variables.
 model_data$sexual_selection <- model_data$sexual_selection + 1
 
@@ -112,6 +113,7 @@ names(all_datasets) <- c("allbirds", "primary", "fruit", "secondary", "invert",
 
 ###############################################################################
                 #### Define brms model function. ######
+
 
 lat_brms_model <- function(data_set = model_data, response = "sexual_selection",  
                            predictor = "abs_lat", family = "cumulative"){
@@ -152,6 +154,7 @@ lat_brms_model <- function(data_set = model_data, response = "sexual_selection",
 
 ###############################################################################
               #### Run latitudinal models ######
+
 
 # Model pathway.
 first_half <- "Results/Models/Latitudinal/Latitude/"
