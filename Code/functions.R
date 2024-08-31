@@ -19,31 +19,17 @@ read_ss_data <- function(pathway = "Data/supplementary_dataset_1.xlsx"){
   model_data %<>% dplyr::select(-source)
   # Add in tree tips used in phylo models.
   model_data$tree_tip <- gsub(" ", "_", model_data$scientific_name_bird_tree)
-  # Add in dummy territoriality variables used in EDF 8.
+  # Add in dummy territoriality variables used in Figure S9.
   model_data %<>% mutate(
     terr_dummy = 0,
     year_terr_dummy = 0,
     terr_dummy = replace(terr_dummy, territoriality_binary == "Territorial", 1),
     year_terr_dummy = replace(year_terr_dummy, territoriality == "Strong", 1),
-    # # Add in binary sexual selection for sensitivity analysis.
-    # sexual_binary = sexual_selection,
-    # sexual_binary = replace(sexual_binary, sexual_binary  <3, 0),
-    # sexual_binary = replace(sexual_binary, sexual_binary  >0, 1),
-    # # Try tertiary.
-    # sexual_tertiary = sexual_selection,
-    # sexual_tertiary = replace(sexual_tertiary, sexual_tertiary <3, 0),
-    # sexual_tertiary = replace(sexual_tertiary, sexual_tertiary ==3, 1),
-    # sexual_tertiary = replace(sexual_tertiary, sexual_tertiary ==4, 2),
-    # # Try tertiary.
-    # sexual_sens = sexual_selection,
-    # sexual_sens = replace(sexual_sens, sexual_sens ==0, 1),
-    
     # Absolute latitude.
     abs_lat = abs(latitude))
   # Export model data.
   return(model_data)
 }
-
 
 # Quick function for centering factors.
 center_categorical <- function(predictor){
@@ -55,18 +41,18 @@ standard_error <- function(vector){
   sd(vector)/sqrt(length(vector))
 }
 
+
 ################################################################################
                   ##### Making maps ######
 
 
 # Function to make species richness raster.
 spec_raster_func <- function(ranges = sex_ranges){
-  spec_raster <- fasterize(ranges, raster_template, fun = "sum") # Rasterize
-  spec_raster[which(getValues(spec_raster) < 10)] <- NA # Remove low SR cells
-  spec_raster <- mask(spec_raster, land) # Mask for land.
+  spec_raster <- fasterize(ranges, raster_template, fun = "sum") 
+  spec_raster[which(getValues(spec_raster) < 10)] <- NA 
+  spec_raster <- mask(spec_raster, land)
   return(spec_raster)
 }
-
 
 # Function to make average raster from variable name.
 average_raster <- function(ranges = sex_ranges, var_name = "sexual_selection"){
@@ -80,8 +66,6 @@ average_raster <- function(ranges = sex_ranges, var_name = "sexual_selection"){
   var_raster <- var_raster / spec_raster
   return(var_raster)
 }
-
-
 
 # Make a function with the legend as bins.
 ggplot_raster <- function(raster, nbins = 6, variable = ""){
@@ -115,25 +99,27 @@ ggplot_raster <- function(raster, nbins = 6, variable = ""){
     geom_raster(aes(x=long, y=lat, fill= values), data=raster_data) +
     
     # Specify colours, legend labels and legend title.
-    scale_fill_manual(values = rev(colorRampPalette(pal)(nbins)), breaks = rev(1:nbins), labels = rev(labels), na.value = "lightgrey") +
+    scale_fill_manual(values = rev(colorRampPalette(pal)(nbins)), 
+                      breaks = rev(1:nbins), labels = rev(labels), 
+                      na.value = "lightgrey") +
     guides(fill = guide_legend(title = NULL, byrow = TRUE)) +
     
     # Make map closer to the edge.
     scale_y_continuous(limits = c(-57, 85), expand = expansion(), ) +
     scale_x_continuous(limits = c(-180, 180), expand = expansion()) +
     # Theme stuff.
-    theme_classic(base_size = 18) + theme(axis.text = element_blank(),
-                                          axis.ticks = element_blank(),
-                                          axis.line = element_blank(),
-                                          legend.position = c(0.13, 0.2),
-                                          legend.key.height = unit(0.2, 'cm'),
-                                          legend.spacing.y = unit(0.3, 'cm'),
-                                          legend.title = element_blank(),
-                                          legend.background = element_rect(fill = NA, colour = "lightgrey"),
-                                          legend.margin = margin(t = 0, r = 0.4, b = 0.3, l = 0.4, unit = "cm"),
-                                          plot.margin = margin(t = 0, l = 0, b = 0, r = 0)) +
-    ylab("") + 
-    xlab("") 
+    theme_classic(base_size = 18) + 
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          axis.line = element_blank(),
+          legend.position = c(0.13, 0.2),
+          legend.key.height = unit(0.2, 'cm'),
+          legend.spacing.y = unit(0.3, 'cm'),
+          legend.title = element_blank(),
+          legend.background = element_rect(fill = NA, colour = "lightgrey"),
+          legend.margin = margin(t = 0, r = 0.4, b = 0.3, l = 0.4, unit = "cm"),
+          plot.margin = margin(t = 0, l = 0, b = 0, r = 0)) +
+    ylab("") + xlab("") 
 }
 
 
@@ -145,73 +131,41 @@ panel_ggplot_raster <- function(raster_map, plot_title, plot_label){
   return(panel_raster)
 }
 
-
-# A custom function used for plotting primary consummer territoriality due to a lack
-# of variation in the majority of grid cells.
+# A custom function used for plotting primary consumer territoriality.
 ggplot_terr_raster <- function(raster, nbins = 6, variable = ""){
-  
-  # Get the limits for breaks, using quantiles so each bin has an equal number of cells.
   breaks <- quantile(values(raster)[values(raster)>0], seq(0,1,length.out=nbins), na.rm=TRUE)
   breaks <- c(0,breaks) 
-  # Cut the cell values into bins using the breaks.
   cuts <- cut(values(raster), breaks = breaks, include.lowest = TRUE)
-  #cuts <-cut(values(raster), breaks = c(0,0.05,0.1,0.15,0.2,0.25, 0.66666667), include.lowest = TRUE)
-  # Replace cell values with bins.
   raster@data@values <- as.numeric(cuts)
-  
-  # Create raster data.
   raster_data <- as.data.frame(raster, xy=TRUE)
   colnames(raster_data) <- c("long", "lat", "values")
   raster_data$values %<>% as.factor()
-  
-  # Get rid of areas without land.
   raster_data$land <- land_data$layer
   raster_data %<>% drop_na(land)
-  
-  # Create a label of the bins for plotting. Unicode is for en-dash.
   labels <- as.character(format(round(breaks, 2), nsmall = 2))
   labels <- paste0(labels[1:nbins], " \u2013 ", labels[2:(nbins+1)])
-  #labels <- c("", labels)
+
   # Plot with ggplot.
   ggplot() +
-    
-    # Clip to world extent.
     xlim(-180, 180) +  
     ylim(-57, 80) +
-    
-    # Add the raster data.
     geom_raster(aes(x=long, y=lat, fill= values), data=raster_data) +
-    
-    # Specify colours, legend labels and legend title.
     scale_fill_manual(values = rev(colorRampPalette(pal)(nbins)), breaks = rev(1:nbins), labels = rev(labels), na.value = "lightgrey") +     #na.value = "grey"
     guides(fill = guide_legend(title = NULL, byrow = TRUE)) +
-    
-    # Make map closer to the edge.
-    #scale_x_discrete(expand=c(0,1))+
-    #scale_y_discrete(expand=c(0,1))+
     scale_y_continuous(limits = c(-57, 85), expand = expansion()) +
     scale_x_continuous(limits = c(-180, 180), expand = expansion()) +
     # Theme stuff.
-    theme_classic(base_size = 18) + theme(axis.text = element_blank(),
-                                          axis.ticks = element_blank(),
-                                          axis.line = element_blank(),
-                                          # legend.position = c(0.075, 0.3),
-                                          legend.position = c(0.13, 0.2),
-                                          legend.key.height = unit(0.2, 'cm'),
-                                          legend.spacing.y = unit(0.3, 'cm'),
-                                          #legend.title = element_text(face = "bold"),
-                                          legend.title = element_blank(),
-                                          legend.background = element_rect(fill = NA, colour = "lightgrey"),
-                                          legend.margin = margin(t = 0, r = 0.4, b = 0.3, l = 0.4, unit = "cm"),
-                                          #plot.margin = margin(t = 15, l = -20000, b = -150, r = 2)
-                                          #plot.margin = margin(t =0, l = 0.5, b = 0, r = 0.5, unit = "cm")#unit(c(0,0,0,0), "null")
-    ) +
-    ylab("") + 
-    xlab("") #+ 
-  #coord_fixed() + 
-  #coord_cartesian(ylim=c(-50, 80))
-  
-  
+    theme_classic(base_size = 18) + 
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          axis.line = element_blank(),
+          legend.position = c(0.13, 0.2),
+          legend.key.height = unit(0.2, 'cm'),
+          legend.spacing.y = unit(0.3, 'cm'),
+          legend.title = element_blank(),
+          legend.background = element_rect(fill = NA, colour = "lightgrey"),
+          legend.margin = margin(t = 0, r = 0.4, b = 0.3, l = 0.4, unit = "cm")) +
+    ylab("") + xlab("") 
 }
 
 
@@ -233,7 +187,6 @@ lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreaks = c
   } else {
     cor_label <- paste0("p = ", as.character(format(round(p_value, 3), nsmall = 3)), "\nR\u00b2 = ", r_squared)
   }
-  
   ggplot(data_set, aes(x = binned_lat, y = trait_mean)) +
     geom_errorbar(aes(ymin = trait_min, ymax = trait_max), 
                   position = position_dodge(width = 1), show.legend = FALSE, col =  "darkgrey") + 
@@ -255,6 +208,7 @@ lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.1), ybreaks = c
 
 ################################################################################
                       ##### brms functions ######
+
 
 # Function to extract and combine brms models.
 combine_brms <- function(model_pattern, file_pathways = lat_files){
@@ -366,6 +320,7 @@ marginal_R2_MZ <- function(fit, ...) {
       check.names = FALSE), 
     digits = 2)
 }
+
 
 ###############################################################################
                         #### SAR model functions #####
@@ -506,7 +461,6 @@ sar_lat_side_plot <- function(data_set, ylabel = "", ylimits = c(0,1.2), ybreaks
 }
 
 
-
-
 ################################################################################
                           ##### End ######
+################################################################################
