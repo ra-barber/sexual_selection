@@ -1,5 +1,5 @@
 ###############################################################################
-          ##### Combine univarate models from the HPC #####
+             ##### Combine univarate models from the HPC #####
 ###############################################################################
 
 # Combine univariate models as an array job into a single folder on the HPC:
@@ -68,9 +68,6 @@ file_pathway <- paste0("Results/Models/Combined_models/Univariate/", current_mod
 saveRDS(current_model_deets, file = file_pathway)
 
 
-
 ###############################################################################
                              #### END ####
 ###############################################################################
-
-

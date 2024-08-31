@@ -58,9 +58,6 @@ data_type <- all_combos[array_number, 3] %>% as.character()
 tree_number <- all_combos[array_number, 4] %>% as.numeric()
 
 
-
-
-
 ###############################################################################
                        #### Read in the data #####
 
@@ -139,11 +136,10 @@ brms_formula <- brmsformula(model_formula, family = cumulative())
 # Simple models.
 model_pathway <- paste0("Results/Models/Univariate/", response, "_", center, "_", data_type, "_", tree_number, ".rds") 
 
-#library(standist) ~ for visualising priors.
-# # Add un-informative priors.
+# Add recommended priors.
 normal_priors <- c(prior(normal(0,1), class="Intercept"),
                    prior(normal(0,1), class="b"),
-                   prior(gamma(2,1), "sd")) # Gamma 2,1 probs seems to work well given all previous models end up with values around 1
+                   prior(gamma(2,1), "sd"))
 
   # Run brms models.
   brms_model <- brm(
