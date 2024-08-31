@@ -12,14 +12,13 @@ rm(list=ls())
 # Load packages.
 library(magrittr)
 library(skimr)
-#library(tictoc)
 library(stringr)
 library(caper)
 library(dplyr)
 library(janitor)
 library(ggpubr)
 library(effectsize)
-#library(readxl)
+library(readxl)
 
 # Read in the functions. 
 source("Code/functions.R")
@@ -33,9 +32,6 @@ data_pathway <- "Data/supplementary_dataset_1.xlsx"
 full_data <- read_excel(data_pathway, sheet = 2, na = "NA") %>% 
   clean_names()
 high_data <- full_data %>% filter(data_certainty > 2)
-
-# Read in a tree.
-#tree <- read.tree("Data/Trees/prum_trees.tre")[[1]]
 
 # Read in Clements data.
 clements_data <- read_excel(data_pathway, sheet = 3, na = "NA") %>% 
