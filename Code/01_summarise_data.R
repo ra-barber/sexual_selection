@@ -2,7 +2,6 @@
                ##### Summarise sexual selection data #####
 ###############################################################################
 
-
 # This script summarises the spread of sexual selection across birds. It also 
 # generates figures S1 & S2
 
