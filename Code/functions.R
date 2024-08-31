@@ -11,7 +11,7 @@
 
 
 # Read in the data without having to load extra packages.
-read_ss_data <- function(pathway = "Data/sexual_selection_dataset_12_10.xlsx"){
+read_ss_data <- function(pathway = "Data/supplementary_dataset_1.xlsx"){
   # Read in the data.
   model_data <- readxl::read_excel(pathway, sheet = 2, na = "NA")
   # Remove upper-case column names.
@@ -51,7 +51,7 @@ center_categorical <- function(predictor){
 }
 
 # Calculate Standard error.
-stanard_error <- function(vector){
+standard_error <- function(vector){
   sd(vector)/sqrt(length(vector))
 }
 

@@ -1,8 +1,11 @@
 ###############################################################################
-               ##### Summarise data before modelling #####
+               ##### Summarise sexual selection data #####
 ###############################################################################
 
-# This script summarises data before subsequent modelling.
+
+# This script summarises the spread of sexual selection across birds. It also 
+# generates figures S1 & S2
+
 
 # Clean the environment.
 rm(list=ls())
@@ -10,15 +13,14 @@ rm(list=ls())
 # Load packages.
 library(magrittr)
 library(skimr)
-library(tictoc)
+#library(tictoc)
 library(stringr)
 library(caper)
 library(dplyr)
 library(janitor)
 library(ggpubr)
 library(effectsize)
-library(readxl)
-
+#library(readxl)
 
 # Read in the functions. 
 source("Code/functions.R")
@@ -28,13 +30,13 @@ source("Code/functions.R")
                              #### Data ####
 
 # Read in the life history traits.
-data_pathway <- "Data/sexual_selection_dataset_04_09.xlsx"
+data_pathway <- "Data/supplementary_dataset_1.xlsx"
 full_data <- read_excel(data_pathway, sheet = 2, na = "NA") %>% 
   clean_names()
 high_data <- full_data %>% filter(data_certainty > 2)
 
 # Read in a tree.
-tree <- read.tree("Data/Trees/prum_trees.tre")[[1]]
+#tree <- read.tree("Data/Trees/prum_trees.tre")[[1]]
 
 # Read in Clements data.
 clements_data <- read_excel(data_pathway, sheet = 3, na = "NA") %>% 
@@ -45,37 +47,37 @@ clements_data %<>% tidyr::drop_na(sexual_selection)
 
 ###############################################################################
                     #### Transform data as usual ####
-
-# Set as factor, then re-level for appropriate reference group.
-full_data %<>% mutate(
-  territoriality_binary = relevel(as.factor(territoriality_binary), ref = "Non-territorial"),
-  migration_binary = relevel(as.factor(migration_binary), ref = "Weak"),
-  trophic_level_binary = relevel(as.factor(trophic_level_binary), ref = "Secondary"),
-
-  # Center categorical predictors.
-  terr_bi_c = center_categorical(territoriality_binary),
-  migration_bi_c = center_categorical(migration_binary),
-  trophic_level_c = center_categorical(trophic_level_binary),
-  
-  # Center / scale continuous.
-  centroid_z = standardize(sqrt(abs(latitude)), two_sd = TRUE),
-  temp_seasonality_z = standardize(log(seasonality), two_sd = TRUE))
-
-
-# Set as factor, then re-level for appropriate reference group.
-high_data %<>% mutate(
-  territoriality_binary = relevel(as.factor(territoriality_binary), ref = "Non-territorial"),
-  migration_binary = relevel(as.factor(migration_binary), ref = "Weak"),
-  trophic_level_binary = relevel(as.factor(trophic_level_binary), ref = "Secondary"),
-  
-  # Center categorical predictors.
-  terr_bi_c = center_categorical(territoriality_binary),
-  migration_bi_c = center_categorical(migration_binary),
-  trophic_level_c = center_categorical(trophic_level_binary),
-  
-  # Center / scale continuous.
-  centroid_z = standardize(sqrt(abs(latitude)), two_sd = TRUE),
-  temp_seasonality_z = standardize(log(seasonality), two_sd = TRUE))
+# 
+# # Set as factor, then re-level for appropriate reference group.
+# full_data %<>% mutate(
+#   territoriality_binary = relevel(as.factor(territoriality_binary), ref = "Non-territorial"),
+#   migration_binary = relevel(as.factor(migration_binary), ref = "Weak"),
+#   trophic_level_binary = relevel(as.factor(trophic_level_binary), ref = "Secondary"),
+# 
+#   # Center categorical predictors.
+#   terr_bi_c = center_categorical(territoriality_binary),
+#   migration_bi_c = center_categorical(migration_binary),
+#   trophic_level_c = center_categorical(trophic_level_binary),
+#   
+#   # Center / scale continuous.
+#   centroid_z = standardize(sqrt(abs(latitude)), two_sd = TRUE),
+#   temp_seasonality_z = standardize(log(seasonality), two_sd = TRUE))
+# 
+# 
+# # Set as factor, then re-level for appropriate reference group.
+# high_data %<>% mutate(
+#   territoriality_binary = relevel(as.factor(territoriality_binary), ref = "Non-territorial"),
+#   migration_binary = relevel(as.factor(migration_binary), ref = "Weak"),
+#   trophic_level_binary = relevel(as.factor(trophic_level_binary), ref = "Secondary"),
+#   
+#   # Center categorical predictors.
+#   terr_bi_c = center_categorical(territoriality_binary),
+#   migration_bi_c = center_categorical(migration_binary),
+#   trophic_level_c = center_categorical(trophic_level_binary),
+#   
+#   # Center / scale continuous.
+#   centroid_z = standardize(sqrt(abs(latitude)), two_sd = TRUE),
+#   temp_seasonality_z = standardize(log(seasonality), two_sd = TRUE))
 
 
 ###############################################################################
@@ -87,7 +89,7 @@ high_data %>% count(sexual_selection)
 
 # Calculate percentages.
 counts <- full_data %>% count(sexual_selection) 
-high_counts <- full_data %>% filter(data_certainty == 4) %>%  count(sexual_selection) 
+high_counts <- full_data %>% filter(data_certainty == 4) %>% count(sexual_selection) 
 
 round((counts[1,2]/9988)*100, 2)  # % Scored 0
 round((counts[2,2]/9988)*100, 2)  # % Scored 1
@@ -102,42 +104,16 @@ round((high_counts[1,2]/2793)*100, 2)  # % Scored 0
 round((sum(high_counts[2:5,2])/2793)*100, 2) # % Scored 1 - 4
 
 
-################################################################################
-    #### Calculate phylogenetic signal sexual selection scores #####
-
-# This should be a separate script on the HPC.
-full_data$tree_tip <- full_data$scientific_name_bird_tree %>% str_replace(" ", "_")
-row.names(full_data) <- full_data$tree_tip
-
-full_data %<>% mutate(
-  sexual_binary = replace(sexual_selection, sexual_selection > 0, 1)
-)
-
-sex_data <- full_data %>% select(tree_tip, sexual_binary)
-
-# Create a comparative object.
-sex_comp <- comparative.data(tree, sex_data, names.col = "tree_tip")
-
-tic()
-# Run the phylo D signal analysis for binary traits.
-phylo_signal_d <- phylo.d(data = sex_comp, binvar = sexual_binary)
-toc()
-# All species took 4978 seconds.
-
-# Return the phylo D analysis results.
-phylo_signal_d
-
-saveRDS(phylo_signal_d, "Results/Tables/phylo_d.rds")
-
-# Plot the result against expected models.
-plot(phylo_signal_d)
 
 ###############################################################################
-             #### Plot sexual selection scores barchat ####
+                      #### Figure S1 ####
 
-# Create a palette to match bin length.
+
+# Colour pal.
 pal <- c('#3B9AB2', '#78B7C5', '#EBCC2A', '#E1AF00', '#F21A00')
 
+
+# Function to make barplot.
 ss_barplot <- function(dataset = full_data){
   dataset %>% ggplot(aes(x = sexual_selection, fill = as.factor(sexual_selection))) +
     geom_bar() +  scale_fill_manual(values = pal) + 
@@ -146,19 +122,20 @@ ss_barplot <- function(dataset = full_data){
           line = element_line(linewidth = 0.5))
 }
 
+# Pull out frugivores and invertivores.
 fruit_data <- full_data %>% filter(trophic_niche == "Frugivore")
 invert_data <- full_data %>% filter(trophic_niche == "Invertivore")
 
+# Get axis limits.
 jetz_y <- full_data %>% count(sexual_selection) %>% pull(n) %>% max()
 clements_y <- clements_data %>% count(sexual_selection) %>% pull(n) %>% max()
 fruit_y <- fruit_data %>% count(sexual_selection) %>% pull(n) %>% max()
 invert_y <- invert_data %>% count(sexual_selection) %>% pull(n) %>% max()
 
 
-
 library(ggbreak)
 
-
+# Create plots.
 jetz_plot <- full_data %>% ss_barplot() + scale_y_continuous(limits = c(0,jetz_y*1.1)) +
   ylab("Species count")  + 
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.title.y = element_text(vjust = 1.5)) +
@@ -174,17 +151,14 @@ clements_plot <- clements_data %>% ss_barplot() + scale_y_continuous(limits = c(
         axis.ticks.y.right  = element_blank(),
         axis.line.y.right  = element_blank())
 
-
 fruit_plot <- fruit_data %>%  
   ss_barplot() + xlab("Sexual selection") + ylab("Species count") +
-  scale_y_continuous(limits = c(0, 5500)) + #, breaks = c(0, 25, 50, 75), labels = c("0", "  25", "  50", "  75")) + 
+  scale_y_continuous(limits = c(0, 5500)) + 
   theme(axis.title.y = element_text(vjust = 1.5)) +
-  #scale_y_break(c(250, 500), scales = "free", ticklabels = c(1000, 2000, 3000, 4000)) + 
   scale_y_break(c(250, 500), scales = "free", ticklabels = c(500, 1500, 2500, 3500, 4500)) + 
   theme(axis.text.y.right = element_blank(),
         axis.ticks.y.right  = element_blank(),
         axis.line.y.right  = element_blank())
-
 
 invert_plot <- full_data %>% filter(trophic_niche == "Invertivore") %>% 
   ss_barplot() + scale_y_continuous(limits = c(0,5500)) +
@@ -195,59 +169,56 @@ invert_plot <- full_data %>% filter(trophic_niche == "Invertivore") %>%
         axis.line.y.right  = element_blank())
 
 
-# Labels are 95% and 80% low than y lim.
-0.95*(5500-500) + 500
-0.8*(5500-500) + 500
+# # Labels are 95% and 80% low than y lim.
+# 0.95*(5500-500) + 500
+# 0.8*(5500-500) + 500
 
 
 # Add the annotations. 
 jetz_anno <- jetz_plot + annotate("text", x = -0.3, y = 9750, label = "a", size = 10, fontface = 2) +
   annotate("text", x = 3, y = 9000, label = "Taxonomy 1\nn = 9988", size = 7)
-
 clem_anno <- clements_plot  + annotate("text", x = -0.3, y = 9750, label = "b", size = 10, fontface = 2) +
   annotate("text", x = 3, y = 9000, label = "Taxonomy 2\nn = 10671", size = 7)
-
 fruit_anno <- fruit_plot + annotate("text", x = -0.3, y = 5250, label = "c", size = 10, fontface = 2) +
   annotate("text", x = 3, y = 4500, label = "Frugivores\nn = 1030", size = 7)
-
 invert_anno <- invert_plot  +  annotate("text", x = -0.3, y = 5250, label = "d", size = 10, fontface = 2) +
   annotate("text", x = 3, y = 4500, label = "Invertivores\nn = 4779", size = 7)
 
-# Amaurospiza carrizalensis 
+# Arrange figures.
 ggarrange(print(jetz_anno), 
           print(clem_anno),
           print(fruit_anno), 
           print(invert_anno), 
-          ncol = 2, nrow = 2, widths = c(1.1,1), heights = c(1, 1.1))
+          ncol = 2, nrow = 2, widths = c(1.1, 1), heights = c(1, 1.1))
 
 # Export.
-ggsave("Plots/Data/extended_data_figure_1.pdf", width = 8, height = 8, device = cairo_pdf)
-ggsave("Plots/Data/extended_data_figure_1.tiff", width = 8, height = 8)
+#ggsave("Figures/Fig_S1.pdf", width = 8, height = 8, device = cairo_pdf)
+ggsave("Figures/Fig_S1.tiff", width = 8, height = 8, compression = "lzw")
 
 
 
 ################################################################################
-                   ###### Supplementary figure 1 ######
+                   ###### Figure S2 ######
 
 # Read in the most up to date version of the SS database.
-clean_data <- read.csv("Data/sexual_selection_cleaned_01_08.csv") %>% clean_names()  # We have since cleaned this data even more.
-
-clean_data <- full_data
-
-# Create a palette to match bin length.
-pal <- c('#3B9AB2', '#78B7C5', '#EBCC2A', '#E1AF00', '#F21A00')
+#clean_data <- read.csv("Data/sexual_selection_cleaned_01_08.csv") %>% clean_names()  # We have since cleaned this data even more.
+# 
+# full_data <- full_data
+# 
+# # Create a palette to match bin length.
+# pal <- c('#3B9AB2', '#78B7C5', '#EBCC2A', '#E1AF00', '#F21A00')
 
 #pal <- c('#F21A00', '#E1AF00', '#EBCC2A', '#78B7C5', '#3B9AB2')
 
 # Group the data by certainty score, and calculate mean and standard error.
-grouped_data <- clean_data %>% 
+grouped_data <- full_data %>% 
   group_by(data_certainty) %>% 
   summarise(sex_mean = mean(sqrt(sexual_selection)),
             sex_sd = sd(sqrt(sexual_selection)),
             sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
 
 # Merge the averages with full dataset.
-merged_data <- clean_data %>% 
+merged_data <- full_data %>% 
   left_join(grouped_data, by = "data_certainty")
 merged_data$sex_fact <- factor(merged_data$sexual_selection, levels = 4:0)  # For plotting.
 
@@ -315,7 +286,8 @@ ggarrange(whisker_plot, prop_plot, labels = c("a", "b"),
           font.label = list(size = 28), widths = c(1,1.2))
 
 # Export the plot.
-ggsave("Plots/Data/figure_s1.png", width = 13, height = 6)
+#ggsave("Figures/Fig_S2.png", width = 13, height = 6)
+ggsave("Figures/Fig_S2.tiff", width = 13, height = 6, compression = "lzw")
 
 
 
