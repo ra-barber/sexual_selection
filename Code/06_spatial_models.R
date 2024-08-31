@@ -50,7 +50,8 @@ rm(new_jetz_ranges)
 
 
 # Define behrman's proj.
-behr_proj <- "+proj=cea +lat_ts=30 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs"
+behr_proj <- "+proj=cea +lat_ts=30 +lon_0=0 +x_0=0 +y_0=0 
++datum=WGS84 +units=m +no_defs +type=crs"
 
 # Define boundaries.
 xmin = -18000000
@@ -81,22 +82,40 @@ sex_raster <- average_raster()
 cert_raster <- average_raster(var_name = "data_certainty")
 
 # Figure 3.
-p_sex_raster <- sex_ranges %>% filter(trophic_level_binary == "Primary") %>% average_raster()
-s_sex_raster <- sex_ranges %>% filter(trophic_level_binary == "Secondary") %>% average_raster()
-fruit_sex_raster <- sex_ranges %>% filter(trophic_niche == "Frugivore") %>% average_raster()
-invert_sex_raster <- sex_ranges %>% filter(trophic_niche == "Invertivore") %>% average_raster()
+p_sex_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Primary") %>% average_raster()
+s_sex_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Secondary") %>% average_raster()
+fruit_sex_raster <- sex_ranges %>% 
+  filter(trophic_niche == "Frugivore") %>% average_raster()
+invert_sex_raster <- sex_ranges %>% 
+  filter(trophic_niche == "Invertivore") %>% average_raster()
 
 # Supplementary figures.
-h_sex_raster <- sex_ranges %>% filter(data_certainty == 4) %>% average_raster()
-m_sex_raster <- sex_ranges %>% filter(data_certainty > 2) %>% average_raster()
-mig_sex_raster <- sex_ranges %>% filter(migration_binary == "Strong") %>% average_raster()
-no_mig_sex_raster <- sex_ranges %>% filter(migration_binary == "Weak") %>% average_raster()
-terr_sex_raster <- sex_ranges %>% filter(territoriality_binary == "Territorial") %>% average_raster()
-no_terr_sex_raster <- sex_ranges %>% filter(territoriality_binary == "Non-territorial") %>% average_raster()
-p_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Primary") %>% average_raster(var_name = "terr_dummy")
-s_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Secondary") %>% average_raster(var_name = "terr_dummy")
-p_year_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Primary") %>% average_raster(var_name = "year_terr_dummy")
-s_year_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Secondary") %>% average_raster(var_name = "year_terr_dummy")
+h_sex_raster <- sex_ranges %>% 
+  filter(data_certainty == 4) %>% average_raster()
+m_sex_raster <- sex_ranges %>% 
+  filter(data_certainty > 2) %>% average_raster()
+mig_sex_raster <- sex_ranges %>% 
+  filter(migration_binary == "Strong") %>% average_raster()
+no_mig_sex_raster <- sex_ranges %>% 
+  filter(migration_binary == "Weak") %>% average_raster()
+terr_sex_raster <- sex_ranges %>% 
+  filter(territoriality_binary == "Territorial") %>% average_raster()
+no_terr_sex_raster <- sex_ranges %>% 
+  filter(territoriality_binary == "Non-territorial") %>% average_raster()
+p_terr_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Primary") %>% 
+  average_raster(var_name = "terr_dummy")
+s_terr_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Secondary") %>% 
+  average_raster(var_name = "terr_dummy")
+p_year_terr_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Primary") %>% 
+  average_raster(var_name = "year_terr_dummy")
+s_year_terr_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Secondary") %>% 
+  average_raster(var_name = "year_terr_dummy")
 
 ##### High cert rasters #####
 
@@ -104,16 +123,24 @@ s_year_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Secondary")
 high_ranges <- sex_ranges %>% filter(data_certainty > 2)
 
 # Diet rasters.
-high_p_sex_raster <- high_ranges %>% filter(trophic_level_binary == "Primary") %>% average_raster()
-high_s_sex_raster <- high_ranges %>% filter(trophic_level_binary == "Secondary") %>% average_raster()
-high_fruit_sex_raster <- high_ranges %>% filter(trophic_niche == "Frugivore") %>% average_raster()
-high_invert_sex_raster <- high_ranges %>% filter(trophic_niche == "Invertivore") %>% average_raster()
+high_p_sex_raster <- high_ranges %>% 
+  filter(trophic_level_binary == "Primary") %>% average_raster()
+high_s_sex_raster <- high_ranges %>% 
+  filter(trophic_level_binary == "Secondary") %>% average_raster()
+high_fruit_sex_raster <- high_ranges %>% 
+  filter(trophic_niche == "Frugivore") %>% average_raster()
+high_invert_sex_raster <- high_ranges %>% 
+  filter(trophic_niche == "Invertivore") %>% average_raster()
 
 # Migration and territoriality.
-high_mig_sex_raster <- high_ranges %>% filter(migration_binary == "Strong") %>% average_raster()
-high_no_mig_sex_raster <- high_ranges %>% filter(migration_binary == "Weak") %>% average_raster()
-high_terr_sex_raster <- high_ranges %>% filter(territoriality_binary == "Territorial") %>% average_raster()
-high_no_terr_sex_raster <- high_ranges %>% filter(territoriality_binary == "Non-territorial") %>% average_raster()
+high_mig_sex_raster <- high_ranges %>% 
+  filter(migration_binary == "Strong") %>% average_raster()
+high_no_mig_sex_raster <- high_ranges %>% 
+  filter(migration_binary == "Weak") %>% average_raster()
+high_terr_sex_raster <- high_ranges %>% 
+  filter(territoriality_binary == "Territorial") %>% average_raster()
+high_no_terr_sex_raster <- high_ranges %>% 
+  filter(territoriality_binary == "Non-territorial") %>% average_raster()
 
 # Remove big objects.
 rm(sex_ranges)
@@ -373,6 +400,7 @@ high_estimates %<>% mutate(
 
 # Export.
 write.csv(high_estimates, "Results/Tables/high_spatial_regression.csv", row.names = FALSE)
+
 
 ###############################################################################
                              #### END ####
