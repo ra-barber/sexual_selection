@@ -25,7 +25,6 @@ gc()
 source("Code/functions.R")
 
 
-
 ################################################################################
                            #### Data ####
 
@@ -45,15 +44,6 @@ rm(new_jetz_ranges)
 # Start by creating an empty raster stack to store our data in. 
 # (This creates 5km res, which is only used for visualisation)
 raster_template <- raster(ncols=8640, nrows=3600, ymn = -60)
-# raster_template <- raster(ncols=8640, nrows=3600, ymn = -60, crs = behrmannCRS)
-# 
-# behrmannCRS <- CRS('+proj=cea +lat_ts=30')
-
-
-
-# Code for figuring out the resolution.
-# library(terra)
-# distance(cbind(0,-21), cbind(0,-21.04166667), lonlat=TRUE)
 
 # Create a raster of landmass to mask maps.
 data(wrld_simpl)
@@ -69,48 +59,63 @@ sex_raster <- average_raster()
 cert_raster <- average_raster(var_name = "data_certainty")
 
 # Figure 3.
-p_sex_raster <- sex_ranges %>% filter(trophic_level_binary == "Primary") %>% average_raster()
-s_sex_raster <- sex_ranges %>% filter(trophic_level_binary == "Secondary") %>% average_raster()
-fruit_sex_raster <- sex_ranges %>% filter(trophic_niche == "Frugivore") %>% average_raster()
-invert_sex_raster <- sex_ranges %>% filter(trophic_niche == "Invertivore") %>% average_raster()
+p_sex_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Primary") %>% average_raster()
+s_sex_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Secondary") %>% average_raster()
+fruit_sex_raster <- sex_ranges %>% 
+  filter(trophic_niche == "Frugivore") %>% average_raster()
+invert_sex_raster <- sex_ranges %>% 
+  filter(trophic_niche == "Invertivore") %>% average_raster()
 
 # Extended data figure 3.
-h_sex_raster <- sex_ranges %>% filter(data_certainty == 4) %>% average_raster()
-m_sex_raster <- sex_ranges %>% filter(data_certainty > 2) %>% average_raster()
+h_sex_raster <- sex_ranges %>% 
+  filter(data_certainty == 4) %>% average_raster()
+m_sex_raster <- sex_ranges %>% 
+  filter(data_certainty > 2) %>% average_raster()
 
 # Extended data figure 4.
-mig_sex_raster <- sex_ranges %>% filter(migration_binary == "Strong") %>% average_raster()
-no_mig_sex_raster <- sex_ranges %>% filter(migration_binary == "Weak") %>% average_raster()
+mig_sex_raster <- sex_ranges %>% 
+  filter(migration_binary == "Strong") %>% average_raster()
+no_mig_sex_raster <- sex_ranges %>% 
+  filter(migration_binary == "Weak") %>% average_raster()
 
 # Extended data figure 5.
-terr_sex_raster <- sex_ranges %>% filter(territoriality_binary == "Territorial") %>% average_raster()
-no_terr_sex_raster <- sex_ranges %>% filter(territoriality_binary == "Non-territorial") %>% average_raster()
+terr_sex_raster <- sex_ranges %>% 
+  filter(territoriality_binary == "Territorial") %>% average_raster()
+no_terr_sex_raster <- sex_ranges %>% 
+  filter(territoriality_binary == "Non-territorial") %>% average_raster()
 
 # Extended data figure 8.
-p_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Primary") %>% average_raster(var_name = "terr_dummy")
-s_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Secondary") %>% average_raster(var_name = "terr_dummy")
-p_year_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Primary") %>% average_raster(var_name = "year_terr_dummy")
-s_year_terr_raster <- sex_ranges %>% filter(trophic_level_binary == "Secondary") %>% average_raster(var_name = "year_terr_dummy")
+p_terr_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Primary") %>% 
+  average_raster(var_name = "terr_dummy")
+s_terr_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Secondary") %>% 
+  average_raster(var_name = "terr_dummy")
+p_year_terr_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Primary") %>% 
+  average_raster(var_name = "year_terr_dummy")
+s_year_terr_raster <- sex_ranges %>% 
+  filter(trophic_level_binary == "Secondary") %>% 
+  average_raster(var_name = "year_terr_dummy")
 
 # Figure S2.
-h_spec_raster <- sex_ranges %>% filter(data_certainty == 4) %>% spec_raster_func()
+h_spec_raster <- sex_ranges %>% 
+  filter(data_certainty == 4) %>% spec_raster_func()
 
 # Remove big objects.
+save(list = ls(pattern =  "_raster"), file = "Results/Spatial/wgs84_rasters.Rdata")
 rm(sex_ranges)
 gc()
 
 
 ###############################################################################
-               #### Plot sexual selection figure 2 ####
+                          #### Plot figure 3 ####
 
 
 # Load in the side plots.
-#load("Plots/Maps/latitudinal_sideplots.Rdata")
-#load("Plots/Maps/relative_size_latitudinal_sideplots.Rdata")
-#load("Plots/Maps/purple_relative_remove_10_latitudinal_sideplots.Rdata")
 load("Plots/Maps/behr_200_latitudinal_sideplots.Rdata")
-
-load("Plots/Maps/behr_500_and_100_latitudinal_sideplots.Rdata")
 
 # Create data frame of land to use to crop ggplot maps.
 land_data <- as.data.frame(land, xy=TRUE)
@@ -130,32 +135,37 @@ cert_plot <- panel_ggplot_raster(cert_raster, plot_title = "Data certainty", plo
 sex_side_plots <- ggarrange(sex_lat_plot + rremove("xlab") + rremove("x.text"), 
                             cert_lat_plot, nrow = 2, ncol = 1, heights = c(1,1.2))
 # Arrange maps.
-sex_maps <- ggarrange(blank_plot, sex_plot, cert_plot, blank_plot, nrow = 4, ncol = 1,
-                      heights = c(0.1,1,1,0.1))
+sex_maps <- ggarrange(blank_plot, sex_plot, cert_plot, blank_plot, nrow = 4, 
+                      ncol = 1, heights = c(0.1,1,1,0.1))
 
 # Put all together.
 sex_both_plots <- ggarrange(sex_maps, sex_side_plots, ncol = 2, widths = c(3,1.535)) +
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_500_and_100/figure_2.png", height = 10, width = 15, dpi = 600, bg="white")
-ggsave("Figures_500_and_100/figure_2.pdf", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures/Fig3_large.tiff", height = 10, width = 15, dpi = 600, bg="white", compression = "lzw")
 gc()
 
 # Try removing excess objects to free up space.
 rm(sex_plot, cert_plot, sex_maps, sex_side_plots, sex_both_plots)
-#rm(sex_raster, cert_raster)
+rm(sex_raster, cert_raster)
 
 
 ###############################################################################
-                        #### Figure 3  ####
+                        #### Figure 4  ####
 
 
 # Create maps of the four niches.
-p_sex_plot <- panel_ggplot_raster(p_sex_raster, plot_title = expression(bold("1"^ry*" consumers (n = 2753)")), plot_label = "a")
-fruit_sex_plot <- panel_ggplot_raster(fruit_sex_raster, plot_title = "Frugivores (n = 1025)", plot_label = "c")
-s_sex_plot <- panel_ggplot_raster(s_sex_raster, plot_title = expression(bold("2"^ry*" consumers (n = 7083)")), plot_label = "e")
-invert_sex_plot <- panel_ggplot_raster(invert_sex_raster, plot_title = "Invertivores (n = 4694)", plot_label = "g")
+p_sex_plot <- panel_ggplot_raster(
+  p_sex_raster, plot_title = expression(bold("1"^ry*" consumers (n = 2753)")), 
+  plot_label = "a")
+fruit_sex_plot <- panel_ggplot_raster(
+  fruit_sex_raster, plot_title = "Frugivores (n = 1025)", plot_label = "c")
+s_sex_plot <- panel_ggplot_raster(
+  s_sex_raster, plot_title = expression(bold("2"^ry*" consumers (n = 7083)")), 
+  plot_label = "e")
+invert_sex_plot <- panel_ggplot_raster(
+  invert_sex_raster, plot_title = "Invertivores (n = 4694)", plot_label = "g")
 
 # Arrange side plots and maps.
 niche_side_plots <- ggarrange(pri_lat_plot + rremove("xlab") + rremove("x.text"), 
@@ -170,8 +180,7 @@ niche_both_plots <- ggarrange(niche_maps, niche_side_plots, ncol = 2, widths = c
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export.
-ggsave("Figures_500_and_100/figure_3.png", height = 20, width = 15, dpi = 900, bg="white")
-ggsave("Figures_500_and_100/figure_3.pdf", height = 20, width = 15, dpi = 900, bg="white")
+ggsave("Figures/Fig4_large.tiff", height = 20, width = 15, dpi = 600, bg="white", compression = "lzw")
 
 # Try removing excess objects to free up space.
 rm(p_sex_plot, fruit_sex_plot, s_sex_plot, invert_sex_plot,
@@ -179,12 +188,14 @@ rm(p_sex_plot, fruit_sex_plot, s_sex_plot, invert_sex_plot,
 
 
 ###############################################################################
-                 #### Extended data figure 3 ####
+                  #### Supplementary figures ####
 
 
 # Show high certainty sexual selection maps.
-m_sex_plot <- panel_ggplot_raster(m_sex_raster, plot_title = "Certainty 3 & 4 (n = 7592)", plot_label = "a")
-h_sex_plot <- panel_ggplot_raster(h_sex_raster, plot_title = "Certainty 4 (n = 2851)", plot_label = "c")
+m_sex_plot <- panel_ggplot_raster(
+  m_sex_raster, plot_title = "Certainty 3 & 4 (n = 7592)", plot_label = "a")
+h_sex_plot <- panel_ggplot_raster(
+  h_sex_raster, plot_title = "Certainty 4 (n = 2851)", plot_label = "c")
 
 # Arrange side plots and maps.
 cert_side_plots <- ggarrange(med_sex_lat_plot + rremove("xlab") + rremove("x.text"), 
@@ -195,17 +206,14 @@ cert_both_plots <- ggarrange(cert_maps, cert_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_500_and_100/figure_ED_3.png", height = 10, width = 15, dpi = 600, bg="white")   
-ggsave("Figures_500_and_100/figure_ED_3.pdf", height = 10, width = 15, dpi = 600, bg="white")
-
-
-###############################################################################
-               #### Extended data figure 4 & 5 ####
+ggsave("Figures/figure_S3.tiff", height = 10, width = 15, dpi = 600, bg="white", compression = "lzw")   
 
 
 # Show high certainty sexual selection maps.
-mig_sex_plot <- panel_ggplot_raster(mig_sex_raster, plot_title = "Migrants (n = 901)", plot_label = "a")
-no_mig_sex_plot <- panel_ggplot_raster(no_mig_sex_raster, plot_title = "Non-migrants (n = 8935)", plot_label = "c")
+mig_sex_plot <- panel_ggplot_raster(
+  mig_sex_raster, plot_title = "Migrants (n = 901)", plot_label = "a")
+no_mig_sex_plot <- panel_ggplot_raster(
+  no_mig_sex_raster, plot_title = "Non-migrants (n = 8935)", plot_label = "c")
 
 # Arrange maps together.
 mig_side_plots <- ggarrange(mig_lat_plot + rremove("xlab") + rremove("x.text"), 
@@ -216,12 +224,14 @@ mig_both_plots <- ggarrange(mig_maps, mig_side_plots, ncol = 2, widths = c(3,1.5
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_500_and_100/figure_ED_4.png", height = 10, width = 15, dpi = 600, bg="white")
-ggsave("Figures_500_and_100/figure_ED_4.pdf", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures/figure_S5.tiff", height = 10, width = 15, dpi = 600, bg="white", compression = "lzw")
+
 
 # Show high certainty sexual selection maps.
-terr_sex_plot <- panel_ggplot_raster(terr_sex_raster, plot_title = "Territorial (n = 7261)", plot_label = "a")
-no_terr_sex_plot <- panel_ggplot_raster(no_terr_sex_raster, plot_title = "Non-territorial (n = 2575)", plot_label = "c")
+terr_sex_plot <- panel_ggplot_raster(
+  terr_sex_raster, plot_title = "Territorial (n = 7261)", plot_label = "a")
+no_terr_sex_plot <- panel_ggplot_raster(
+  no_terr_sex_raster, plot_title = "Non-territorial (n = 2575)", plot_label = "c")
 
 # Arrange maps together.
 terr_side_plots <- ggarrange(terr_lat_plot + rremove("xlab") + rremove("x.text"), 
@@ -232,20 +242,24 @@ terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_500_and_100/figure_ED_5.png", height = 10, width = 15, dpi = 600, bg="white")
-ggsave("Figures_500_and_100/figure_ED_5.pdf", height = 10, width = 15, dpi = 600, bg="white")
+ggsave("Figures/figure_S6.tiff", height = 10, width = 15, dpi = 600, bg="white", compression = "lzw")
 
-
-###############################################################################
-                  #### Extended data figure 8 ####
 
 # Territoriality maps.
-p_terr_plot <- panel_ggplot_raster(p_terr_raster, plot_title = expression(bold("1"^ry*" consumers (n = 1379)")), plot_label = "a")
-p_year_terr_plot <- ggplot_terr_raster(p_year_terr_raster, 6, "") +   # Has a custom function due to lack of variation meaning it needs custom breaks.
-  annotate("text", x = 20, y = -48, label  = expression(bold("1"^ry*" consumers (n = 333)")), size = 8, fontface = 2)+
+p_terr_plot <- panel_ggplot_raster(
+  p_terr_raster, plot_title = expression(bold("1"^ry*" consumers (n = 1379)")), 
+  plot_label = "a")
+p_year_terr_plot <- ggplot_terr_raster(p_year_terr_raster, 6, "") + 
+  annotate("text", x = 20, y = -48, 
+           label  = expression(bold("1"^ry*" consumers (n = 333)")), 
+           size = 8, fontface = 2)+
   annotate("text", x =  -170, y = 80, label  = "c", size = 12, fontface = 2)
-s_terr_plot <- panel_ggplot_raster(s_terr_raster, plot_title = expression(bold("2"^ry*" consumers (n = 5882)")), plot_label = "e")
-s_year_terr_plot <- panel_ggplot_raster(s_year_terr_raster, plot_title = expression(bold("2"^ry*" consumers (n = 2640)")), plot_label = "g")
+s_terr_plot <- panel_ggplot_raster(
+  s_terr_raster, plot_title = expression(bold("2"^ry*" consumers (n = 5882)")), 
+  plot_label = "e")
+s_year_terr_plot <- panel_ggplot_raster(
+  s_year_terr_raster, plot_title = expression(bold("2"^ry*" consumers (n = 2640)")), 
+  plot_label = "g")
 
 # Arrange side plots and maps.
 terr_side_plots <- ggarrange(pri_terr_lat_plot + rremove("xlab") + rremove("x.text"), 
@@ -260,25 +274,16 @@ terr_both_plots <- ggarrange(terr_maps, terr_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export.
-#ggsave("Figures_relative_error/figure_ED_8.png", height = 20, width = 15, dpi = 900, bg="white")
-#ggsave("Figures_relative_error/figure_ED_8.pdf", height = 20, width = 15, dpi = 900, bg="white")
-
-ggsave("Figures_500_and_100/figure_ED_8.png", height = 20, width = 15, dpi = 600, bg="white")
-ggsave("Figures_500_and_100/figure_ED_8.pdf", height = 20, width = 15, dpi = 600, bg="white")
-
-
-
-###############################################################################
-                   ##### Figure S2 ######
+ggsave("Figures/figure_S9.tiff", height = 20, width = 15, dpi = 600, bg="white", compression = "lzw")
 
 
 # Show high certainty sexual selection maps.
-#m_spec_plot <- panel_ggplot_raster(m_spec_raster, plot_title = "Certainty 3 & 4 (n = 7592)", plot_label = "a")
-h_spec_plot <- panel_ggplot_raster(h_spec_raster, plot_title = "Certainty 4 (n = 2851)", plot_label = "") +
+h_spec_plot <- panel_ggplot_raster(
+  h_spec_raster, plot_title = "Certainty 4 (n = 2851)", plot_label = "") +
   theme(plot.margin = margin(l = -0.3, r =0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures_relative_error/figure_S2.png", height = 5, width = 10, dpi = 600)
+ggsave("Figures/figure_S4.tiff", height = 5, width = 10, dpi = 600, compression = "lzw")
 
 
 ################################################################################
