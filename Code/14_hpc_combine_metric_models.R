@@ -1,8 +1,8 @@
 ###############################################################################
-                ##### Combine multivariate models #####
+                   ##### Combine metric models #####
 ###############################################################################
 
-# This script does something new. Pretty sick eh.
+# This script combines models run on the cluster.
 
 
 # Clean the environment.
@@ -10,7 +10,6 @@ rm(list=ls())
 
 # Load packages.
 library(magrittr)
-library(tictoc)
 library(dplyr)
 library(ggplot2)
 library(ggpubr)
@@ -22,59 +21,54 @@ source("Code/functions.R")
 
 
 ###############################################################################
-                  #### Read in models ####
+                        #### Read in models ####
 
 # Read in the new files.
-model_files <- list.files(path = c("Results/Models/Sex_metrics/"), full.names = T, include.dirs = FALSE, recursive = FALSE)
+model_files <- list.files(path = c("Results/Models/Sex_metrics/"), 
+                          full.names = T, include.dirs = FALSE, recursive = FALSE)
 
 # Bateman Models.
-bateman_centered_linear  <- combine_brms("/bateman_centered_linear", model_files)
 bateman_centered_phylo  <- combine_brms("/bateman_centered_phylo", model_files)
-
-bateman_uncentered_linear  <- combine_brms("/bateman_uncentered_linear", model_files)
 bateman_uncentered_phylo  <- combine_brms("/bateman_uncentered_phylo", model_files)
 
 # OSS models.
-oss_centered_linear  <- combine_brms("/oss_centered_linear", model_files)
 oss_centered_phylo  <- combine_brms("/oss_centered_phylo", model_files)
-
-oss_uncentered_linear  <- combine_brms("/oss_uncentered_linear", model_files)
 oss_uncentered_phylo  <- combine_brms("/oss_uncentered_phylo", model_files)
 
-# Testes models. 
-testes_centered_linear  <- combine_brms("/testes_centered_linear", model_files)
-testes_centered_phylo <- combine_brms("/testes_centered_phylo", model_files)
+# OSS models.
+oss_centered_phylo  <- combine_brms("/oss_centered_phylo", model_files)
+oss_uncentered_phylo  <- combine_brms("/oss_uncentered_phylo", model_files)
+sensoss_centered_phylo  <- combine_brms("/oss_centered_phylo", model_files)
 
-testes_uncentered_linear <- combine_brms("/testes_uncentered_linear", model_files)
+# Testes models. 
+testes_centered_phylo <- combine_brms("/testes_centered_phylo", model_files)
 testes_uncentered_phylo <- combine_brms("/testes_uncentered_phylo", model_files)
 
 gc()
 
+# Export models.
+first_half <- "Z:/home/sexual_selection/Results/Models/Metrics/"
+export_model <- function(model, name){
+  pathway <- paste0(first_half, name, "_phylo_models.rds")
+  saveRDS(object = model, file = pathway)
+}
+
 
 # Export the models.
-saveRDS(object = bateman_centered_linear, file =  "Results/Models/Combined_models/Sex_metrics/bateman_centered_linear_models.rds")
-saveRDS(object = bateman_centered_phylo, file =  "Results/Models/Combined_models/Sex_metrics/bateman_centered_phylo_models.rds")
-
-saveRDS(object = bateman_uncentered_linear, file =  "Results/Models/Combined_models/Sex_metrics/bateman_uncentered_linear_models.rds")
-saveRDS(object = bateman_uncentered_phylo, file =  "Results/Models/Combined_models/Sex_metrics/bateman_uncentered_phylo_models.rds")
+export_model(bateman_centered_phylo, "bateman_centered")
+export_model(bateman_uncentered_phylo, "bateman_uncentered")
 
 # OSS models.
-saveRDS(object = oss_centered_linear, file =  "Results/Models/Combined_models/Sex_metrics/oss_centered_linear_models.rds")
-saveRDS(object = oss_centered_phylo, file =  "Results/Models/Combined_models/Sex_metrics/oss_centered_phylo_models.rds")
-
-saveRDS(object = oss_uncentered_linear, file =  "Results/Models/Combined_models/Sex_metrics/oss_uncentered_linear_models.rds")
-saveRDS(object = oss_uncentered_phylo, file =  "Results/Models/Combined_models/Sex_metrics/oss_uncentered_phylo_models.rds")
+export_model(oss_centered_phylo, "oss_centered")
+export_model(oss_uncentered_phylo, "oss_uncentered")
+export_model(sensoss_centered_phylo, "sensoss_centered")
 
 # Testes models. 
-saveRDS(object = testes_centered_linear, file =  "Results/Models/Combined_models/Sex_metrics/testes_centered_linear_models.rds")
-saveRDS(object = testes_centered_phylo, file =  "Results/Models/Combined_models/Sex_metrics/testes_centered_phylo_models.rds")
+export_model(testes_centered_phylo, "testes_centered")
+export_model(testes_uncentered_phylo, "testes_uncentered")
 
-saveRDS(object = testes_uncentered_linear, file =  "Results/Models/Combined_models/Sex_metrics/testes_uncentered_linear_models.rds")
-saveRDS(object = testes_uncentered_phylo, file =  "Results/Models/Combined_models/Sex_metrics/testes_uncentered_phylo_models.rds")
 
 
 ###############################################################################
                              #### END ####
 ###############################################################################
-
-
