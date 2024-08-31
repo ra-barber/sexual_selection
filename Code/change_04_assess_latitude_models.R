@@ -2,8 +2,8 @@
               # Plotting Latitudinal brms models from HPC  #
 ###############################################################################
 
-# This script creates the side plots which are used alongside maps produced in
-# another script. It uses models that have been run on the HPC.
+# This script extracts model estimates and creates figure S7. 
+# It uses models that have been run on the HPC.
 
 
 # Packages to load.
@@ -27,7 +27,7 @@ rm(list=ls())
 set.seed(1993)
 
 ###############################################################################
-                       #### Read in the data #####
+                             #### Data #####
 
 # Functions.
 source("Code/functions.R")
@@ -95,7 +95,6 @@ year_terr_diet_lat_data <- model_data  %>%
   group_by(binned_lat, trophic_level_binary) %>% average_lat_bins("year_terr_dummy")
 
 
-
 ###############################################################################
                     #### Read in brms models ####
 
@@ -141,6 +140,7 @@ prim_allterr_all_model <- read_lat_model("prim_allterr_all")
 prim_yearterr_all_model <- read_lat_model("prim_yearterr_all")
 sec_allterr_all_model <- read_lat_model("sec_allterr_all")
 sec_yearterr_all_model <- read_lat_model("sec_yearterr_all")
+
 
 ################################################################################
                     #### Export summary tables ####
@@ -216,7 +216,7 @@ write.csv(high_estimates, "Results/Tables/high_continuous_lat_regression.csv", r
 # Change scipen. (Probs not needed now)
 options(scipen = 999)
 
-# Function that recreates side plots using both pseudo p-values and credible intervals from centered models.
+# Function to create panel plots in figure S7
 brms_lat_side_plot <- function(data_set, xlabel,  ylabel = "", ylimits = c(-0.1,2.1), ybreaks = c(0,1,2), 
                                lab_x_pos = 40, lab_ypos = 2.1, plot_label = "b", 
                                plot_model = allbirds_all_model,
@@ -288,7 +288,7 @@ brms_lat_side_plot <- function(data_set, xlabel,  ylabel = "", ylimits = c(-0.1,
   # ggplot function for sideplots with annotations.
   ggplot(data_set, aes(x = binned_lat, y = trait_mean)) +
   geom_errorbar(aes(ymin = trait_min, ymax = trait_max),
-                position = position_dodge(width = 1), show.legend = FALSE, col = "darkgrey") + #    col =  "darkgrey") +
+                position = position_dodge(width = 1), show.legend = FALSE, col = "darkgrey") + 
     geom_point(aes(size = trait_n), position = position_dodge(width = 1), alpha = 0.9, col = "#442B48") + 
       scale_x_continuous(breaks = seq(from = 0, to = 70, by = 35)) +
     scale_y_continuous(breaks = ybreaks, labels = scales::number_format(accuracy = 0.1)) +
@@ -307,7 +307,7 @@ brms_lat_side_plot <- function(data_set, xlabel,  ylabel = "", ylimits = c(-0.1,
 
 
 ################################################################################
-                     #### Make the side plots  ####
+                     #### Make thhe panels  ####
 
 
 # Primary and secondary consumers.
@@ -369,4 +369,6 @@ ggsave("Figures/figure_S7.png", height = 10, width = 15, dpi = 600)
 ggsave("Figures/figure_S7.pdf", height = 10, width = 15, dpi = 600)
 
 
-
+################################################################################
+                            #### End ####
+################################################################################

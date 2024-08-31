@@ -1,6 +1,8 @@
 ###############################################################################
-                     # Latitudinal brms models on cluster  #
+                 # Latitudinal brms models on cluster  #
 ###############################################################################
+
+# Script to run brms latitudinal models on the cluster.
 
 # Packages to load.
 library(magrittr)
@@ -35,7 +37,7 @@ model_type <- c("allbirds",  "primary", "fruit", "secondary", "invert",
                 "mig", "nomig", "terr", "noterr")
 
 # Response type.
-response_type <- c("ordinal", "logistic")
+response_type <- c("ordinal")
 
 # Set the data types.
 data_type <- c("all", "high")
@@ -49,7 +51,8 @@ data_type <- c("all")
 cert_combos <- expand.grid(response_type, data_type, model_type)
 
 # And the specific analysis on certainty. 
-cert_combos <- rbind(cert_combos, data.frame(Var1 = "ordinal", Var2 = "all", Var3 = "certainty"))
+cert_combos <- rbind(cert_combos, data.frame(Var1 = "ordinal", 
+                                             Var2 = "all", Var3 = "certainty"))
 
 # Models that only use logistsic, unrelated to sexual selection certainty.
 model_type <- c("primterr", "primyearterr", "secterr", "secyearterr")
@@ -85,7 +88,6 @@ if (data_type == "high"){
 
 # Prepare response variables.
 model_data$sexual_selection <- model_data$sexual_selection + 1
-model_data$sexual_tertiary <- model_data$sexual_tertiary + 1
 
 # Trophic niche model data.
 primary_data <- model_data %>% filter(trophic_level_binary == "Primary")
@@ -139,9 +141,7 @@ lat_brms_model <- function(data_set = model_data, response = "sexual_selection",
     iter = 10000,
     warmup = 8000,
     chains = 4,
-    #thin = 20,
     cores = 8,
-    #init = 0,
     file = model_pathway,
     normalize = FALSE,
     control = list(adapt_delta = 0.95),
@@ -155,17 +155,14 @@ lat_brms_model <- function(data_set = model_data, response = "sexual_selection",
 
 # Model pathway.
 first_half <- "Results/Models/Latitudinal/Latitude/"
-model_pathway <- paste0(first_half, response_type, "_", model_type, "_", data_type, ".rds")
+model_pathway <- paste0(first_half, response_type, "_", 
+                        model_type, "_", data_type, ".rds")
 
 
 # Run the straightforward sexual selection models first.
 if (model_type %in% names(all_datasets)){
   model_data <- all_datasets[[model_type]]
-  if (response_type == "ordinal"){
     lat_brms_model(model_data)
-  } else {
-    lat_brms_model(model_data, response = "sexual_binary",  family = "bernoulli")
-  }
 }
 
 # Run the global data certainty analysis, with certainty as the response variable.
@@ -175,15 +172,19 @@ if (model_type == "certainty"){
 
 # Run territoriality models.
 if (model_type == "primterr"){
-  lat_brms_model(response = "terr_dummy", data_set = primary_data, family = "bernoulli")
+  lat_brms_model(response = "terr_dummy", 
+                 data_set = primary_data, family = "bernoulli")
 }
 if (model_type == "primyearterr"){
-  lat_brms_model(response = "year_terr_dummy", data_set = primary_data, family = "bernoulli")
+  lat_brms_model(response = "year_terr_dummy", 
+                 data_set = primary_data, family = "bernoulli")
 }
 if (model_type == "secterr"){
-  lat_brms_model(response = "terr_dummy", data_set = secondary_data, family = "bernoulli")
+  lat_brms_model(response = "terr_dummy", 
+                 data_set = secondary_data, family = "bernoulli")
 }
 if (model_type == "secyearterr"){
-  lat_brms_model(response = "year_terr_dummy", data_set = secondary_data, family = "bernoulli")
+  lat_brms_model(response = "year_terr_dummy", 
+                 data_set = secondary_data, family = "bernoulli")
 }
 
