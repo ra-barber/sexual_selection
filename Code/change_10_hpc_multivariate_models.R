@@ -1,5 +1,5 @@
 ###############################################################################
-                     # Simple brms models on cluster  #
+                         # brms models on cluster #
 ###############################################################################
 
 # Packages to load.
@@ -77,6 +77,7 @@ model_data <- model_data[row.names(model_covar),]
 ###############################################################################
               #### Prepare predictor variables ######
 
+
 # Set as factor, then re-level for appropriate reference group.
 model_data %<>% mutate(
   territoriality_binary = relevel(as.factor(territoriality_binary), ref = "Non-territorial"),
@@ -99,9 +100,10 @@ model_data$sexual_selection <- model_data$sexual_selection + 1
 
 
 ###############################################################################
-                #### Set model formula ######
+                  #### Set model formula ######
 
-# Phylo effect
+
+# Basic formula.
 model_formula <- "sexual_score ~ terr_bi_c + migration_bi_c + trophic_level_c + 
 trophic_level_c*temp_seasonality_z + trophic_level_c*terr_bi_c + (1|gr(tree_tip, cov=A))"
  
@@ -111,14 +113,13 @@ brms_formula <- brmsformula(model_formula, family = cumulative(), decomp = "QR")
 # Simple models.
 model_pathway <- paste0("Results/Models/Multivariate/", data_type, "_", tree_number, ".rds") 
 
-#library(standist) ~ for visualising priors.
-# # Add un-informative priors.
+# Add priors.
 normal_priors <- c(prior(normal(0,1), class="Intercept"),
                    prior(normal(0,1), class="b"),
-                   prior(gamma(2,1), "sd")) # Gamma 2,1 probs seems to work well given all previous models end up with values around 1
+                   prior(gamma(2,1), "sd")) 
 
-
-  brms_model <- brm(
+# Run models.
+brms_model <- brm(
     brms_formula,
     data = model_data,
     data2 = list(A=model_covar),
@@ -132,8 +133,9 @@ normal_priors <- c(prior(normal(0,1), class="Intercept"),
     file = model_pathway,
     normalize = FALSE,
     backend = "cmdstanr",
-    #control = list(adapt_delta = 0.6),
-    threads = threading(8),
-  )
+    threads = threading(8))
 
 
+################################################################################
+                           #### End ####
+################################################################################

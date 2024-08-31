@@ -26,72 +26,22 @@ source("Code/functions.R")
 ###############################################################################
                   #### Read in the models #####
 
-all_models <- readRDS("Z:/home/sexual_selection/Results/Models/Old_models/Combined_models/Multivariate/multivariate_all_models.rds")
-high_models <- readRDS("Z:/home/sexual_selection/Results/Models/Old_models/Combined_models/Multivariate/multivariate_high_models.rds")
+### Need to edit.
+first_half <- "Z:/home/sexual_selection/Results/Combined_models/Multivariate/"
+
+all_models <- readRDS(paste0(first_half, "multivariate_all_models.rds"))
+high_models <- readRDS(paste0(first_half, "multivariate_high_models.rds"))
 
 # Look at the summaries.
 summary(all_models)
 summary(high_models)
 
 gc()
-
-###############################################################################
-                    #### Model Diagnostics #####
-
-
-# Look at the summaries.
-summary(all_models)
-summary(high_models)
-
-# # # Plot the model.
-# plot(all_models)
-# plot(high_models)
-
-
-###############################################################################
-                       #### Forest Plots #####
-
-# 
-# # Quick function to avoid repeating lines.
-# brms_forest <- function(model){
-#   mcmc_areas(model, regex_pars = "^b_[a-z]", prob = 0.95, prob_outer = 0.95)
-# }
-
-# # Feb models.
-# brms_forest(all_models)
-# brms_forest(high_models)
-
-# ###############################################################################
-#                           #### P mapping #####
-# 
-# 
-# # Check p-values.
-# brms_pmap <- function(model){
-#   p_map(model, regex_pars = "^b_[a-z]")
-# }
-# 
-# # Feb models.
-# brms_pmap(all_models)
-# brms_pmap(high_models)
-
-
-###############################################################################
-                         #### R2 values #####
-gc()
-# library(tictoc)
-# 
-# # This takes forever and smashes the ram.
-# tic()
-# all_r_squared <- bayes_R2(all_models, categorical = TRUE)
-# toc()
-# 
-# tic()
-# high_r_squared <- bayes_R2(high_models, categorical = TRUE)
-# toc()
 
 
 ################################################################################
                 ##### Export summary tables ####
+
 
 # Extract relevant coeffcient information.
 all_estimates <- summary(all_models)$fixed[5:10,c(1,3,4)]
@@ -111,7 +61,8 @@ high_estimates %<>% mutate(
   est_intervals = paste0(round_est, " ", intervals))
 
 # Reorder.
-order <- c("trophic_level_c", "migration_bi_c","terr_bi_c","temp_seasonality_z","terr_bi_c:trophic_level_c","trophic_level_c:temp_seasonality_z") 
+order <- c("trophic_level_c", "migration_bi_c","terr_bi_c","temp_seasonality_z",
+           "terr_bi_c:trophic_level_c","trophic_level_c:temp_seasonality_z") 
 
 all_estimates <- all_estimates[order,]
 high_estimates <- high_estimates[order,]
@@ -179,17 +130,12 @@ high_plotdata %<>% add_legend_info()
 
 
 ###############################################################################
-                         #### Colour pal #####
+                         #### Plot dynamics #####
 
 
 library(ggnewscale)
 
-# Dark and light colours (not all used anymore)
-#light_colours <- c( "#77AD78","#7494EA", "#C98986", "#D8C77B")   #F7D460   #F6CE5F
-#dark_colours <- c("#214F4B", "#05299E", "#8D0801","#A88A05")
-#light_colours <- c("#7494EA",  "#77AD78", "#C98986", "#D8C77B")   #F7D460   #F6CE5F
 
-#light_colours <- c( "#C98986",  "#77AD78", "#7494EA", "#D8C77B")   #F7D460   #F6CE5F
 light_colours <- c("#77AD78", "#C98986", "#7494EA", "#D8C77B") 
 #dark_colours <- c( "#05299E","#214F4B", "#8D0801","#A88A05")
 

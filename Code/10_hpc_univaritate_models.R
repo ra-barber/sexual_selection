@@ -141,19 +141,24 @@ normal_priors <- c(prior(normal(0,1), class="Intercept"),
                    prior(normal(0,1), class="b"),
                    prior(gamma(2,1), "sd"))
 
-  # Run brms models.
-  brms_model <- brm(
-    brms_formula,
-    data = model_data,
-    data2 = list(A=model_covar),
-    prior = normal_priors,
-    iter = 10000,
-    warmup = 5000,
-    chains = 2,
-    thin = 20,
-    cores = 16,
-    init = 0,
-    file = model_pathway,
-    normalize = FALSE,
-    backend = "cmdstanr",
-    threads = threading(8))
+# Run brms models.
+brms_model <- brm(
+  brms_formula,
+  data = model_data,
+  data2 = list(A=model_covar),
+  prior = normal_priors,
+  iter = 10000,
+  warmup = 5000,
+  chains = 2,
+  thin = 20,
+  cores = 16,
+  init = 0,
+  file = model_pathway,
+  normalize = FALSE,
+  backend = "cmdstanr",
+  threads = threading(8))
+
+
+################################################################################
+                                #### End ####
+################################################################################

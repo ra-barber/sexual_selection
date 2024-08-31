@@ -31,7 +31,7 @@ prum_model_trees <- prum_trees[c(prum_numbers)]
 write.tree(prum_model_trees, "Data/Trees/prum_trees.tre")
 
 # Create a consensus tree.
-prum_consensus_tree <- consensus.edges(prum_model_trees)
+prum_consensus_tree <- consensus(prum_model_trees, check.labels = TRUE, p = 0.5)
 
 # Export the trees. 
 write.tree(prum_consensus_tree, "Data/Trees/prum_consensus_tree.tre")
