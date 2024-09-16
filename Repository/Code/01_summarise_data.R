@@ -176,8 +176,6 @@ grouped_data <- full_data %>%
             sex_sd = sd(sqrt(sexual_selection)),
             sex_se = sd(sqrt(sexual_selection))/sqrt(length(sexual_selection)))
 
-round(grouped_data[,2:4], digits = 2)
-
 # Merge the averages with full dataset.
 merged_data <- full_data %>% 
   left_join(grouped_data, by = "data_certainty")

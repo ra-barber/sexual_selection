@@ -81,12 +81,6 @@ teritory_data <- average_family("territoriality_binary")
 migration_data <- average_family("migration_binary")
 trophic_data <- average_family("trophic_level_binary")
 
-# Export tables.
-write.csv(teritory_data, "Results/Figures/family_territorialty.csv", row.names = FALSE)
-write.csv(migration_data, "Results/Figures/family_migration.csv", row.names = FALSE)
-write.csv(trophic_data, "Results/Figures/family_trophic.csv", row.names = FALSE)
-write.csv(family_seasonality_data, "Results/Figures/family_seasonality.csv", row.names = FALSE)
-
 
 ##############################################################################
             ######  Extract predicted values ######
@@ -127,13 +121,6 @@ temp_preds <- post_epred_ord_means(temp_uncen_all_data[[1]], newdata = temp_newd
 all_predictions <- list(tro_preds, mig_preds, terr_preds, temp_preds)
 saveRDS(all_predictions, "Results/Models/Univariate/model_predictions.rds")
 
-all_predictions <- readRDS("Results/Models/Univariate/model_predictions.rds")
-
-tro_preds <- all_predictions[[1]]
-mig_preds <- all_predictions[[2]]
-terr_preds <- all_predictions[[3]]
-temp_preds <- all_predictions[[4]]
-
 # Extract temperature summaries.
 temp_est <- apply(temp_preds, 2, mean)
 temp_err <- apply(temp_preds, 2, standard_error)
@@ -169,11 +156,6 @@ extract_summaries <- function(matrix, levels =  c("Reference", "Main")){
 tro_summaries <- extract_summaries(tro_preds, levels =  c("Secondary", "Primary"))
 mig_summaries <- extract_summaries(mig_preds, levels = c("Weak", "Strong"))
 terr_summaries <- extract_summaries(terr_preds, levels = c("Non-territorial", "Territorial"))
-
-round(tro_summaries[,2:5], digits = 2)
-round(mig_summaries[,2:5], digits = 2)
-round(terr_summaries[,2:5], digits = 2)
-round(temp_summaries[,2:5], digits = 2)
 
 
 ###############################################################################

@@ -115,7 +115,6 @@ gc()
 
 
 # Load in the side plots.
-load("Results/Spatial/wgs84_rasters.Rdata")
 load("Plots/Maps/behr_200_latitudinal_sideplots.Rdata")
 
 # Create data frame of land to use to crop ggplot maps.
