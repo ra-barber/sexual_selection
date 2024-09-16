@@ -250,7 +250,7 @@ high_no_terr_sex_model <- scaled_run_spatial_model(high_no_terr_sex_sf)
 # Save the models for quick editing later.
 save(list = ls(pattern =  "_model"), file = "Results/SAR_200_models.Rdata")
 load("Results/SAR_200_models.Rdata")
-
+load("Results/SAR_sfdata.Rdata")
 
 #################################################################################
                ####### Create side plots for figures ######
@@ -287,8 +287,8 @@ invert_lat_plot <- sar_lat_side_plot(invert_sex_sf, ylabel = "Sexual selection",
                      plot_label = "h", plot_model = invert_sex_model, stats_model = scaled_invert_sex_model) 
 
 # Sexual lat gradient for high data certainty.
-med_sex_lat_plot <- sar_lat_side_plot(m_sex_sf, ylabel = "Sexual selection", ylimits = c(0,1.3), 
-                     ybreaks =  c(0,0.5,1.0), lab_ypos = 1.3, plot_label = "b",
+med_sex_lat_plot <- sar_lat_side_plot(m_sex_sf, ylabel = "Sexual selection", ylimits = c(0,1.5), 
+                     ybreaks =  c(0,0.5,1.0, 1.5), lab_ypos = 1.5, plot_label = "b",
                      plot_model = m_sex_model, stats_model = scaled_m_sex_model)
 
 hi_sex_lat_plot <- sar_lat_side_plot(h_sex_sf, ylabel = "Sexual selection", ylimits = c(0,1.5), 

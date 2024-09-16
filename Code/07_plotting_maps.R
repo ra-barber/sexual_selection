@@ -207,7 +207,7 @@ cert_both_plots <- ggarrange(cert_maps, cert_side_plots, ncol = 2, widths = c(3,
   theme(plot.margin = margin(l = -0.3, unit = "cm"))
 
 # Export figure.
-ggsave("Figures/figure_S3.tiff", height = 10, width = 15, dpi = 600, bg="white", compression = "lzw")   
+ggsave("Figures/figure_S3_test.tiff", height = 10, width = 15, dpi = 600, bg="white", compression = "lzw")   
 
 
 # Show high certainty sexual selection maps.
